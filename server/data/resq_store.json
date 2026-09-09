@@ -641,6 +641,286 @@
   ],
   "audits": [
     {
+      "id": "aud-1788947849196-8c7b",
+      "time": "15:27",
+      "actor": "System Admin Member",
+      "action": "System Admin Member signed in as System Admin (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:57:29.195Z",
+      "previousHash": "324925694dc5aafb896a31e59b4824649924014e1d5861bffceda3ad4383139f",
+      "hash": "75c4852b6d9c5666130083f1d09d99ed1cf17e61e136d18fae8d155de4e378bf"
+    },
+    {
+      "id": "aud-1788947842760-5n7s",
+      "time": "15:27",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:57:22.760Z",
+      "previousHash": "9da69a71895b2df535e978de9866c9e46c7bb554c7809f2f10f38168d2304e1d",
+      "hash": "324925694dc5aafb896a31e59b4824649924014e1d5861bffceda3ad4383139f"
+    },
+    {
+      "id": "aud-1788947814905-rdwp",
+      "time": "15:26",
+      "actor": "Government Officer Member",
+      "action": "Government Officer Member signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:56:54.890Z",
+      "previousHash": "038072945848bb9bdb1379ffff7c896a3f5ed0262f47785c182b9190b9a1520c",
+      "hash": "9da69a71895b2df535e978de9866c9e46c7bb554c7809f2f10f38168d2304e1d"
+    },
+    {
+      "id": "aud-1788947489880-inpw",
+      "time": "15:21",
+      "actor": "System Admin Member",
+      "action": "System Admin Member signed in as System Admin (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:51:29.880Z",
+      "previousHash": "3717ba3d2954461c4b8e505b0686a49ad309626809ecc57d8592553e0f5b247c",
+      "hash": "038072945848bb9bdb1379ffff7c896a3f5ed0262f47785c182b9190b9a1520c"
+    },
+    {
+      "id": "aud-1788947484602-mpkr",
+      "time": "15:21",
+      "actor": "Government Officer Member",
+      "action": "Government Officer Member signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:51:24.602Z",
+      "previousHash": "3a7afb7ec6ae65e37085cfddbb69d807617cb107213f546949e54b44489538f2",
+      "hash": "3717ba3d2954461c4b8e505b0686a49ad309626809ecc57d8592553e0f5b247c"
+    },
+    {
+      "id": "aud-1788947479348-j7cx",
+      "time": "15:21",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:51:19.348Z",
+      "previousHash": "ad8db0ed041fffbf4b5db0e33a761f73dabba6f9850347dd8bf92ce10c5411f3",
+      "hash": "3a7afb7ec6ae65e37085cfddbb69d807617cb107213f546949e54b44489538f2"
+    },
+    {
+      "id": "aud-1788947461635-3uz7",
+      "time": "15:21",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:51:01.635Z",
+      "previousHash": "58917d215683ba297cebcbdf438f48f9f57ab3e692567a814891944f5d7e00e8",
+      "hash": "ad8db0ed041fffbf4b5db0e33a761f73dabba6f9850347dd8bf92ce10c5411f3"
+    },
+    {
+      "id": "aud-1788947432850-8spa",
+      "time": "15:20",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:50:32.850Z",
+      "previousHash": "30493789077bd86d1f109f5d042989a76c781a6d03fd75b3dcc543287c969230",
+      "hash": "58917d215683ba297cebcbdf438f48f9f57ab3e692567a814891944f5d7e00e8"
+    },
+    {
+      "id": "aud-1788947412203-9nnv",
+      "time": "15:20",
+      "actor": "System Admin Member",
+      "action": "System Admin Member signed in as System Admin (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:50:12.202Z",
+      "previousHash": "c592e69a5843bdfdc5ee007b2ea7df3fced0894537d1e3bdb37b496b6a2a21a7",
+      "hash": "30493789077bd86d1f109f5d042989a76c781a6d03fd75b3dcc543287c969230"
+    },
+    {
+      "id": "aud-1788947406917-n94n",
+      "time": "15:20",
+      "actor": "Government Officer Member",
+      "action": "Government Officer Member signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:50:06.917Z",
+      "previousHash": "11049a626efcebdf9156d7f6543387f220929f94da4d87b324d74b5a99cf97cb",
+      "hash": "c592e69a5843bdfdc5ee007b2ea7df3fced0894537d1e3bdb37b496b6a2a21a7"
+    },
+    {
+      "id": "aud-1788947401599-dad5",
+      "time": "15:20",
+      "actor": "NGO / Volunteer Member",
+      "action": "NGO / Volunteer Member signed in as NGO / Volunteer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:50:01.599Z",
+      "previousHash": "86904be03fce3c70e90ab1df853255c3c28d5c15902d4ee1857a046668795433",
+      "hash": "11049a626efcebdf9156d7f6543387f220929f94da4d87b324d74b5a99cf97cb"
+    },
+    {
+      "id": "aud-1788947396076-b30i",
+      "time": "15:19",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:49:56.076Z",
+      "previousHash": "33ab77e5761b96c1ff59026d46768e2bcf511cbcf337a11049d48dab2f1f19ce",
+      "hash": "86904be03fce3c70e90ab1df853255c3c28d5c15902d4ee1857a046668795433"
+    },
+    {
+      "id": "aud-1788947298879-2q5j",
+      "time": "15:18",
+      "actor": "System Admin Member",
+      "action": "System Admin Member signed in as System Admin (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:48:18.878Z",
+      "previousHash": "4d317bd03b2fec0a3dd576e5ba8a633dc89792cc1f63c2332e0489fcacd60378",
+      "hash": "33ab77e5761b96c1ff59026d46768e2bcf511cbcf337a11049d48dab2f1f19ce"
+    },
+    {
+      "id": "aud-1788947293237-0wjr",
+      "time": "15:18",
+      "actor": "Government Officer Member",
+      "action": "Government Officer Member signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:48:13.236Z",
+      "previousHash": "a42dbf867aa69275b57c532143df137d21739f7befb09cd03016d77fcd517bbe",
+      "hash": "4d317bd03b2fec0a3dd576e5ba8a633dc89792cc1f63c2332e0489fcacd60378"
+    },
+    {
+      "id": "aud-1788947287937-irs9",
+      "time": "15:18",
+      "actor": "NGO / Volunteer Member",
+      "action": "NGO / Volunteer Member signed in as NGO / Volunteer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:48:07.936Z",
+      "previousHash": "3273c3f5277da917a8cbe751369011d65156497c37e725ce3596218082b85e53",
+      "hash": "a42dbf867aa69275b57c532143df137d21739f7befb09cd03016d77fcd517bbe"
+    },
+    {
+      "id": "aud-1788947282390-eb6v",
+      "time": "15:18",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:48:02.390Z",
+      "previousHash": "4bf56feb7d4d6fc17e02163938edb4ad592f00431a780e449cf2b606408bce6d",
+      "hash": "3273c3f5277da917a8cbe751369011d65156497c37e725ce3596218082b85e53"
+    },
+    {
+      "id": "aud-1788947259343-l1pv",
+      "time": "15:17",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:47:39.343Z",
+      "previousHash": "a3e026690f3011250d2a4e5f7f85bdf8e872f1f2acde6bb80b4b84b3b6179835",
+      "hash": "4bf56feb7d4d6fc17e02163938edb4ad592f00431a780e449cf2b606408bce6d"
+    },
+    {
+      "id": "aud-1788947158623-f080",
+      "time": "15:15",
+      "actor": "Harshal Mogare",
+      "action": "Harshal Mogare signed in as Government Officer (Thane City (Naupada), Thane)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:45:58.623Z",
+      "previousHash": "9930580820ef38a41060fa9d9e35b56b8621b8893cb3eece483fcb1de3cea138",
+      "hash": "a3e026690f3011250d2a4e5f7f85bdf8e872f1f2acde6bb80b4b84b3b6179835"
+    },
+    {
+      "id": "aud-1788946961753-t142",
+      "time": "15:12",
+      "actor": "Test admin",
+      "action": "Test admin signed in as System Admin (Pune City, Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:42:41.752Z",
+      "previousHash": "7a311936c6f7812495aa128b6a7f53573a8405d005d54817173e9e60a195f87e",
+      "hash": "9930580820ef38a41060fa9d9e35b56b8621b8893cb3eece483fcb1de3cea138"
+    },
+    {
+      "id": "aud-1788946961749-okxs",
+      "time": "15:12",
+      "actor": "Test government",
+      "action": "Test government signed in as Government Officer (Pune City, Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:42:41.748Z",
+      "previousHash": "488adfd304606ef3cc07e81d21753b94267a48e58e84c3cc3b9aab98347f31c0",
+      "hash": "7a311936c6f7812495aa128b6a7f53573a8405d005d54817173e9e60a195f87e"
+    },
+    {
+      "id": "aud-1788946961744-kpyt",
+      "time": "15:12",
+      "actor": "Test government",
+      "action": "Unauthorized login attempt to GOVERNMENT role",
+      "severity": "warning",
+      "timestamp": "2026-09-09T09:42:41.744Z",
+      "previousHash": "bfb227e25cb0dcfcfef0745b656e2753885dfcd96e944fe61636b919d9b0fb7e",
+      "hash": "488adfd304606ef3cc07e81d21753b94267a48e58e84c3cc3b9aab98347f31c0"
+    },
+    {
+      "id": "aud-1788946961740-2af3",
+      "time": "15:12",
+      "actor": "Test ngo",
+      "action": "Test ngo signed in as NGO / Volunteer (Pune City, Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:42:41.740Z",
+      "previousHash": "fade389e588c48dc8c809d76a6914dd01ed2b99ed16c696c11792b5982b72470",
+      "hash": "bfb227e25cb0dcfcfef0745b656e2753885dfcd96e944fe61636b919d9b0fb7e"
+    },
+    {
+      "id": "aud-1788946961734-ebx2",
+      "time": "15:12",
+      "actor": "Test citizen",
+      "action": "Test citizen signed in as Citizen (Pune City, Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:42:41.734Z",
+      "previousHash": "053acaa3325ea7cf53260414e720b6ac28c14f047223c96ec267f89f4aea6991",
+      "hash": "fade389e588c48dc8c809d76a6914dd01ed2b99ed16c696c11792b5982b72470"
+    },
+    {
+      "id": "aud-1788946509688-rur6",
+      "time": "15:05",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:35:09.687Z",
+      "previousHash": "d126be696cc8f2f75122cc47aeae9635afa67da0f02a53be30bac1ee13b137d7",
+      "hash": "053acaa3325ea7cf53260414e720b6ac28c14f047223c96ec267f89f4aea6991"
+    },
+    {
+      "id": "aud-1788946493317-zmjn",
+      "time": "15:04",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Nagpur City (Civil Lines), Nagpur)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:34:53.317Z",
+      "previousHash": "45c285871f3354c3b967aa0f80515d9cfb506c1ba5038be60639dd99065abcba",
+      "hash": "d126be696cc8f2f75122cc47aeae9635afa67da0f02a53be30bac1ee13b137d7"
+    },
+    {
+      "id": "aud-1788946381169-dj7c",
+      "time": "15:03",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Citizen (Sitabuldi / Dharampeth, Nagpur)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:33:01.169Z",
+      "previousHash": "c45cd41d917e6db264f4c0295f03d0b71c31b157a7ad5098358b69df13bf398b",
+      "hash": "45c285871f3354c3b967aa0f80515d9cfb506c1ba5038be60639dd99065abcba"
+    },
+    {
+      "id": "aud-1788946335353-cmyg",
+      "time": "15:02",
+      "actor": "Harshal Mogare",
+      "action": "Harshal Mogare signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:32:15.352Z",
+      "previousHash": "5a4501e9d92e55e3f04e809c239b63c8b77e5afb7b7771af46cc0faeb5440da6",
+      "hash": "c45cd41d917e6db264f4c0295f03d0b71c31b157a7ad5098358b69df13bf398b"
+    },
+    {
+      "id": "aud-1788946304432-dcxu",
+      "time": "15:01",
+      "actor": "Platform Administrator",
+      "action": "Platform Administrator signed in as System Admin (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:31:44.432Z",
+      "previousHash": "85af58c3a79a4c63f9fa6febe190d5de1f7afb7c49b8cc067b19308470d95f26",
+      "hash": "5a4501e9d92e55e3f04e809c239b63c8b77e5afb7b7771af46cc0faeb5440da6"
+    },
+    {
       "id": "aud-1788946219011-ijxq",
       "time": "15:00",
       "actor": "Harshal Mogare",
