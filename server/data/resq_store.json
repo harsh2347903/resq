@@ -571,6 +571,16 @@
   ],
   "audits": [
     {
+      "id": "aud-1788943304419-0mol",
+      "time": "14:11",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Bhandara City, Bhandara)",
+      "severity": "info",
+      "timestamp": "2026-09-09T08:41:44.390Z",
+      "previousHash": "e3f60b504b22d04fcb8ee3fb7e54056fb9069c3f42f3a48d10afd8c1f9a824da",
+      "hash": "7ba65b74650100c4c3a8613a4b7419893977f07e2bcf83e9c075ffd575a8512b"
+    },
+    {
       "id": "aud-1788942507693-upaj",
       "time": "13:58",
       "actor": "Harshal",

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getCoordinatesForLocation, getDistrictCenter } from '../lib/indiaGeoData';
+import { getCoordinatesForLocation, getDistrictCenter, getDistrictBounds } from '../lib/indiaGeoData';
 
 const LOCATION_STORAGE_KEY = 'resq_active_location_v1';
 
@@ -10,7 +10,7 @@ const DEFAULT_LOCATION = {
   city: 'Pune City (Shivaji Nagar)',
   pincode: '411005',
   coordinates: { lat: 18.5314, lng: 73.8446 },
-  bounds: { minLat: 18.40, maxLat: 18.65, minLng: 73.72, maxLng: 73.98 }
+  bounds: { minLat: 18.10, maxLat: 19.30, minLng: 73.35, maxLng: 74.70 }
 };
 
 const LocationContext = createContext({
@@ -47,13 +47,8 @@ export function LocationProvider({ children }) {
       coordinates = getCoordinatesForLocation(state, district, taluka, city);
     }
 
-    const centerInfo = getDistrictCenter(state, district);
-    const bounds = centerInfo.bounds || {
-      minLat: coordinates.lat - 0.12,
-      maxLat: coordinates.lat + 0.12,
-      minLng: coordinates.lng - 0.12,
-      maxLng: coordinates.lng + 0.12
-    };
+    const bounds = newLoc.bounds || getDistrictBounds(state, district);
+
 
     const resolved = {
       state,

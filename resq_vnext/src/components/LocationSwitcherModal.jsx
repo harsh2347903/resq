@@ -63,15 +63,19 @@ export function LocationSwitcherBadge() {
 
   const quickJump = (state, district, taluka, city) => {
     const coords = getCoordinatesForLocation(state, district, taluka, city);
+    const citiesList = getCitiesForDistrict(state, district);
+    const matched = citiesList.find(c => c.city === city || c.taluka === taluka);
     switchLocation({
       state,
       district,
       taluka,
       city,
+      pincode: matched?.pincode || '',
       coordinates: coords
     });
     setIsOpen(false);
   };
+
 
   return (
     <>

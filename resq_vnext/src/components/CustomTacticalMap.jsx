@@ -1,19 +1,27 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as Icons from 'lucide-react';
 import { api } from '../lib/apiClient';
 import { useLocation } from '../context/LocationContext';
-import { getTalukasForDistrict, getCitiesForDistrict, getDistrictCenter } from '../lib/indiaGeoData';
+import {
+  getTalukasForDistrict,
+  getCitiesForDistrict,
+  getDistrictCenter,
+  getDistrictBounds,
+  getAllLocationsForDistrict
+} from '../lib/indiaGeoData';
 import { LocationSwitcherBadge } from './LocationSwitcherModal';
 
 // Canvas Coordinate Mapping: Converts real GPS (lat, lng) to SVG (x, y) coordinates based on dynamic bounds
 function projectGpsToSvg(lat, lng, bounds, width = 1000, height = 650) {
-  const x = ((lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * width;
+  const spanLng = bounds.maxLng - bounds.minLng || 0.1;
+  const spanLat = bounds.maxLat - bounds.minLat || 0.1;
+  const x = ((lng - bounds.minLng) / spanLng) * width;
   // Latitude is inverted on screen (higher lat = further north = smaller y)
-  const y = ((bounds.maxLat - lat) / (bounds.maxLat - bounds.minLat)) * height;
+  const y = ((bounds.maxLat - lat) / spanLat) * height;
   return {
     x: Math.max(35, Math.min(width - 35, x)),
-    y: Math.max(35, Math.min(height - 35, y))
+    y: Math.max(45, Math.min(height - 45, y))
   };
 }
 
@@ -24,13 +32,27 @@ function projectSvgToGps(x, y, bounds, width = 1000, height = 650) {
   return { lat: Number(lat.toFixed(4)), lng: Number(lng.toFixed(4)) };
 }
 
+// Haversine distance calculator in kilometers
+function calculateHaversineKm(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c * 10) / 10;
+}
+
 export function CustomTacticalMap({ layers = { incidents: true, shelters: true, ngo: true, responders: true } }) {
-  const { activeLocation } = useLocation();
+  const { activeLocation, switchLocation } = useLocation();
   const svgRef = useRef(null);
 
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [activeSector, setActiveSector] = useState('all');
-  const [cursorCoords, setCursorCoords] = useState('18.5204° N, 73.8567° E');
+  const [cursorCoords, setCursorCoords] = useState('');
   const [radarActive, setRadarActive] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
@@ -41,7 +63,8 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
     critical: true,
     warning: true,
     shelters: true,
-    ngo: true
+    ngo: true,
+    localities: true
   });
 
   // Dynamic Data States from Backend API
@@ -70,7 +93,12 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
     return () => { mounted = false; clearInterval(interval); };
   }, []);
 
-  // Compute active center and bounding box dynamically from activeLocation
+  // Compute active district's bounding box encompassing all city areas
+  const activeBounds = useMemo(() => {
+    return getDistrictBounds(activeLocation.state, activeLocation.district);
+  }, [activeLocation.state, activeLocation.district]);
+
+  // Compute active center coordinates
   const currentCenter = useMemo(() => {
     if (activeLocation?.coordinates?.lat && activeLocation?.coordinates?.lng) {
       return activeLocation.coordinates;
@@ -79,16 +107,10 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
     return { lat: fallback.lat, lng: fallback.lng };
   }, [activeLocation]);
 
-  const activeBounds = useMemo(() => {
-    if (activeLocation?.bounds) return activeLocation.bounds;
-    const fallback = getDistrictCenter(activeLocation.state, activeLocation.district);
-    return fallback.bounds || {
-      minLat: currentCenter.lat - 0.12,
-      maxLat: currentCenter.lat + 0.12,
-      minLng: currentCenter.lng - 0.14,
-      maxLng: currentCenter.lng + 0.14
-    };
-  }, [activeLocation, currentCenter]);
+  // All distinct localities and areas in the active district
+  const districtLocations = useMemo(() => {
+    return getAllLocationsForDistrict(activeLocation.state, activeLocation.district);
+  }, [activeLocation.state, activeLocation.district]);
 
   // Command EOC HQ for the active sector
   const activeHq = useMemo(() => {
@@ -100,18 +122,31 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
     };
   }, [currentCenter, activeLocation]);
 
-  // When active location changes, reset pan and zoom smoothly
-  useEffect(() => {
-    setZoomLevel(1);
-    setPanOffset({ x: 0, y: 0 });
-    setActiveSector('all');
-    setSelectedPoint(null);
-    setCursorCoords(`${currentCenter.lat.toFixed(4)}° N, ${currentCenter.lng.toFixed(4)}° E`);
-  }, [activeLocation, currentCenter]);
-
-  // Locations to plot: Prioritize locations in and around active district / taluka
+  // Master List of Plotted Locations: Locality stations + Incidents + Shelters + NGOs
   const allLocations = useMemo(() => {
-    // 1. Incidents
+    // 1. Every location/area in the selected district is represented
+    const localityNodes = districtLocations.map((loc, idx) => {
+      const lat = loc.coordinates?.lat || (currentCenter.lat + ((idx % 5) - 2) * 0.025);
+      const lng = loc.coordinates?.lng || (currentCenter.lng + (Math.floor(idx / 5) - 1) * 0.025);
+      return {
+        id: `loc-${loc.city.replace(/[^a-zA-Z0-9]/g, '-')}`,
+        category: 'locality',
+        type: 'locality',
+        name: loc.city,
+        title: `${loc.city} (${loc.taluka || 'Sector'})`,
+        district: activeLocation.district,
+        taluka: loc.taluka || activeLocation.district,
+        city: loc.city,
+        pincode: loc.pincode || '',
+        sub: `Sector Operations Base · PIN ${loc.pincode || 'Active'} · Quick Response Hub`,
+        lat,
+        lng,
+        team: `${loc.city} Disaster Cell & Civil Defense`,
+        services: ['Local Command Post', 'Shelter Access Hub', 'Field Triage Base']
+      };
+    });
+
+    // 2. Incidents (filter to district or nearby)
     const incs = (incidentsList.length ? incidentsList : [
       { id: 'INC-077', type: 'Flood', district: 'Pune', taluka: 'Haveli', location: 'Pune • Mula-Mutha basin', coordinates: { lat: 18.5312, lng: 73.8553 }, severity: 'Critical', affected: '2,482', details: 'Water surge +3.8m above danger mark.' },
       { id: 'INC-076', type: 'Landslide', district: 'Pune', taluka: 'Maval', location: 'Lonavala • Old Mumbai Rd', coordinates: { lat: 18.7546, lng: 73.4062 }, severity: 'High', affected: '218', details: 'Debris blocking transit corridor.' },
@@ -120,14 +155,14 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
       { id: 'INC-075', type: 'Fire', district: 'Nashik', taluka: 'Nashik', location: 'Nashik • MIDC Industrial Zone', coordinates: { lat: 19.9975, lng: 73.7898 }, severity: 'High', affected: '624', details: 'Chemical storage vapor flare containment.' },
       { id: 'INC-074', type: 'Heatwave', district: 'Nagpur', taluka: 'Nagpur Urban', location: 'Nagpur • Central zone', coordinates: { lat: 21.1458, lng: 79.0882 }, severity: 'Medium', affected: '5,870', details: 'Severe thermal warning.' },
       { id: 'INC-079', type: 'Landslide', district: 'Satara', taluka: 'Wai', location: 'Wai-Pasarni Ghat Corridor', coordinates: { lat: 17.9480, lng: 73.8920 }, severity: 'Critical', affected: '340', details: 'Hillside rockfall blocking access.' }
-    ]).map(i => ({
+    ]).filter(i => (i.district || '').toLowerCase() === (activeLocation.district || '').toLowerCase()).map(i => ({
       id: i.id || `inc-${Math.random()}`,
       category: 'incident',
       type: (i.severity?.toLowerCase() === 'critical' ? 'critical' : 'warning'),
       name: `${i.type} (${i.severity})`,
       title: `${i.type} at ${i.location}`,
       sub: i.details || `Impact zone: ${i.affected || 'Multiple'} citizens affected`,
-      district: i.district || 'Pune',
+      district: i.district || activeLocation.district,
       taluka: i.taluka || '',
       lat: i.coordinates?.lat ?? currentCenter.lat,
       lng: i.coordinates?.lng ?? currentCenter.lng,
@@ -136,7 +171,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
       team: 'NDRF Battalion & Civil Defense'
     }));
 
-    // 2. Shelters
+    // 3. Shelters
     const shels = (sheltersList.length ? sheltersList : [
       { id: 1, name: 'Shivaji Sports Complex', district: 'Pune', taluka: 'Haveli', city: 'Pune City', address: 'Shivaji Nagar, Pune', coordinates: { lat: 18.5314, lng: 73.8446 }, capacity: 850, occupied: 642, services: ['Food', 'Medical', 'Childcare', 'Bedding'], eta: '4 min' },
       { id: 2, name: 'Bharati Vidyapeeth Hall', district: 'Pune', taluka: 'Haveli', city: 'Katraj', address: 'Katraj, Pune', coordinates: { lat: 18.4575, lng: 73.8508 }, capacity: 520, occupied: 301, services: ['Food', 'Power', 'Wi-Fi', 'First Aid'], eta: '14 min' },
@@ -149,13 +184,13 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
       { id: 4, name: 'Nehru Stadium Transit Camp', district: 'Nagpur', taluka: 'Nagpur Urban', city: 'Nagpur', address: 'Civil Lines, Nagpur', coordinates: { lat: 21.1458, lng: 79.0882 }, capacity: 1100, occupied: 620, services: ['Food', 'Medical', 'Cooling Rooms'], eta: '12 min' },
       { id: 17, name: 'Golf Club Ground Relief Camp', district: 'Nashik', taluka: 'Nashik', city: 'Nashik', address: 'Old Agra Rd, Nashik', coordinates: { lat: 19.9975, lng: 73.7898 }, capacity: 700, occupied: 310, services: ['Food', 'Water'], eta: '9 min' },
       { id: 3, name: 'ZP School Relief Centre', district: 'Satara', taluka: 'Satara', city: 'Satara', address: 'Satara Main Rd', coordinates: { lat: 17.6805, lng: 74.0183 }, capacity: 340, occupied: 210, services: ['Food', 'Water', 'First Aid'], eta: '15 min' }
-    ]).map(s => ({
+    ]).filter(s => (s.district || '').toLowerCase() === (activeLocation.district || '').toLowerCase()).map(s => ({
       id: `she-${s.id}`,
       category: 'shelter',
       type: 'safe',
       name: s.name,
       title: s.name,
-      district: s.district || 'Pune',
+      district: s.district || activeLocation.district,
       taluka: s.taluka || '',
       sub: `${s.capacity - s.occupied} Available Beds · ${Math.round((s.occupied / s.capacity) * 100)}% Occupancy`,
       lat: s.coordinates?.lat ?? currentCenter.lat,
@@ -169,7 +204,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
       team: 'District Relief Logistics Taskforce'
     }));
 
-    // 3. NGO Stations
+    // 4. NGOs
     const ngos = [
       {
         id: 'ngo-seva-kitchen',
@@ -227,65 +262,10 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
         team: 'Red Cross Nagpur',
         services: ['Electrolyte Stations', 'Cooling Vans']
       }
-    ];
+    ].filter(n => (n.district || '').toLowerCase() === (activeLocation.district || '').toLowerCase());
 
-    // Filter points to those matching the active district or nearby bounds
-    const activeDistrictLower = (activeLocation.district || '').toLowerCase();
-    const isMatchingOrNear = (pt) => {
-      const ptDistrict = (pt.district || '').toLowerCase();
-      if (ptDistrict === activeDistrictLower) return true;
-      // Also include if within the calculated bounds
-      return (
-        pt.lat >= activeBounds.minLat &&
-        pt.lat <= activeBounds.maxLat &&
-        pt.lng >= activeBounds.minLng &&
-        pt.lng <= activeBounds.maxLng
-      );
-    };
-
-    const localPoints = [...incs, ...shels, ...ngos].filter(isMatchingOrNear);
-
-    // If no specific points in this district yet, generate default local EOC pins so map is never blank
-    if (localPoints.length === 0) {
-      return [
-        {
-          id: `she-local-${activeLocation.district}`,
-          category: 'shelter',
-          type: 'safe',
-          name: `${activeLocation.district} Regional Relief Center`,
-          title: `${activeLocation.district} Central Transit Shelter`,
-          district: activeLocation.district,
-          taluka: activeLocation.taluka,
-          sub: '450 Available Beds · Verified Safe Facility',
-          lat: currentCenter.lat + 0.015,
-          lng: currentCenter.lng + 0.012,
-          capacity: 600,
-          occupied: 150,
-          availableBeds: 450,
-          services: ['Food', 'Water', 'Medical', 'Bedding'],
-          address: `${activeLocation.taluka || activeLocation.district}, ${activeLocation.state}`,
-          eta: '6 min',
-          team: `${activeLocation.district} Civil Defense`
-        },
-        {
-          id: `ngo-local-${activeLocation.district}`,
-          category: 'ngo',
-          type: 'info',
-          name: `${activeLocation.district} Volunteer Network Hub`,
-          title: `${activeLocation.district} Community Kitchen & First Aid`,
-          district: activeLocation.district,
-          taluka: activeLocation.taluka,
-          sub: '28 Active Volunteers · Relief Rations Active',
-          lat: currentCenter.lat - 0.012,
-          lng: currentCenter.lng - 0.015,
-          team: 'District Volunteer Taskforce',
-          services: ['Rations', 'First Aid', 'Family Help']
-        }
-      ];
-    }
-
-    return localPoints;
-  }, [incidentsList, sheltersList, activeLocation, activeBounds, currentCenter]);
+    return [...localityNodes, ...incs, ...shels, ...ngos];
+  }, [districtLocations, incidentsList, sheltersList, activeLocation, currentCenter]);
 
   // Filter visible points based on active layer chips
   const visiblePoints = useMemo(() => {
@@ -298,42 +278,91 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
       if (pt.type === 'warning' && !activeLayerFilters.warning) return false;
       if (pt.type === 'safe' && !activeLayerFilters.shelters) return false;
       if (pt.type === 'info' && !activeLayerFilters.ngo) return false;
+      if (pt.type === 'locality' && !activeLayerFilters.localities) return false;
 
       return true;
     });
   }, [allLocations, layers, activeLayerFilters]);
 
-  // Dynamic Sectors for the current district
-  const availableTalukas = useMemo(() => {
-    const list = getTalukasForDistrict(activeLocation.state, activeLocation.district);
-    return list.slice(0, 6); // Top 6 sectors for quick chips
-  }, [activeLocation]);
-
-  const jumpToSector = (talukaName) => {
-    setActiveSector(talukaName);
-    if (talukaName === 'all') {
-      setPanOffset({ x: 0, y: 0 });
+  // Master Navigator: Centering, smooth panning, and zooming to ANY location in the selected city
+  const navigateToLocation = useCallback((targetLoc) => {
+    if (!targetLoc) {
       setZoomLevel(1);
+      setPanOffset({ x: 0, y: 0 });
+      setSelectedPoint(null);
+      setActiveSector('all');
       return;
     }
 
-    // Find city/sector coordinates in that taluka
-    const cities = getCitiesForDistrict(activeLocation.state, activeLocation.district);
-    const matched = cities.find(c => c.taluka === talukaName && c.coordinates);
-    if (matched?.coordinates) {
-      const pos = projectGpsToSvg(matched.coordinates.lat, matched.coordinates.lng, activeBounds);
-      // Pan to center that position
-      setPanOffset({
-        x: (500 - pos.x) * 0.7,
-        y: (325 - pos.y) * 0.7
-      });
-      setZoomLevel(1.6);
+    let point = null;
+    if (typeof targetLoc === 'string') {
+      point = allLocations.find(p =>
+        p.name?.toLowerCase() === targetLoc.toLowerCase() ||
+        p.city?.toLowerCase() === targetLoc.toLowerCase() ||
+        p.title?.toLowerCase() === targetLoc.toLowerCase()
+      ) || districtLocations.find(d => d.city?.toLowerCase() === targetLoc.toLowerCase());
     } else {
-      setZoomLevel(1.4);
+      point = targetLoc;
     }
-  };
 
-  // Google Maps Deep-Link Redirection (No external API needed in-app!)
+    if (!point) return;
+
+    const lat = point.lat ?? point.coordinates?.lat;
+    const lng = point.lng ?? point.coordinates?.lng;
+
+    if (typeof lat === 'number' && typeof lng === 'number') {
+      const pos = projectGpsToSvg(lat, lng, activeBounds);
+      // Center canvas directly on this point
+      setZoomLevel(1.85);
+      setPanOffset({
+        x: (500 - pos.x) * 1.85,
+        y: (325 - pos.y) * 1.85
+      });
+
+      const dist = calculateHaversineKm(currentCenter.lat, currentCenter.lng, lat, lng);
+      const dynamicEta = dist > 0 ? `${Math.max(3, Math.round(dist * 2.2))} min drive` : 'Immediate sector';
+
+      const normalized = {
+        id: point.id || `loc-${point.city || point.name}`,
+        category: point.category || 'locality',
+        type: point.type || 'locality',
+        name: point.name || point.city,
+        title: point.title || `${point.city || point.name} (${point.taluka || 'Sector'})`,
+        district: point.district || activeLocation.district,
+        taluka: point.taluka || '',
+        city: point.city || point.name,
+        pincode: point.pincode || '',
+        sub: point.sub || `Sector Station · PIN ${point.pincode || 'Active'} · ${dist > 0 ? `${dist} km away · ${dynamicEta}` : 'EOC Center'}`,
+        lat,
+        lng,
+        distanceKm: dist,
+        eta: dynamicEta,
+        team: point.team || `${activeLocation.district} Civil Defense Unit`,
+        services: point.services || ['Command Post', 'Relief Staging Base', 'Evacuation Staging']
+      };
+
+      setSelectedPoint(normalized);
+      setActiveSector(point.taluka || point.name);
+      setCursorCoords(`${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E`);
+      setToast(`📍 Focused on ${normalized.name} (${normalized.taluka || activeLocation.district})`);
+      setTimeout(() => setToast(''), 3000);
+    }
+  }, [allLocations, districtLocations, activeBounds, currentCenter, activeLocation]);
+
+  // When active location changes, reset and navigate to the selected city if specified
+  useEffect(() => {
+    setCursorCoords(`${currentCenter.lat.toFixed(4)}° N, ${currentCenter.lng.toFixed(4)}° E`);
+    if (activeLocation.city && activeLocation.city !== activeLocation.district) {
+      navigateToLocation(activeLocation.city);
+    } else {
+      setZoomLevel(1);
+      setPanOffset({ x: 0, y: 0 });
+      setActiveSector('all');
+      setSelectedPoint(null);
+    }
+  }, [activeLocation.district, activeLocation.city]);
+
+  // Google Maps Deep-Link Redirection
   const redirectToGoogleMaps = (lat, lng, title, fromHQ = false) => {
     const url = fromHQ
       ? `https://www.google.com/maps/dir/?api=1&origin=${activeHq.lat},${activeHq.lng}&destination=${lat},${lng}&travelmode=driving`
@@ -349,7 +378,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
     setTimeout(() => setToast(''), 3000);
   };
 
-  // Mouse / Touch Navigation
+  // Mouse / Touch Drag Navigation
   const handleMouseDown = (e) => {
     setIsDragging(true);
     setDragStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
@@ -374,11 +403,11 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
 
   const handleMouseUp = () => setIsDragging(false);
 
-  // Projected HQ point on the canvas
+  // Projected SVG coordinates
   const hqPos = projectGpsToSvg(activeHq.lat, activeHq.lng, activeBounds);
   const selectedPos = selectedPoint ? projectGpsToSvg(selectedPoint.lat, selectedPoint.lng, activeBounds) : null;
 
-  // Determine regional terrain styling
+  // Regional terrain style
   const isCoastal = (activeLocation.district || '').toLowerCase().includes('mumbai') ||
                     (activeLocation.district || '').toLowerCase().includes('thane') ||
                     (activeLocation.district || '').toLowerCase().includes('raigad');
@@ -387,38 +416,40 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
     <div
       className="ops-map tactical-nav-map"
       style={{
-        height: '560px',
+        height: '620px',
         position: 'relative',
         overflow: 'hidden',
         borderRadius: '20px',
         background: 'radial-gradient(ellipse at 50% 50%, #0c1a27 0%, #060e15 100%)',
-        border: '1px solid rgba(56, 189, 248, 0.2)',
-        boxShadow: '0 24px 60px rgba(0, 0, 0, 0.7)',
+        border: '1px solid rgba(56, 189, 248, 0.25)',
+        boxShadow: '0 24px 60px rgba(0, 0, 0, 0.75)',
         userSelect: 'none'
       }}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      {/* Tactical Top Toolbar with Live Location Switcher */}
+      {/* 1. Tactical Top Command Toolbar */}
       <div
         className="map-toolbar tactical-map-toolbar"
         style={{
-          zIndex: 20,
+          zIndex: 25,
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
-          padding: '12px 16px',
+          padding: '10px 16px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          background: 'linear-gradient(180deg, rgba(6,14,21,0.95) 0%, rgba(6,14,21,0.7) 80%, transparent 100%)',
-          backdropFilter: 'blur(10px)',
-          borderBottom: '1px solid rgba(56, 189, 248, 0.15)'
+          flexWrap: 'wrap',
+          gap: '8px',
+          background: 'linear-gradient(180deg, rgba(6,14,21,0.96) 0%, rgba(6,14,21,0.85) 90%, transparent 100%)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(56, 189, 248, 0.2)'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span className="live-dot pulse-green" />
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -430,184 +461,259 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
               <span style={{ fontSize: '10px', color: '#38bdf8', fontFamily: 'monospace' }}>
                 <Icons.Crosshair size={10} style={{ display: 'inline', marginRight: '3px' }} />
-                {cursorCoords}
+                {cursorCoords || `${currentCenter.lat.toFixed(4)}° N, ${currentCenter.lng.toFixed(4)}° E`}
               </span>
               <span style={{ fontSize: '9px', background: 'rgba(56,189,248,0.15)', color: '#7dd3fc', padding: '1px 6px', borderRadius: '4px', border: '1px solid rgba(56,189,248,0.3)' }}>
-                100% IN-HOUSE VECTOR ENGINE (NO THIRD-PARTY API)
+                {districtLocations.length} SECTOR LOCATIONS MAPPED
               </span>
             </div>
           </div>
         </div>
 
-        {/* Sector / Taluka Quick Jump Chips */}
-        <div className="sector-jump-chips" style={{ display: 'flex', gap: '6px' }}>
-          <button
-            type="button"
-            className={`sector-chip interactive ${activeSector === 'all' ? 'active' : ''}`}
-            onClick={() => jumpToSector('all')}
-            style={{
-              fontSize: '11px',
-              padding: '4px 10px',
-              borderRadius: '8px',
-              background: activeSector === 'all' ? 'rgba(56,189,248,0.25)' : 'rgba(15,23,42,0.6)',
-              color: activeSector === 'all' ? '#38bdf8' : '#94a3b8',
-              border: `1px solid ${activeSector === 'all' ? '#38bdf8' : 'rgba(255,255,255,0.08)'}`,
-              cursor: 'pointer'
-            }}
-          >
-            All Sectors
-          </button>
-          {availableTalukas.map(taluka => (
+        {/* City Location Navigator Dropdown: Instant jump to ANY location in this city */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(56,189,248,0.35)', borderRadius: '8px', padding: '4px 10px' }}>
+            <Icons.Navigation size={13} style={{ color: '#38bdf8' }} />
+            <select
+              className="interactive"
+              value={selectedPoint?.name || selectedPoint?.city || ''}
+              onChange={(e) => navigateToLocation(e.target.value)}
+              style={{
+                background: 'transparent',
+                color: '#f8fafc',
+                border: 'none',
+                fontSize: '11px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                outline: 'none',
+                maxWidth: '220px'
+              }}
+              title="Navigate directly to any locality or taluka of the selected city"
+            >
+              <option value="" style={{ background: '#091924', color: '#94a3b8' }}>
+                🎯 Jump to Location ({districtLocations.length} in {activeLocation.district})...
+              </option>
+              {districtLocations.map(loc => (
+                <option key={loc.city} value={loc.city} style={{ background: '#091924', color: '#f8fafc' }}>
+                  {loc.city} • {loc.taluka} {loc.pincode ? `(${loc.pincode})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Zoom & Reset Controls */}
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
             <button
               type="button"
-              key={taluka}
-              className={`sector-chip interactive ${activeSector === taluka ? 'active' : ''}`}
-              onClick={() => jumpToSector(taluka)}
+              className="interactive"
+              onClick={() => setRadarActive(r => !r)}
+              title="Toggle Radar Sweep"
               style={{
-                fontSize: '11px',
-                padding: '4px 10px',
+                background: radarActive ? 'rgba(16,185,129,0.2)' : 'rgba(15,23,42,0.6)',
+                color: radarActive ? '#10b981' : '#94a3b8',
+                border: '1px solid rgba(255,255,255,0.1)',
+                padding: '5px 8px',
                 borderRadius: '8px',
-                background: activeSector === taluka ? 'rgba(56,189,248,0.25)' : 'rgba(15,23,42,0.6)',
-                color: activeSector === taluka ? '#38bdf8' : '#94a3b8',
-                border: `1px solid ${activeSector === taluka ? '#38bdf8' : 'rgba(255,255,255,0.08)'}`,
+                fontSize: '11px',
                 cursor: 'pointer'
               }}
             >
-              {taluka}
+              <Icons.Radar size={13} />
             </button>
-          ))}
-        </div>
-
-        {/* Tactical Controls */}
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <button
-            type="button"
-            className="interactive"
-            onClick={() => setRadarActive(r => !r)}
-            title="Toggle Radar Sweep"
-            style={{
-              background: radarActive ? 'rgba(16,185,129,0.2)' : 'rgba(15,23,42,0.6)',
-              color: radarActive ? '#10b981' : '#94a3b8',
-              border: '1px solid rgba(255,255,255,0.1)',
-              padding: '6px 10px',
-              borderRadius: '8px',
-              fontSize: '11px',
-              cursor: 'pointer'
-            }}
-          >
-            <Icons.Radar size={13} style={{ display: 'inline', marginRight: '4px' }} />
-            Radar {radarActive ? 'ON' : 'OFF'}
-          </button>
-          <button
-            type="button"
-            className="interactive"
-            onClick={() => setZoomLevel(z => Math.min(2.5, z + 0.25))}
-            title="Zoom In"
-            style={{ background: 'rgba(15,23,42,0.6)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer' }}
-          >
-            +
-          </button>
-          <button
-            type="button"
-            className="interactive"
-            onClick={() => setZoomLevel(z => Math.max(0.75, z - 0.25))}
-            title="Zoom Out"
-            style={{ background: 'rgba(15,23,42,0.6)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer' }}
-          >
-            -
-          </button>
-          <button
-            type="button"
-            className="interactive"
-            onClick={() => {
-              setZoomLevel(1);
-              setPanOffset({ x: 0, y: 0 });
-              setActiveSector('all');
-              setSelectedPoint(null);
-            }}
-            title="Reset Map View"
-            style={{ background: 'rgba(15,23,42,0.6)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer' }}
-          >
-            <Icons.RotateCcw size={13} />
-          </button>
+            <button
+              type="button"
+              className="interactive"
+              onClick={() => setZoomLevel(z => Math.min(3.0, z + 0.3))}
+              title="Zoom In"
+              style={{ background: 'rgba(15,23,42,0.6)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '5px 9px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}
+            >
+              +
+            </button>
+            <button
+              type="button"
+              className="interactive"
+              onClick={() => setZoomLevel(z => Math.max(0.75, z - 0.3))}
+              title="Zoom Out"
+              style={{ background: 'rgba(15,23,42,0.6)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '5px 9px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}
+            >
+              -
+            </button>
+            <button
+              type="button"
+              className="interactive"
+              onClick={() => {
+                setZoomLevel(1);
+                setPanOffset({ x: 0, y: 0 });
+                setActiveSector('all');
+                setSelectedPoint(null);
+              }}
+              title="Reset to Full City Overview"
+              style={{ background: 'rgba(15,23,42,0.6)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '5px 9px', borderRadius: '8px', cursor: 'pointer' }}
+            >
+              <Icons.RotateCcw size={13} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Layer Filter Sub-Bar */}
-      <div style={{ position: 'absolute', top: '64px', left: '16px', zIndex: 19, display: 'flex', gap: '8px' }}>
+      {/* 2. Scrollable Quick-Nav Pill Strip for EVERY Location in Selected City */}
+      <div
+        className="city-locations-nav-strip"
+        style={{
+          position: 'absolute',
+          top: '56px',
+          left: '14px',
+          right: '14px',
+          zIndex: 22,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          overflowX: 'auto',
+          paddingBottom: '6px',
+          scrollbarWidth: 'none'
+        }}
+      >
+        <button
+          type="button"
+          className={`interactive ${!selectedPoint ? 'active' : ''}`}
+          onClick={() => {
+            setZoomLevel(1);
+            setPanOffset({ x: 0, y: 0 });
+            setSelectedPoint(null);
+            setActiveSector('all');
+          }}
+          style={{
+            flexShrink: 0,
+            fontSize: '11px',
+            fontWeight: '600',
+            padding: '4px 10px',
+            borderRadius: '999px',
+            background: !selectedPoint ? 'rgba(56,189,248,0.25)' : 'rgba(15,23,42,0.85)',
+            color: !selectedPoint ? '#38bdf8' : '#94a3b8',
+            border: `1px solid ${!selectedPoint ? '#38bdf8' : 'rgba(255,255,255,0.1)'}`,
+            cursor: 'pointer',
+            backdropFilter: 'blur(8px)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px'
+          }}
+        >
+          <Icons.Globe size={11} /> All {activeLocation.district} ({districtLocations.length})
+        </button>
+
+        {districtLocations.map(loc => {
+          const isSelected = selectedPoint?.name === loc.city || selectedPoint?.city === loc.city;
+          return (
+            <button
+              type="button"
+              key={loc.city}
+              className={`interactive ${isSelected ? 'active' : ''}`}
+              onClick={() => navigateToLocation(loc.city)}
+              style={{
+                flexShrink: 0,
+                fontSize: '11px',
+                fontWeight: isSelected ? '700' : '500',
+                padding: '4px 11px',
+                borderRadius: '999px',
+                background: isSelected ? 'rgba(16,185,129,0.3)' : 'rgba(15,23,42,0.85)',
+                color: isSelected ? '#34d399' : '#cbd5e1',
+                border: `1px solid ${isSelected ? '#10b981' : 'rgba(255,255,255,0.1)'}`,
+                cursor: 'pointer',
+                backdropFilter: 'blur(8px)',
+                boxShadow: isSelected ? '0 0 14px rgba(16,185,129,0.45)' : 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <span>📍</span>
+              <b>{loc.city}</b>
+              {loc.taluka && loc.taluka !== loc.city && (
+                <small style={{ color: isSelected ? '#a7f3d0' : '#94a3b8', fontSize: '9.5px' }}>
+                  ({loc.taluka})
+                </small>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 3. Layer Filter Sub-Bar */}
+      <div style={{ position: 'absolute', top: '96px', left: '16px', zIndex: 20, display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          className="interactive"
+          onClick={() => setActiveLayerFilters(f => ({ ...f, localities: !f.localities }))}
+          style={{
+            fontSize: '9.5px',
+            padding: '3px 8px',
+            borderRadius: '999px',
+            background: activeLayerFilters.localities ? 'rgba(6,182,212,0.2)' : 'rgba(15,23,42,0.8)',
+            border: `1px solid ${activeLayerFilters.localities ? '#06b6d4' : 'rgba(255,255,255,0.1)'}`,
+            color: activeLayerFilters.localities ? '#67e8f9' : '#64748b',
+            cursor: 'pointer'
+          }}
+        >
+          🎯 City Localities ({districtLocations.length})
+        </button>
         <button
           type="button"
           className="interactive"
           onClick={() => setActiveLayerFilters(f => ({ ...f, critical: !f.critical }))}
           style={{
-            fontSize: '10px',
-            padding: '4px 10px',
+            fontSize: '9.5px',
+            padding: '3px 8px',
             borderRadius: '999px',
-            background: activeLayerFilters.critical ? 'rgba(244,63,94,0.15)' : 'rgba(15,23,42,0.8)',
+            background: activeLayerFilters.critical ? 'rgba(244,63,94,0.2)' : 'rgba(15,23,42,0.8)',
             border: `1px solid ${activeLayerFilters.critical ? '#f43f5e' : 'rgba(255,255,255,0.1)'}`,
             color: activeLayerFilters.critical ? '#ff7070' : '#64748b',
             cursor: 'pointer'
           }}
         >
-          ● Critical Incidents
-        </button>
-        <button
-          type="button"
-          className="interactive"
-          onClick={() => setActiveLayerFilters(f => ({ ...f, warning: !f.warning }))}
-          style={{
-            fontSize: '10px',
-            padding: '4px 10px',
-            borderRadius: '999px',
-            background: activeLayerFilters.warning ? 'rgba(245,158,11,0.15)' : 'rgba(15,23,42,0.8)',
-            border: `1px solid ${activeLayerFilters.warning ? '#f59e0b' : 'rgba(255,255,255,0.1)'}`,
-            color: activeLayerFilters.warning ? '#fbbf24' : '#64748b',
-            cursor: 'pointer'
-          }}
-        >
-          ● Warning Incidents
+          🚨 Critical Hazards
         </button>
         <button
           type="button"
           className="interactive"
           onClick={() => setActiveLayerFilters(f => ({ ...f, shelters: !f.shelters }))}
           style={{
-            fontSize: '10px',
-            padding: '4px 10px',
+            fontSize: '9.5px',
+            padding: '3px 8px',
             borderRadius: '999px',
-            background: activeLayerFilters.shelters ? 'rgba(16,185,129,0.15)' : 'rgba(15,23,42,0.8)',
+            background: activeLayerFilters.shelters ? 'rgba(16,185,129,0.2)' : 'rgba(15,23,42,0.8)',
             border: `1px solid ${activeLayerFilters.shelters ? '#10b981' : 'rgba(255,255,255,0.1)'}`,
             color: activeLayerFilters.shelters ? '#34d399' : '#64748b',
             cursor: 'pointer'
           }}
         >
-          ● Safe Shelters
+          🏠 Safe Shelters
         </button>
         <button
           type="button"
           className="interactive"
           onClick={() => setActiveLayerFilters(f => ({ ...f, ngo: !f.ngo }))}
           style={{
-            fontSize: '10px',
-            padding: '4px 10px',
+            fontSize: '9.5px',
+            padding: '3px 8px',
             borderRadius: '999px',
-            background: activeLayerFilters.ngo ? 'rgba(168,85,247,0.15)' : 'rgba(15,23,42,0.8)',
+            background: activeLayerFilters.ngo ? 'rgba(168,85,247,0.2)' : 'rgba(15,23,42,0.8)',
             border: `1px solid ${activeLayerFilters.ngo ? '#a855f7' : 'rgba(255,255,255,0.1)'}`,
             color: activeLayerFilters.ngo ? '#c084fc' : '#64748b',
             cursor: 'pointer'
           }}
         >
-          ● NGO / Responders
+          🤝 NGOs & Rescue
         </button>
       </div>
 
-      {/* Main Interactive In-House SVG GIS Canvas */}
+      {/* 4. Main Interactive SVG Vector Canvas */}
       <div
         style={{
           width: '100%',
           height: '100%',
           cursor: isDragging ? 'grabbing' : 'grab',
-          position: 'relative'
+          position: 'relative',
+          paddingTop: '60px'
         }}
         onMouseDown={handleMouseDown}
       >
@@ -623,28 +729,25 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
           }}
         >
           <defs>
-            {/* Radar gradient sweep */}
             <radialGradient id="radarSweepGrad" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="rgba(56, 189, 248, 0.18)" />
               <stop offset="70%" stopColor="rgba(56, 189, 248, 0.05)" />
               <stop offset="100%" stopColor="transparent" />
             </radialGradient>
 
-            {/* Glowing water / river filter */}
             <filter id="riverGlow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
 
-            {/* Marker pulse glow */}
             <filter id="markerGlow" x="-40%" y="-40%" width="180%" height="180%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
           </defs>
 
-          {/* 1. Tactical Coordinate Grid Lines */}
-          <g className="grid-layer" opacity="0.18">
+          {/* Grid Lines */}
+          <g className="grid-layer" opacity="0.16">
             {[100, 200, 300, 400, 500, 600, 700, 800, 900].map(x => (
               <line key={`x-${x}`} x1={x} y1={0} x2={x} y2={650} stroke="#38bdf8" strokeWidth="0.75" strokeDasharray="3, 6" />
             ))}
@@ -653,20 +756,9 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
             ))}
           </g>
 
-          {/* 2. District Command Range Rings (5km, 10km, 15km radii) */}
-          <g className="range-rings" opacity="0.25">
-            <circle cx={hqPos.x} cy={hqPos.y} r={90} fill="none" stroke="#38bdf8" strokeWidth="1" strokeDasharray="4, 4" />
-            <circle cx={hqPos.x} cy={hqPos.y} r={180} fill="none" stroke="#38bdf8" strokeWidth="1" strokeDasharray="4, 4" />
-            <circle cx={hqPos.x} cy={hqPos.y} r={280} fill="none" stroke="#38bdf8" strokeWidth="1" strokeDasharray="4, 4" />
-            <text x={hqPos.x + 94} y={hqPos.y - 6} fill="#38bdf8" fontSize="9" fontFamily="monospace">5 KM RADIUS</text>
-            <text x={hqPos.x + 184} y={hqPos.y - 6} fill="#38bdf8" fontSize="9" fontFamily="monospace">10 KM RADIUS</text>
-            <text x={hqPos.x + 284} y={hqPos.y - 6} fill="#38bdf8" fontSize="9" fontFamily="monospace">15 KM BUFFER</text>
-          </g>
-
-          {/* 3. Regional Topography: Coastal or River/Inland Vector Maps */}
+          {/* Regional Topography: Coast or River */}
           {isCoastal ? (
             <g className="coastal-terrain">
-              {/* Arabian Sea coastline outline */}
               <path
                 d="M 120 0 C 140 180, 80 340, 220 520 C 260 570, 200 650, 180 650"
                 fill="none"
@@ -683,15 +775,11 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
                 opacity="0.7"
               />
               <text x="30" y="320" fill="#7dd3fc" fontSize="11" fontWeight="bold" letterSpacing="2" opacity="0.6" transform="rotate(-90 30 320)">
-                ~ ~ ARABIAN SEA COASTAL REACH ~ ~
+                ~ ~ COASTAL DISASTER SECTOR ~ ~
               </text>
-              {/* Western Express / Coastal Corridor */}
-              <path d="M 280 20 L 310 240 L 420 540 L 480 640" fill="none" stroke="#94a3b8" strokeWidth="4" strokeDasharray="8, 4" opacity="0.4" />
-              <text x="310" y="120" fill="#94a3b8" fontSize="9" opacity="0.5">WESTERN EXPRESS HIGHWAY</text>
             </g>
           ) : (
             <g className="river-basin">
-              {/* River water halo */}
               <path
                 d="M 50 180 Q 220 220, 360 270 T 580 280 T 780 320 T 960 300"
                 fill="none"
@@ -700,7 +788,6 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
                 opacity="0.22"
                 filter="url(#riverGlow)"
               />
-              {/* Core river stream */}
               <path
                 d="M 50 180 Q 220 220, 360 270 T 580 280 T 780 320 T 960 300"
                 fill="none"
@@ -709,22 +796,19 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
                 opacity="0.65"
               />
               <text x="320" y="255" fill="#7dd3fc" fontSize="10" fontWeight="bold" letterSpacing="1.5" opacity="0.65">
-                ~ ~ ~ REGIONAL DRAINAGE & WATERWAY CORRIDOR ~ ~ ~
+                ~ ~ REGIONAL DRAINAGE & WATERWAY CORRIDOR ~ ~
               </text>
-              {/* National Arterial Highway */}
-              <path d="M 80 50 L 260 220 L 420 460 L 680 620" fill="none" stroke="#94a3b8" strokeWidth="4" strokeDasharray="8, 4" opacity="0.4" />
-              <text x="110" y="90" fill="#94a3b8" fontSize="9" opacity="0.5" transform="rotate(38 110 90)">PRIMARY DISASTER TRANSIT CORRIDOR</text>
             </g>
           )}
 
-          {/* 4. Active Rotating Radar Sweep Animation */}
+          {/* Radar Sweep */}
           {radarActive && (
             <g className="radar-sweep" style={{ transformOrigin: `${hqPos.x}px ${hqPos.y}px` }}>
-              <circle cx={hqPos.x} cy={hqPos.y} r={320} fill="url(#radarSweepGrad)" opacity="0.4" />
+              <circle cx={hqPos.x} cy={hqPos.y} r={340} fill="url(#radarSweepGrad)" opacity="0.4" />
               <line
                 x1={hqPos.x}
                 y1={hqPos.y}
-                x2={hqPos.x + 320}
+                x2={hqPos.x + 340}
                 y2={hqPos.y}
                 stroke="#38bdf8"
                 strokeWidth="2"
@@ -742,7 +826,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
             </g>
           )}
 
-          {/* 5. Tactical Vector Line to Selected Target */}
+          {/* Vector Navigation Line to Selected Location Target */}
           {selectedPos && (
             <g className="route-vector">
               <line
@@ -750,39 +834,39 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
                 y1={hqPos.y}
                 x2={selectedPos.x}
                 y2={selectedPos.y}
-                stroke="#38bdf8"
+                stroke="#10b981"
                 strokeWidth="3"
                 strokeDasharray="6, 6"
                 opacity="0.9"
               >
                 <animate attributeName="stroke-dashoffset" from="30" to="0" dur="1s" repeatCount="indefinite" />
               </line>
-              {/* Mid-point Distance HUD Tag */}
+              {/* Midpoint route distance chip */}
               <rect
-                x={(hqPos.x + selectedPos.x) / 2 - 40}
+                x={(hqPos.x + selectedPos.x) / 2 - 45}
                 y={(hqPos.y + selectedPos.y) / 2 - 12}
-                width="80"
+                width="90"
                 height="22"
                 rx="6"
                 fill="#0f172a"
-                stroke="#38bdf8"
+                stroke="#10b981"
                 strokeWidth="1"
               />
               <text
                 x={(hqPos.x + selectedPos.x) / 2}
                 y={(hqPos.y + selectedPos.y) / 2 + 3}
-                fill="#38bdf8"
+                fill="#34d399"
                 fontSize="9"
                 fontFamily="monospace"
                 fontWeight="bold"
                 textAnchor="middle"
               >
-                GPS ROUTE
+                {selectedPoint.distanceKm !== undefined ? `${selectedPoint.distanceKm} KM` : 'GPS ROUTE'}
               </text>
             </g>
           )}
 
-          {/* 6. Command HQ Beacon for Active Area */}
+          {/* District Incident Command EOC HQ Point */}
           <g className="command-hq" transform={`translate(${hqPos.x}, ${hqPos.y})`}>
             <circle r="22" fill="rgba(56, 189, 248, 0.2)">
               <animate attributeName="r" values="16;32;16" dur="2.4s" repeatCount="indefinite" />
@@ -790,19 +874,19 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
             </circle>
             <circle r="12" fill="#0284c7" stroke="#ffffff" strokeWidth="2.5" />
             <polygon points="0,-7 6,4 -6,4" fill="#ffffff" />
-            <rect x="-85" y="16" width="170" height="20" rx="6" fill="rgba(15,23,42,0.9)" stroke="#38bdf8" strokeWidth="1" />
+            <rect x="-85" y="16" width="170" height="20" rx="6" fill="rgba(15,23,42,0.92)" stroke="#38bdf8" strokeWidth="1" />
             <text x="0" y="30" fill="#38bdf8" fontSize="8.5" fontWeight="bold" textAnchor="middle">
-              {activeLocation.district.toUpperCase()} COMMAND HQ
+              {activeLocation.district.toUpperCase()} COMMAND EOC
             </text>
           </g>
 
-          {/* 7. Live Disaster, Shelter & NGO Locations */}
+          {/* All Interactive City Locations, Shelters, Incidents & NGOs */}
           {visiblePoints.map(pt => {
             const pos = projectGpsToSvg(pt.lat, pt.lng, activeBounds);
-            const isSelected = selectedPoint?.id === pt.id;
+            const isSelected = selectedPoint?.id === pt.id || selectedPoint?.name === pt.name;
 
-            let mainColor = '#38bdf8';
-            let badgeBg = 'rgba(56,189,248,0.2)';
+            let mainColor = '#06b6d4';
+            let badgeBg = 'rgba(6,182,212,0.25)';
             let iconText = '📍';
 
             if (pt.type === 'critical') {
@@ -821,6 +905,10 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
               mainColor = '#a855f7';
               badgeBg = 'rgba(168,85,247,0.3)';
               iconText = '🤝';
+            } else if (pt.type === 'locality') {
+              mainColor = isSelected ? '#10b981' : '#38bdf8';
+              badgeBg = isSelected ? 'rgba(16,185,129,0.3)' : 'rgba(56,189,248,0.2)';
+              iconText = '🎯';
             }
 
             return (
@@ -830,64 +918,77 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
                 transform={`translate(${pos.x}, ${pos.y})`}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setSelectedPoint(pt);
+                  navigateToLocation(pt);
                 }}
                 style={{ cursor: 'pointer' }}
               >
-                {/* Outer radar ping ring */}
-                <circle r={isSelected ? 30 : 20} fill={badgeBg}>
-                  <animate attributeName="r" values="14;28;14" dur="2s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.7;0.1;0.7" dur="2s" repeatCount="indefinite" />
+                {/* Targeting Reticle around selected location */}
+                {isSelected && (
+                  <g className="targeting-reticle">
+                    <circle r="34" fill="none" stroke={mainColor} strokeWidth="1.5" strokeDasharray="5, 3">
+                      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="8s" repeatCount="indefinite" />
+                    </circle>
+                    <line x1="-40" y1="0" x2="-26" y2="0" stroke={mainColor} strokeWidth="2" />
+                    <line x1="26" y1="0" x2="40" y2="0" stroke={mainColor} strokeWidth="2" />
+                    <line x1="0" y1="-40" x2="0" y2="-26" stroke={mainColor} strokeWidth="2" />
+                    <line x1="0" y1="26" x2="0" y2="40" stroke={mainColor} strokeWidth="2" />
+                  </g>
+                )}
+
+                {/* Radar Ping */}
+                <circle r={isSelected ? 26 : 18} fill={badgeBg}>
+                  <animate attributeName="r" values="14;28;14" dur="2.2s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.7;0.1;0.7" dur="2.2s" repeatCount="indefinite" />
                 </circle>
 
-                {/* Pin head with border */}
+                {/* Pin Circle */}
                 <circle
-                  r={isSelected ? 16 : 13}
+                  r={isSelected ? 15 : 12}
                   fill={mainColor}
                   stroke="#ffffff"
-                  strokeWidth={isSelected ? 3 : 2}
+                  strokeWidth={isSelected ? 2.5 : 1.5}
                   filter="url(#markerGlow)"
                 />
 
-                {/* Marker Emoji / Symbol */}
+                {/* Pin Icon */}
                 <text
                   x="0"
                   y="4"
-                  fontSize={isSelected ? "13" : "11"}
+                  fontSize={isSelected ? "12" : "10"}
                   textAnchor="middle"
                   pointerEvents="none"
                 >
                   {iconText}
                 </text>
 
-                {/* Name & Metric Label Pill */}
-                <g transform="translate(0, 20)">
+                {/* Label Box */}
+                <g transform="translate(0, 18)">
                   <rect
-                    x="-70"
+                    x="-65"
                     y="0"
-                    width="140"
-                    height={pt.category === 'shelter' ? 28 : 18}
-                    rx="6"
+                    width="130"
+                    height={pt.category === 'shelter' ? 26 : 17}
+                    rx="5"
                     fill="rgba(15,23,42,0.92)"
-                    stroke={mainColor}
-                    strokeWidth="1"
+                    stroke={isSelected ? '#10b981' : mainColor}
+                    strokeWidth={isSelected ? 1.5 : 1}
                   />
                   <text
                     x="0"
-                    y="12"
-                    fill="#f8fafc"
-                    fontSize="9"
+                    y="11"
+                    fill={isSelected ? '#34d399' : '#f8fafc'}
+                    fontSize="8.5"
                     fontWeight="bold"
                     textAnchor="middle"
                   >
-                    {pt.name.length > 22 ? pt.name.substring(0, 20) + '...' : pt.name}
+                    {pt.name.length > 18 ? pt.name.substring(0, 16) + '..' : pt.name}
                   </text>
                   {pt.category === 'shelter' && (
                     <text
                       x="0"
-                      y="23"
+                      y="21"
                       fill="#34d399"
-                      fontSize="8"
+                      fontSize="7.5"
                       fontWeight="bold"
                       textAnchor="middle"
                     >
@@ -901,7 +1002,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
         </svg>
       </div>
 
-      {/* Bottom Floating Interactive Inspector & Direct Google Maps Redirection Drawer */}
+      {/* 5. Bottom Tactical Inspection & 1-Click Google Maps Navigation Drawer */}
       <AnimatePresence>
         {selectedPoint && (
           <motion.div
@@ -911,40 +1012,47 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             style={{
               position: 'absolute',
-              bottom: '16px',
-              left: '16px',
-              right: '16px',
-              zIndex: 30,
-              background: 'rgba(15, 23, 42, 0.95)',
+              bottom: '14px',
+              left: '14px',
+              right: '14px',
+              zIndex: 35,
+              background: 'rgba(15, 23, 42, 0.96)',
               backdropFilter: 'blur(20px)',
               border: `1px solid ${selectedPoint.type === 'safe' ? '#10b981' : selectedPoint.type === 'critical' ? '#f43f5e' : '#38bdf8'}`,
               borderRadius: '16px',
-              padding: '18px 22px',
-              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.7)'
+              padding: '16px 20px',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8)'
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div
                   style={{
-                    width: '38px',
-                    height: '38px',
+                    width: '40px',
+                    height: '40px',
                     borderRadius: '12px',
                     background: selectedPoint.type === 'safe' ? 'rgba(16,185,129,0.2)' : selectedPoint.type === 'critical' ? 'rgba(244,63,94,0.2)' : 'rgba(56,189,248,0.2)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '18px'
+                    fontSize: '20px'
                   }}
                 >
-                  {selectedPoint.category === 'shelter' ? '🏠' : selectedPoint.type === 'critical' ? '🚨' : selectedPoint.type === 'warning' ? '⚠️' : '🤝'}
+                  {selectedPoint.category === 'shelter' ? '🏠' : selectedPoint.type === 'critical' ? '🚨' : selectedPoint.type === 'warning' ? '⚠️' : selectedPoint.category === 'ngo' ? '🤝' : '🎯'}
                 </div>
                 <div>
-                  <span style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 'bold' }}>
-                    {selectedPoint.category} · GPS: {selectedPoint.lat}° N, {selectedPoint.lng}° E
-                  </span>
-                  <h4 style={{ margin: '2px 0 0 0', fontSize: '18px', color: '#f8fafc', fontWeight: '700' }}>
-                    {selectedPoint.title}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '10px', color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 'bold' }}>
+                      {selectedPoint.category?.toUpperCase()} · GPS: {selectedPoint.lat}° N, {selectedPoint.lng}° E
+                    </span>
+                    {selectedPoint.distanceKm !== undefined && (
+                      <span style={{ fontSize: '10px', background: 'rgba(16,185,129,0.2)', color: '#34d399', padding: '1px 6px', borderRadius: '4px', border: '1px solid rgba(16,185,129,0.3)' }}>
+                        {selectedPoint.distanceKm} km · {selectedPoint.eta}
+                      </span>
+                    )}
+                  </div>
+                  <h4 style={{ margin: '2px 0 0 0', fontSize: '17px', color: '#f8fafc', fontWeight: '700' }}>
+                    {selectedPoint.title || selectedPoint.name}
                   </h4>
                 </div>
               </div>
@@ -960,75 +1068,103 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
               </button>
             </div>
 
-            <p style={{ color: '#cbd5e1', fontSize: '13px', margin: '8px 0 12px 0', lineHeight: 1.5 }}>
+            <p style={{ color: '#cbd5e1', fontSize: '12.5px', margin: '6px 0 10px 0', lineHeight: 1.4 }}>
               {selectedPoint.sub}
             </p>
 
-            {/* Shelter Bed Availability Metrics */}
+            {/* Shelter Bed Metrics */}
             {selectedPoint.category === 'shelter' && (
-              <div style={{ background: 'rgba(16,185,129,0.12)', padding: '10px 14px', borderRadius: '10px', margin: '8px 0 12px 0', border: '1px solid rgba(16,185,129,0.25)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 'bold' }}>
+              <div style={{ background: 'rgba(16,185,129,0.12)', padding: '8px 12px', borderRadius: '8px', margin: '6px 0 10px 0', border: '1px solid rgba(16,185,129,0.25)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>
                     Available Bed Headroom: {selectedPoint.availableBeds} / {selectedPoint.capacity} Beds
                   </span>
-                  <span style={{ fontSize: '11px', background: '#10b981', color: '#ffffff', padding: '2px 8px', borderRadius: '999px', fontWeight: 'bold' }}>
+                  <span style={{ fontSize: '10px', background: '#10b981', color: '#ffffff', padding: '2px 8px', borderRadius: '999px', fontWeight: 'bold' }}>
                     {Math.round((selectedPoint.occupied / selectedPoint.capacity) * 100)}% Occupied
                   </span>
-                </div>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                  {selectedPoint.services?.map(x => (
-                    <span key={x} style={{ fontSize: '11px', color: '#e2e8f0', background: 'rgba(255,255,255,0.06)', padding: '3px 8px', borderRadius: '6px' }}>
-                      ✓ {x}
-                    </span>
-                  ))}
                 </div>
               </div>
             )}
 
-            {/* Action Bar: Google Maps Redirection (Universal Driving Navigation) */}
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* 1-Click Direct Google Maps Navigation Actions */}
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
               <button
                 type="button"
                 className="primary-button interactive"
-                onClick={() => redirectToGoogleMaps(selectedPoint.lat, selectedPoint.lng, selectedPoint.title, false)}
+                onClick={() => redirectToGoogleMaps(selectedPoint.lat, selectedPoint.lng, selectedPoint.title || selectedPoint.name, false)}
                 style={{
                   background: 'linear-gradient(135deg, #10b981, #059669)',
                   borderColor: '#34d399',
                   color: '#ffffff',
                   fontWeight: '600',
-                  padding: '9px 16px',
+                  padding: '8px 14px',
                   borderRadius: '10px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
                   cursor: 'pointer',
+                  fontSize: '12px',
                   boxShadow: '0 4px 18px rgba(16,185,129,0.3)'
                 }}
-                title="Opens live turn-by-turn driving directions in Google Maps from your current location"
+                title="Open live Google Maps driving navigation directly to this destination"
               >
-                <Icons.MapPin size={16} />
-                <span>Open in Google Maps & Start Navigation</span>
-                <Icons.ArrowUpRight size={14} />
+                <Icons.Navigation size={14} />
+                <span>Open in Google Maps & Start Driving Navigation</span>
+                <Icons.ArrowUpRight size={13} />
               </button>
 
               <button
                 type="button"
                 className="secondary-button interactive"
-                onClick={() => redirectToGoogleMaps(selectedPoint.lat, selectedPoint.lng, selectedPoint.title, true)}
+                onClick={() => redirectToGoogleMaps(selectedPoint.lat, selectedPoint.lng, selectedPoint.title || selectedPoint.name, true)}
                 style={{
                   background: 'rgba(255,255,255,0.05)',
                   color: '#e2e8f0',
                   border: '1px solid rgba(255,255,255,0.15)',
-                  padding: '9px 14px',
+                  padding: '8px 12px',
                   borderRadius: '10px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  fontSize: '12px'
                 }}
-                title="Opens Google Maps route originating from District Command EOC"
+                title="Route from District Incident Command EOC"
               >
-                <Icons.Compass size={15} /> Route from {activeLocation.district} EOC
+                <Icons.Compass size={14} /> Route from {activeLocation.district} EOC
+              </button>
+
+              {/* Set as Active Application Sector button */}
+              <button
+                type="button"
+                className="secondary-button interactive"
+                onClick={() => {
+                  switchLocation({
+                    state: activeLocation.state,
+                    district: activeLocation.district,
+                    taluka: selectedPoint.taluka || selectedPoint.name,
+                    city: selectedPoint.city || selectedPoint.name,
+                    pincode: selectedPoint.pincode,
+                    coordinates: { lat: selectedPoint.lat, lng: selectedPoint.lng }
+                  });
+                  setToast(`⚡ Application sector updated to ${selectedPoint.name}!`);
+                  setTimeout(() => setToast(''), 3000);
+                }}
+                style={{
+                  background: 'rgba(56,189,248,0.12)',
+                  color: '#38bdf8',
+                  border: '1px solid rgba(56,189,248,0.3)',
+                  padding: '8px 12px',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+                title="Sync this location globally so Shelters, Campaigns and Dashboard re-orient around it"
+              >
+                <Icons.CheckCircle2 size={14} /> Set as Active Sector
               </button>
 
               <button
@@ -1037,24 +1173,25 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
                 onClick={() => dispatchTeam(selectedPoint)}
                 style={{
                   background: 'rgba(255,255,255,0.05)',
-                  color: '#e2e8f0',
+                  color: '#cbd5e1',
                   border: '1px solid rgba(255,255,255,0.15)',
-                  padding: '9px 14px',
+                  padding: '8px 12px',
                   borderRadius: '10px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  fontSize: '12px'
                 }}
               >
-                <Icons.Siren size={15} /> Dispatch Unit
+                <Icons.Siren size={14} /> Dispatch Unit
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Real-time Notification Toast */}
+      {/* Real-time Toast Feedback */}
       {toast && (
         <div
           className="toast glass-panel"

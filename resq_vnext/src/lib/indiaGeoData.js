@@ -738,6 +738,47 @@ export const getDistrictCenter = (state, district) => {
   return DISTRICT_CENTERS["Pune"];
 };
 
+export const getDistrictBounds = (state, district) => {
+  const cities = getCitiesForDistrict(state, district);
+  const validCoords = cities
+    .map(c => c.coordinates)
+    .filter(c => c && typeof c.lat === 'number' && typeof c.lng === 'number');
+
+  if (validCoords.length > 0) {
+    let minLat = Infinity;
+    let maxLat = -Infinity;
+    let minLng = Infinity;
+    let maxLng = -Infinity;
+
+    validCoords.forEach(c => {
+      if (c.lat < minLat) minLat = c.lat;
+      if (c.lat > maxLat) maxLat = c.lat;
+      if (c.lng < minLng) minLng = c.lng;
+      if (c.lng > maxLng) maxLng = c.lng;
+    });
+
+    const latSpan = Math.max(maxLat - minLat, 0.14);
+    const lngSpan = Math.max(maxLng - minLng, 0.14);
+    const latPadding = Math.max(latSpan * 0.15, 0.04);
+    const lngPadding = Math.max(lngSpan * 0.15, 0.04);
+
+    return {
+      minLat: Number((minLat - latPadding).toFixed(4)),
+      maxLat: Number((maxLat + latPadding).toFixed(4)),
+      minLng: Number((minLng - lngPadding).toFixed(4)),
+      maxLng: Number((maxLng + lngPadding).toFixed(4))
+    };
+  }
+
+  const center = getDistrictCenter(state, district);
+  return {
+    minLat: Number((center.lat - 0.14).toFixed(4)),
+    maxLat: Number((center.lat + 0.14).toFixed(4)),
+    minLng: Number((center.lng - 0.14).toFixed(4)),
+    maxLng: Number((center.lng + 0.14).toFixed(4))
+  };
+};
+
 export const getCoordinatesForLocation = (state, district, taluka, city) => {
   const cities = getCitiesForDistrict(state, district);
   if (city) {
@@ -749,5 +790,30 @@ export const getCoordinatesForLocation = (state, district, taluka, city) => {
     if (matchTaluka?.coordinates) return matchTaluka.coordinates;
   }
   const fallback = getDistrictCenter(state, district);
+  if (city) {
+    let hash = 0;
+    for (let i = 0; i < city.length; i++) hash = ((hash << 5) - hash) + city.charCodeAt(i);
+    const offsetLat = ((Math.abs(hash) % 40) - 20) * 0.0035;
+    const offsetLng = (((Math.abs(hash >> 3)) % 40) - 20) * 0.0035;
+    return {
+      lat: Number((fallback.lat + offsetLat).toFixed(4)),
+      lng: Number((fallback.lng + offsetLng).toFixed(4))
+    };
+  }
   return { lat: fallback.lat, lng: fallback.lng };
 };
+
+export const getAllLocationsForDistrict = (state, district) => {
+  const cities = getCitiesForDistrict(state, district);
+  return cities.map(c => {
+    let coords = c.coordinates;
+    if (!coords) {
+      coords = getCoordinatesForLocation(state, district, c.taluka, c.city);
+    }
+    return {
+      ...c,
+      coordinates: coords
+    };
+  });
+};
+
