@@ -13,7 +13,7 @@ import { isCrisisActive } from './lib/crisisManager';
 import { GoogleOperationsMap } from './components/GoogleOperationsMap';
 import { DigitalTemperatureReader, LiveTemperatureNavPill } from './components/DigitalTemperatureReader';
 import { CitizenAiTriageAssistant } from './components/CitizenAiTriageAssistant';
-
+import { api } from './lib/apiClient';
 
 const ACTIVITY_KEY='resq_system_activity_v3';
 const PROFILE_KEY='resq_profile_v3';

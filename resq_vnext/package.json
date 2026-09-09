@@ -18,5 +18,8 @@
     "react-router-dom": "latest",
     "socket.io-client": "^4.8.3",
     "vite": "latest"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.10.0"
   }
 }
