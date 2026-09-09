@@ -4,33 +4,33 @@ import { api, getSocket } from '../lib/apiClient';
 export const roles = {
   citizen: {
     label: 'Citizen', accent: 'aqua',
-    permissions: ['view_alerts','request_help','track_request','view_campaigns','view_shelters','report_incident','family_safety','interface_preferences'],
+    permissions: ['view_alerts','request_help','track_request','view_campaigns','view_shelters','report_incident','family_safety','interface_preferences','use_ai_triage'],
     nav: [
-      ['Dashboard','/dashboard','home'], ['Emergency Help','/help','sos'], ['Report Incident','/incident','flag'],
+      ['Dashboard','/dashboard','home'], ['AI Triage Assistant','/triage','bot'], ['Emergency Help','/help','sos'], ['Report Incident','/incident','flag'],
       ['Alerts','/alerts','bell'], ['Campaigns','/campaigns','megaphone'], ['Shelters','/shelters','shelter'], ['Family Safety','/family','family'], ['Interface Preferences','/settings','settings']
     ]
   },
   ngo: {
     label: 'NGO / Volunteer', accent: 'amber',
-    permissions: ['view_alerts','view_campaigns','offer_help','manage_tasks','view_shelters','view_assigned_help','update_missions','interface_preferences'],
+    permissions: ['view_alerts','view_campaigns','offer_help','manage_tasks','view_shelters','view_assigned_help','update_missions','interface_preferences','use_ai_triage'],
     nav: [
-      ['Volunteer Dashboard','/dashboard','home'], ['Response Tasks','/requests','tasks'], ['My Missions','/missions','mission'],
+      ['Volunteer Dashboard','/dashboard','home'], ['AI Triage Assistant','/triage','bot'], ['Response Tasks','/requests','tasks'], ['My Missions','/missions','mission'],
       ['Alerts','/alerts','bell'], ['Campaigns','/campaigns','megaphone'], ['Shelters','/shelters','shelter'], ['My Impact','/impact','impact'], ['Interface Preferences','/settings','settings']
     ]
   },
   government: {
     label: 'Government Officer', accent: 'emerald',
-    permissions: ['view_alerts','broadcast_alert','verify_requests','view_shelters','manage_shelters','view_campaigns','manage_campaigns','view_reports','manage_incidents','view_live_map','manage_ngos','interface_preferences'],
+    permissions: ['view_alerts','broadcast_alert','verify_requests','view_shelters','manage_shelters','view_campaigns','manage_campaigns','view_reports','manage_incidents','view_live_map','manage_ngos','interface_preferences','use_ai_triage'],
     nav: [
-      ['Command Dashboard','/dashboard','home'], ['Live Incidents','/incidents','incident'], ['Requests','/requests','tasks'], ['Broadcast Alerts','/broadcast','megaphone'], ['Broadcast History','/broadcast-history','audit'],
+      ['Command Dashboard','/dashboard','home'], ['AI Triage Assistant','/triage','bot'], ['Live Incidents','/incidents','incident'], ['Requests','/requests','tasks'], ['Broadcast Alerts','/broadcast','megaphone'], ['Broadcast History','/broadcast-history','audit'],
       ['Campaigns','/campaigns','campaign'], ['Shelter Network','/shelters','shelter'], ['NGO Coordination','/ngo-coordination','ngo'], ['Analytics','/analytics','chart'], ['Interface Preferences','/settings','settings']
     ]
   },
   admin: {
     label: 'System Admin', accent: 'violet',
-    permissions: ['view_alerts','broadcast_alert','verify_requests','view_shelters','manage_shelters','view_campaigns','manage_campaigns','manage_users','view_reports','system_settings','audit_logs','manage_roles','interface_preferences'],
+    permissions: ['view_alerts','broadcast_alert','verify_requests','view_shelters','manage_shelters','view_campaigns','manage_campaigns','manage_users','view_reports','system_settings','audit_logs','manage_roles','interface_preferences','use_ai_triage'],
     nav: [
-      ['Admin Dashboard','/dashboard','home'], ['Users','/users','users'], ['Roles & Permissions','/permissions','shield'], ['Requests','/requests','tasks'],
+      ['Admin Dashboard','/dashboard','home'], ['AI Triage Assistant','/triage','bot'], ['Users','/users','users'], ['Roles & Permissions','/permissions','shield'], ['Requests','/requests','tasks'],
       ['Alerts','/alerts','bell'], ['Broadcast Alerts','/broadcast','megaphone'], ['Broadcast History','/broadcast-history','audit'], ['Audit Logs','/audit','audit'], ['Analytics','/analytics','chart'], ['Interface Preferences','/settings','settings']
     ]
   }
@@ -66,7 +66,7 @@ export function AuthProvider({ children }) {
 
   const login = (role, profileData = {}) => {
     const safeProfile = {
-      name: profileData.name?.trim() || `Demo ${roles[role].label}`,
+      name: profileData.name?.trim() || `${roles[role].label} Member`,
       email: profileData.email?.trim() || '',
       phone: profileData.phone?.trim() || '',
       country: profileData.country?.trim() || '',

@@ -33,6 +33,6 @@ export default function Landing() {
         {[['Citizen','Request help, track assistance, find shelters and receive location-aware advisories.','aqua',UsersRound],['NGO / Volunteer','Accept response tasks, coordinate supplies and support relief campaigns.','violet',HeartHandshake],['Government Officer','Verify requests, broadcast alerts, manage shelters and coordinate agencies.','amber',ShieldAlert],['System Admin','Manage roles, system settings, audit activity and response operations.','rose',ShieldAlert]].map(([title,desc,accent,Icon],i)=><motion.button key={title} className={`role-card ${accent}`} onClick={() => navigate('/login')} whileHover={{y:-5}}><div className="role-icon"><Icon size={19}/></div><span>{String(i+1).padStart(2,'0')}</span><h4>{title}</h4><p>{desc}</p><b>Continue <ArrowRight size={15}/></b></motion.button>)}
       </div>
     </section>
-    <footer className="landing-footer"><span>RESQ · Concept UI for disaster management & relief coordination</span><button onClick={() => navigate('/login')}>Demo login <ArrowRight size={14}/></button></footer>
+    <footer className="landing-footer"><span>Rakshak · National Disaster Resilience &amp; Emergency Response Coordination (रक्षक)</span><button onClick={() => navigate('/login')}>Sign in <ArrowRight size={14}/></button></footer>
   </div>;
 }
