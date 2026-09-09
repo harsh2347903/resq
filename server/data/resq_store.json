@@ -2,10 +2,10 @@
   "crisisState": {
     "active": false,
     "defcon": "DEFCON 5 · NORMAL MONITORING",
-    "activatedAt": 1788933780908,
-    "activatedBy": "Officer Deshmukh",
+    "activatedAt": 1788937761280,
+    "activatedBy": "Harshal",
     "role": "government",
-    "reason": "Catastrophic Mula-Mutha flood wave",
+    "reason": "State-level Emergency Crisis Protocol Triggered",
     "currentScenario": {
       "id": "scen-1",
       "code": "EVAC-01",
@@ -17,139 +17,306 @@
       "actionLabel": "View Safe Shelters",
       "actionRoute": "/shelters"
     },
-    "updatedAt": "2026-09-09T06:03:00.922Z",
-    "stoodDownAt": 1788933780922,
-    "stoodDownBy": "Officer Deshmukh"
+    "updatedAt": "2026-09-09T07:09:41.612Z",
+    "stoodDownAt": 1788937781612,
+    "stoodDownBy": "Harshal"
   },
   "incidents": [
     {
-      "type": "Flash Flood",
-      "location": "Mutha Right Bank Km 12",
+      "type": "Fire",
+      "location": "MIDC Industrial Corridor · Kurkumbh",
+      "coordinates": {
+        "lat": 18.4419,
+        "lng": 74.5298
+      },
       "severity": "Critical",
-      "affected": "1+",
+      "affected": "3,000+",
       "reports": 1,
       "status": "Active",
-      "details": "",
-      "reporter": "Commander Kulkarni",
-      "reportedAt": "2026-09-09T06:07:13.944Z",
-      "id": "INC-3944",
-      "createdAt": "2026-09-09T06:07:13.944Z"
+      "details": "NASA FIRMS / ISRO Bhuvan Fire Watch warning: Industrial Chemical Vapor Fire (High Radiative Heat flux (>85MW)). Dispatch Foam Crash Tenders and respiratory mask distribution.",
+      "reporter": "Automated Sensor Grid (NASA FIRMS / ISRO Bhuvan Fire Watch)",
+      "reportedAt": "2026-09-09T06:54:19.936Z",
+      "id": "INC-9936",
+      "createdAt": "2026-09-09T06:54:19.936Z"
+    },
+    {
+      "type": "Fire",
+      "location": "MIDC Industrial Corridor · Kurkumbh",
+      "coordinates": {
+        "lat": 18.4419,
+        "lng": 74.5298
+      },
+      "severity": "Critical",
+      "affected": "3,000+",
+      "reports": 1,
+      "status": "Active",
+      "details": "NASA FIRMS / ISRO Bhuvan Fire Watch warning: Industrial Chemical Vapor Fire (High Radiative Heat flux (>85MW)). Dispatch Foam Crash Tenders and respiratory mask distribution.",
+      "reporter": "Automated Sensor Grid (NASA FIRMS / ISRO Bhuvan Fire Watch)",
+      "reportedAt": "2026-09-09T06:54:19.106Z",
+      "id": "INC-9106",
+      "createdAt": "2026-09-09T06:54:19.106Z"
+    },
+    {
+      "type": "Flood",
+      "location": "Western Maharashtra · Mula-Mutha Basin",
+      "coordinates": {
+        "lat": 18.5204,
+        "lng": 73.8567
+      },
+      "severity": "Critical",
+      "affected": "3,000+",
+      "reports": 1,
+      "status": "Active",
+      "details": "IMD (India Meteorological Dept) warning: Flash Flood & Cloudburst Advisory (Red Warning (+120mm/hr)). Enforce riverbank clearance; mobilize NDRF rubberized watercraft.",
+      "reporter": "Automated Sensor Grid (IMD (India Meteorological Dept))",
+      "reportedAt": "2026-09-09T06:54:17.846Z",
+      "id": "INC-7846",
+      "createdAt": "2026-09-09T06:54:17.847Z"
+    },
+    {
+      "type": "Flood",
+      "location": "Western Maharashtra · Mula-Mutha Basin",
+      "coordinates": {
+        "lat": 18.5204,
+        "lng": 73.8567
+      },
+      "severity": "Critical",
+      "affected": "3,000+",
+      "reports": 1,
+      "status": "Active",
+      "details": "IMD (India Meteorological Dept) warning: Flash Flood & Cloudburst Advisory (Red Warning (+120mm/hr)). Enforce riverbank clearance; mobilize NDRF rubberized watercraft.",
+      "reporter": "Automated Sensor Grid (IMD (India Meteorological Dept))",
+      "reportedAt": "2026-09-09T06:54:12.577Z",
+      "id": "INC-2577",
+      "createdAt": "2026-09-09T06:54:12.577Z"
+    },
+    {
+      "type": "Flood",
+      "location": "Western Maharashtra · Mula-Mutha Basin",
+      "coordinates": {
+        "lat": 18.5204,
+        "lng": 73.8567
+      },
+      "severity": "Critical",
+      "affected": "3,000+",
+      "reports": 1,
+      "status": "Active",
+      "details": "IMD (India Meteorological Dept) warning: Flash Flood & Cloudburst Advisory (Red Warning (+120mm/hr)). Enforce riverbank clearance; mobilize NDRF rubberized watercraft.",
+      "reporter": "Automated Sensor Grid (IMD (India Meteorological Dept))",
+      "reportedAt": "2026-09-09T06:45:13.980Z",
+      "id": "INC-3980",
+      "createdAt": "2026-09-09T06:45:13.980Z"
     },
     {
       "id": "INC-077",
       "type": "Flood",
       "location": "Pune • Mula-Mutha basin",
+      "coordinates": {
+        "lat": 18.5204,
+        "lng": 73.8567
+      },
       "severity": "Critical",
       "affected": "2,482",
       "reports": 46,
       "status": "Active",
-      "reportedAt": "2026-09-09T05:02:07.192Z"
+      "reportedAt": "2026-09-09T05:44:34.872Z"
     },
     {
       "id": "INC-076",
       "type": "Landslide",
       "location": "Lonavala • Old Mumbai Rd",
+      "coordinates": {
+        "lat": 18.7546,
+        "lng": 73.4062
+      },
       "severity": "High",
       "affected": "218",
       "reports": 18,
       "status": "Response",
-      "reportedAt": "2026-09-09T04:02:07.193Z"
+      "reportedAt": "2026-09-09T04:44:34.873Z"
     },
     {
       "id": "INC-075",
       "type": "Fire",
-      "location": "Nashik • MIDC",
+      "location": "Nashik • MIDC Industrial Zone",
+      "coordinates": {
+        "lat": 19.9975,
+        "lng": 73.7898
+      },
       "severity": "High",
       "affected": "624",
       "reports": 11,
       "status": "Containment",
-      "reportedAt": "2026-09-09T02:02:07.193Z"
+      "reportedAt": "2026-09-09T02:44:34.873Z"
     },
     {
       "id": "INC-074",
       "type": "Heatwave",
       "location": "Nagpur • Central zone",
+      "coordinates": {
+        "lat": 21.1458,
+        "lng": 79.0882
+      },
       "severity": "Medium",
       "affected": "5,870",
       "reports": 92,
       "status": "Monitoring",
-      "reportedAt": "2026-09-08T22:02:07.193Z"
+      "reportedAt": "2026-09-08T22:44:34.873Z"
     }
   ],
   "requests": [
     {
-      "citizen": "Ramesh K",
-      "type": "Evacuation",
-      "location": "Katraj Ghat Tunnel",
+      "citizen": "SMS Requester (9999)",
+      "type": "Flood",
+      "location": "DHAYARI",
+      "coordinates": {
+        "lat": 18.4485,
+        "lng": 73.8062
+      },
       "priority": "Critical",
-      "status": "Assigned",
-      "team": "NDRF Unit 09",
-      "time": "11:37",
-      "phone": "",
-      "details": "",
-      "createdAt": "2026-09-09T06:07:13.957Z",
-      "id": "REQ-3957",
-      "updatedAt": "2026-09-09T06:07:13.966Z"
+      "status": "Accepted",
+      "team": "Harshal",
+      "time": "12:15",
+      "phone": "+919822099999",
+      "details": "[VIA SMS GATEWAY] SOS FLOOD DHAYARI 6 TRAPPED water rising rapidly",
+      "triage": {
+        "urgency": "Critical",
+        "category": "Flood",
+        "estimatedPersons": 1,
+        "tags": [
+          "Immediate-Life-Threat",
+          "Flood"
+        ],
+        "requiredEquipment": [
+          "Inflatable Zodiac Boat",
+          "High-Buoyancy Life Vests",
+          "Hydraulic Rescue Spreader (Jaws of Life)",
+          "Acoustic Search Sensor"
+        ],
+        "summary": "Triage (Critical): Flood assistance requested. Estimated 1 person(s). Units needed: Inflatable Zodiac Boat.",
+        "processedAt": "2026-09-09T06:45:00.066Z"
+      },
+      "createdAt": "2026-09-09T06:45:00.093Z",
+      "id": "REQ-0093",
+      "updatedAt": "2026-09-09T06:58:07.802Z"
     },
     {
       "id": "RQ-1048",
       "citizen": "Asha K.",
       "type": "Medical",
       "location": "Kothrud",
+      "coordinates": {
+        "lat": 18.5074,
+        "lng": 73.8077
+      },
       "priority": "Critical",
       "status": "Assigned",
       "team": "Red Cross Unit 03",
       "time": "09:41",
       "phone": "+91 98220 11223",
-      "createdAt": "2026-09-09T05:32:07.193Z"
+      "triage": {
+        "urgency": "Critical",
+        "tags": [
+          "Cardiac-Risk",
+          "Oxygen-Required"
+        ],
+        "estimatedPersons": 1
+      },
+      "createdAt": "2026-09-09T06:14:34.873Z"
     },
     {
       "id": "RQ-1047",
       "citizen": "Rohit M.",
       "type": "Food",
       "location": "Warje",
+      "coordinates": {
+        "lat": 18.4795,
+        "lng": 73.8005
+      },
       "priority": "High",
       "status": "In transit",
       "team": "Seva Volunteers",
       "time": "09:36",
       "phone": "+91 98220 44556",
-      "createdAt": "2026-09-09T05:22:07.193Z"
+      "triage": {
+        "urgency": "High",
+        "tags": [
+          "Ration-Kit",
+          "Children-4"
+        ],
+        "estimatedPersons": 5
+      },
+      "createdAt": "2026-09-09T06:04:34.873Z"
     },
     {
       "id": "RQ-1046",
       "citizen": "Nikita P.",
       "type": "Evacuation",
       "location": "Dhayari",
+      "coordinates": {
+        "lat": 18.4485,
+        "lng": 73.8062
+      },
       "priority": "High",
       "status": "Verified",
       "team": "Fire Response 2",
       "time": "09:29",
       "phone": "+91 98220 77889",
-      "createdAt": "2026-09-09T05:02:07.193Z"
+      "triage": {
+        "urgency": "High",
+        "tags": [
+          "Flood-Rooftop",
+          "Boat-Needed"
+        ],
+        "estimatedPersons": 3
+      },
+      "createdAt": "2026-09-09T05:44:34.873Z"
     },
     {
       "id": "RQ-1045",
       "citizen": "Aman S.",
       "type": "Missing family",
       "location": "Sinhagad Rd",
+      "coordinates": {
+        "lat": 18.49,
+        "lng": 73.82
+      },
       "priority": "Medium",
       "status": "Open",
       "team": "—",
       "time": "09:23",
       "phone": "+91 98220 99001",
-      "createdAt": "2026-09-09T04:42:07.193Z"
+      "triage": {
+        "urgency": "Medium",
+        "tags": [
+          "Reunification"
+        ],
+        "estimatedPersons": 2
+      },
+      "createdAt": "2026-09-09T05:24:34.873Z"
     },
     {
       "id": "RQ-1044",
       "citizen": "Rhea T.",
       "type": "Water",
       "location": "Pashan",
+      "coordinates": {
+        "lat": 18.5412,
+        "lng": 73.7929
+      },
       "priority": "Medium",
       "status": "Open",
       "team": "—",
       "time": "09:16",
       "phone": "+91 98220 33445",
-      "createdAt": "2026-09-09T04:22:07.193Z"
+      "triage": {
+        "urgency": "Medium",
+        "tags": [
+          "Potable-Water"
+        ],
+        "estimatedPersons": 4
+      },
+      "createdAt": "2026-09-09T05:04:34.873Z"
     }
   ],
   "alerts": [
@@ -195,13 +362,18 @@
       "id": 1,
       "name": "Shivaji Sports Complex",
       "city": "Pune",
-      "address": "Pune, Maharashtra",
+      "address": "Shivaji Nagar, Pune",
+      "coordinates": {
+        "lat": 18.5314,
+        "lng": 73.8446
+      },
       "capacity": 850,
       "occupied": 642,
       "services": [
         "Food",
         "Medical",
-        "Childcare"
+        "Childcare",
+        "Bedding"
       ],
       "eta": "12 min",
       "open": true
@@ -211,12 +383,17 @@
       "name": "Bharati Vidyapeeth Hall",
       "city": "Pune",
       "address": "Katraj, Pune",
+      "coordinates": {
+        "lat": 18.4575,
+        "lng": 73.8508
+      },
       "capacity": 520,
       "occupied": 301,
       "services": [
         "Food",
         "Power",
-        "Wi-Fi"
+        "Wi-Fi",
+        "First Aid"
       ],
       "eta": "19 min",
       "open": true
@@ -225,7 +402,11 @@
       "id": 3,
       "name": "ZP School Relief Centre",
       "city": "Satara",
-      "address": "Satara, Maharashtra",
+      "address": "Satara Main Road, Satara",
+      "coordinates": {
+        "lat": 17.6805,
+        "lng": 74.0183
+      },
       "capacity": 340,
       "occupied": 238,
       "services": [
@@ -240,13 +421,18 @@
       "id": 4,
       "name": "Nehru Stadium Transit Camp",
       "city": "Nagpur",
-      "address": "Nagpur, Maharashtra",
+      "address": "Civil Lines, Nagpur",
+      "coordinates": {
+        "lat": 21.1458,
+        "lng": 79.0882
+      },
       "capacity": 1100,
       "occupied": 924,
       "services": [
         "Food",
         "Medical",
-        "Charging"
+        "Charging",
+        "Sanitation"
       ],
       "eta": "44 min",
       "open": true
@@ -256,6 +442,10 @@
       "name": "Aundh Community Hall",
       "city": "Pune",
       "address": "Aundh, Pune",
+      "coordinates": {
+        "lat": 18.559,
+        "lng": 73.807
+      },
       "capacity": 430,
       "occupied": 176,
       "services": [
@@ -335,6 +525,10 @@
       "name": "Meera P.",
       "skill": "First Aid",
       "area": "Pune",
+      "coordinates": {
+        "lat": 18.5204,
+        "lng": 73.8567
+      },
       "status": "Available",
       "missions": 18
     },
@@ -343,6 +537,10 @@
       "name": "Arjun S.",
       "skill": "Logistics",
       "area": "Satara",
+      "coordinates": {
+        "lat": 17.6805,
+        "lng": 74.0183
+      },
       "status": "On mission",
       "missions": 31
     },
@@ -351,26 +549,316 @@
       "name": "Sara K.",
       "skill": "Translation",
       "area": "Pune",
+      "coordinates": {
+        "lat": 18.5314,
+        "lng": 73.8446
+      },
       "status": "Available",
       "missions": 11
     },
     {
       "id": "VOL-412",
       "name": "Kabir R.",
-      "skill": "Driving",
+      "skill": "Boat / Driving",
       "area": "Pune",
-      "status": "On mission",
+      "coordinates": {
+        "lat": 18.5074,
+        "lng": 73.8077
+      },
+      "status": "Available",
       "missions": 24
     }
   ],
   "audits": [
+    {
+      "id": "aud-1788939843028-bafy",
+      "time": "13:14",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T07:44:03.028Z",
+      "previousHash": "b966e860a22c4e425657b1b7dcb5de26ecd1a88d07cbfe763cdfefee48f605b9",
+      "hash": "0c3d97ba0464e2b0aebbdcda62635dab06b5c235885ae1f92572fe716d92d0f4"
+    },
+    {
+      "id": "aud-1788939777152-9lhj",
+      "time": "13:12",
+      "actor": "Harshal",
+      "action": "Harshal signed in as System Admin (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T07:42:57.152Z",
+      "previousHash": "98407dff7ed0bf2556cc20b94f981802536d6edc46444f83a98efc2103efc38d",
+      "hash": "b966e860a22c4e425657b1b7dcb5de26ecd1a88d07cbfe763cdfefee48f605b9"
+    },
+    {
+      "id": "aud-1788939726481-w9b1",
+      "time": "13:12",
+      "actor": "Harshal",
+      "action": "Harshal signed in as NGO / Volunteer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T07:42:06.480Z",
+      "previousHash": "b30277239f9ea4d076bd9df4922c7ceb75ba17728c02bd26c08742f693086f60",
+      "hash": "98407dff7ed0bf2556cc20b94f981802536d6edc46444f83a98efc2103efc38d"
+    },
+    {
+      "id": "aud-1788939495433-c7yq",
+      "time": "13:08",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Nagpur City, Nagpur)",
+      "severity": "info",
+      "timestamp": "2026-09-09T07:38:15.432Z",
+      "previousHash": "cf888e8ae0d318842ef36cd32e9b61b636913cc61346c73128a624514eb4bd82",
+      "hash": "b30277239f9ea4d076bd9df4922c7ceb75ba17728c02bd26c08742f693086f60"
+    },
+    {
+      "id": "aud-1788939071728-rt3t",
+      "time": "13:01",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T07:31:11.727Z",
+      "previousHash": "5a8e67dc89a4d37c73a691b490bcd775280429b19841521bd781d15f6355a4c5",
+      "hash": "cf888e8ae0d318842ef36cd32e9b61b636913cc61346c73128a624514eb4bd82"
+    },
+    {
+      "id": "aud-1788937781612-sqdg",
+      "time": "12:39",
+      "actor": "Harshal",
+      "action": "🟢 EMERGENCY CRISIS STOOD DOWN by Harshal (GOVERNMENT)",
+      "severity": "info",
+      "timestamp": "2026-09-09T07:09:41.612Z",
+      "previousHash": "78b8226eb835ae5d0b78e6565abc8df1e6d0488eee13d307a2ca46bff5d5a661",
+      "hash": "5a8e67dc89a4d37c73a691b490bcd775280429b19841521bd781d15f6355a4c5"
+    },
+    {
+      "id": "aud-1788937781604-011k",
+      "time": "12:39",
+      "actor": "Harshal",
+      "action": "🟢 EMERGENCY CRISIS STOOD DOWN by Harshal (GOVERNMENT)",
+      "severity": "info",
+      "timestamp": "2026-09-09T07:09:41.603Z",
+      "previousHash": "34bdb2df0d7697084804e2fc9dbe31b8cc8e6866dc4030bab8e0e42b186c5710",
+      "hash": "78b8226eb835ae5d0b78e6565abc8df1e6d0488eee13d307a2ca46bff5d5a661"
+    },
+    {
+      "id": "aud-1788937761280-2jdl",
+      "time": "12:39",
+      "actor": "Harshal",
+      "action": "🚨 CODE RED CRISIS TRIGGERED by Harshal (GOVERNMENT)",
+      "severity": "critical",
+      "timestamp": "2026-09-09T07:09:21.280Z",
+      "previousHash": "fa8f7ef4bc7c86c37024dd769ac5283c98ff023bf27cfa294b8f1175006f4134",
+      "hash": "34bdb2df0d7697084804e2fc9dbe31b8cc8e6866dc4030bab8e0e42b186c5710"
+    },
+    {
+      "id": "aud-1788937761274-a1vx",
+      "time": "12:39",
+      "actor": "Harshal",
+      "action": "🚨 CODE RED CRISIS TRIGGERED by Harshal (GOVERNMENT)",
+      "severity": "critical",
+      "timestamp": "2026-09-09T07:09:21.273Z",
+      "previousHash": "2ffcb27bf9f38ad8b7c22b2df9fea6a7ce56e24a61892341383819c97bb5cb75",
+      "hash": "fa8f7ef4bc7c86c37024dd769ac5283c98ff023bf27cfa294b8f1175006f4134"
+    },
+    {
+      "id": "aud-1788937551299-v3n9",
+      "time": "12:35",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T07:05:51.298Z",
+      "previousHash": "3709bf6b4033ae6bbbe7f4c439b671729641554621e97cb8c49e9c98e6965bcd",
+      "hash": "2ffcb27bf9f38ad8b7c22b2df9fea6a7ce56e24a61892341383819c97bb5cb75"
+    },
+    {
+      "id": "aud-1788937380714-f7cf",
+      "time": "12:33",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T07:03:00.714Z",
+      "previousHash": "f543f361e0fe7bad961d01df4d369afe67a2e67def53ec7b4b989ac0157a7f3c",
+      "hash": "3709bf6b4033ae6bbbe7f4c439b671729641554621e97cb8c49e9c98e6965bcd"
+    },
+    {
+      "id": "aud-1788937217380-nqcy",
+      "time": "12:30",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T07:00:17.380Z",
+      "previousHash": "4bac4bf864bbae589a2dc4d9322c8c9309be440bd6d685187deb6cf449b6685e",
+      "hash": "f543f361e0fe7bad961d01df4d369afe67a2e67def53ec7b4b989ac0157a7f3c"
+    },
+    {
+      "id": "aud-1788937107953-a0d4",
+      "time": "12:28",
+      "actor": "Harshal",
+      "action": "Harshal signed in as System Admin (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T06:58:27.952Z",
+      "previousHash": "d6483f9d4a838228ea3f1c1e9e32464503e5f919ddd93b37ca24c29718eca2bb",
+      "hash": "4bac4bf864bbae589a2dc4d9322c8c9309be440bd6d685187deb6cf449b6685e"
+    },
+    {
+      "id": "aud-1788937087803-nwsn",
+      "time": "12:28",
+      "actor": "Harshal",
+      "action": "Request REQ-0093 marked as Accepted",
+      "severity": "info",
+      "timestamp": "2026-09-09T06:58:07.802Z",
+      "previousHash": "e1724eaaa416c658533cdb243590c4ceaa67a42ac1bc4980d40bdb0ec8ba623b",
+      "hash": "d6483f9d4a838228ea3f1c1e9e32464503e5f919ddd93b37ca24c29718eca2bb"
+    },
+    {
+      "id": "aud-1788937070007-9t4t",
+      "time": "12:27",
+      "actor": "Harshal",
+      "action": "Harshal signed in as NGO / Volunteer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T06:57:50.006Z",
+      "previousHash": "d3ac376815fa404b0956f040b9cf27379627f6bce3593391fc4281aae70dfe6f",
+      "hash": "e1724eaaa416c658533cdb243590c4ceaa67a42ac1bc4980d40bdb0ec8ba623b"
+    },
+    {
+      "id": "aud-1788937035252-0h23",
+      "time": "12:27",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T06:57:15.251Z",
+      "previousHash": "2429deeebe7ac59f9cd759f35331324abbe29fd5329afe805a1c574f951650cd",
+      "hash": "d3ac376815fa404b0956f040b9cf27379627f6bce3593391fc4281aae70dfe6f"
+    },
+    {
+      "id": "aud-1788936947138-se08",
+      "time": "12:25",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T06:55:47.137Z",
+      "previousHash": "2e98d5ec9f1058d435bb56bca1ad7ff59103b8d5c1807ac16c992561539e40b8",
+      "hash": "2429deeebe7ac59f9cd759f35331324abbe29fd5329afe805a1c574f951650cd"
+    },
+    {
+      "id": "aud-1788936859937-redc",
+      "time": "12:24",
+      "actor": "NASA FIRMS / ISRO Bhuvan Fire Watch",
+      "action": "🛰️ Automated Threat Ingestion: Industrial Chemical Vapor Fire created Incident #INC-9936",
+      "severity": "critical",
+      "timestamp": "2026-09-09T06:54:19.936Z",
+      "previousHash": "b6a62dac046a240bd8a0613e99755e6c23490113c8db9506887adda3d5d6f55b",
+      "hash": "2e98d5ec9f1058d435bb56bca1ad7ff59103b8d5c1807ac16c992561539e40b8"
+    },
+    {
+      "id": "aud-1788936859107-pfnv",
+      "time": "12:24",
+      "actor": "NASA FIRMS / ISRO Bhuvan Fire Watch",
+      "action": "🛰️ Automated Threat Ingestion: Industrial Chemical Vapor Fire created Incident #INC-9106",
+      "severity": "critical",
+      "timestamp": "2026-09-09T06:54:19.106Z",
+      "previousHash": "7133f0d5840075668c851cc398a7ca23375488e90aac025cb0d15eab849a69d8",
+      "hash": "b6a62dac046a240bd8a0613e99755e6c23490113c8db9506887adda3d5d6f55b"
+    },
+    {
+      "id": "aud-1788936857847-td16",
+      "time": "12:24",
+      "actor": "IMD (India Meteorological Dept)",
+      "action": "🛰️ Automated Threat Ingestion: Flash Flood & Cloudburst Advisory created Incident #INC-7846",
+      "severity": "critical",
+      "timestamp": "2026-09-09T06:54:17.847Z",
+      "previousHash": "287c79cfb60b2e8d71791ab1a8831f7586f75f6d0891d0d26b6f4edc901f5e26",
+      "hash": "7133f0d5840075668c851cc398a7ca23375488e90aac025cb0d15eab849a69d8"
+    },
+    {
+      "id": "aud-1788936852578-pigj",
+      "time": "12:24",
+      "actor": "IMD (India Meteorological Dept)",
+      "action": "🛰️ Automated Threat Ingestion: Flash Flood & Cloudburst Advisory created Incident #INC-2577",
+      "severity": "critical",
+      "timestamp": "2026-09-09T06:54:12.577Z",
+      "previousHash": "2e4f530547547a47f207aa9a438eb2354de2383cad7e3e33e02abe8a0ff6262c",
+      "hash": "287c79cfb60b2e8d71791ab1a8831f7586f75f6d0891d0d26b6f4edc901f5e26"
+    },
+    {
+      "id": "aud-1788936831495-9eym",
+      "time": "12:23",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Lonavala, Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T06:53:51.494Z",
+      "previousHash": "e5f6422e98c9f3b760ac141e760681c5f25af39726edf43f95efbcc07cdc186a",
+      "hash": "2e4f530547547a47f207aa9a438eb2354de2383cad7e3e33e02abe8a0ff6262c"
+    },
+    {
+      "id": "aud-1788936313980-9w9r",
+      "time": "12:15",
+      "actor": "IMD (India Meteorological Dept)",
+      "action": "🛰️ Automated Threat Ingestion: Flash Flood & Cloudburst Advisory created Incident #INC-3980",
+      "severity": "critical",
+      "timestamp": "2026-09-09T06:45:13.980Z",
+      "previousHash": "b2727b59ea7487eda865f35f7bdc01586d0f101887055de5ae7537e3c56a2ae1",
+      "hash": "e5f6422e98c9f3b760ac141e760681c5f25af39726edf43f95efbcc07cdc186a"
+    },
+    {
+      "id": "aud-1788936300094-pj7x",
+      "time": "12:15",
+      "actor": "SMS Gateway",
+      "action": "📱 Ingested SMS SOS from +919822099999: SOS FLOOD DHAYARI 6 TRAPPED water rising rapi...",
+      "severity": "critical",
+      "timestamp": "2026-09-09T06:45:00.093Z",
+      "previousHash": "745d96bf853b3af9776343287c4223e5baae0e6b92e15dcfe512022a455b3fe3",
+      "hash": "b2727b59ea7487eda865f35f7bdc01586d0f101887055de5ae7537e3c56a2ae1"
+    },
+    {
+      "id": "aud-1788935113538",
+      "time": "11:55",
+      "actor": "Harshal",
+      "action": "🟢 EMERGENCY CRISIS STOOD DOWN by Harshal (GOVERNMENT)",
+      "severity": "info",
+      "timestamp": "2026-09-09T06:25:13.539Z",
+      "previousHash": "46305d7697b1e81117743783d2730953df2920bee3c9ffe9320fb89c874dd389",
+      "hash": "745d96bf853b3af9776343287c4223e5baae0e6b92e15dcfe512022a455b3fe3"
+    },
+    {
+      "id": "aud-1788935113532",
+      "time": "11:55",
+      "actor": "Harshal",
+      "action": "🟢 EMERGENCY CRISIS STOOD DOWN by Harshal (GOVERNMENT)",
+      "severity": "info",
+      "timestamp": "2026-09-09T06:25:13.532Z",
+      "previousHash": "14e9edf845025850dda324d9a23ad8691297259f0bf3767541a3d3f8bc8ea5d4",
+      "hash": "46305d7697b1e81117743783d2730953df2920bee3c9ffe9320fb89c874dd389"
+    },
+    {
+      "id": "aud-1788935111433",
+      "time": "11:55",
+      "actor": "Harshal",
+      "action": "🚨 CODE RED CRISIS TRIGGERED by Harshal (GOVERNMENT)",
+      "severity": "critical",
+      "timestamp": "2026-09-09T06:25:11.433Z",
+      "previousHash": "e3da80a5f4fd90e90e723f4cc1e42d9b531c577d8394e91c2c1f329bd74c8557",
+      "hash": "14e9edf845025850dda324d9a23ad8691297259f0bf3767541a3d3f8bc8ea5d4"
+    },
+    {
+      "id": "aud-1788935109693",
+      "time": "11:55",
+      "actor": "Harshal",
+      "action": "🚨 CODE RED CRISIS TRIGGERED by Harshal (GOVERNMENT)",
+      "severity": "critical",
+      "timestamp": "2026-09-09T06:25:09.694Z",
+      "previousHash": "3a7f54e7b884aff62ed144303cd96b84f6c19cfb162117aa4d7d831c5bc3cde3",
+      "hash": "e3da80a5f4fd90e90e723f4cc1e42d9b531c577d8394e91c2c1f329bd74c8557"
+    },
     {
       "id": "aud-1788934033967",
       "time": "11:37",
       "actor": "NDRF Unit 09",
       "action": "Request REQ-3957 assigned to NDRF Unit 09",
       "severity": "info",
-      "timestamp": "2026-09-09T06:07:13.968Z"
+      "timestamp": "2026-09-09T06:07:13.968Z",
+      "previousHash": "c6ef057b5ebc65b0fc2a2c1558ec52ad52a694163df7464b4a690ce8e8d73455",
+      "hash": "3a7f54e7b884aff62ed144303cd96b84f6c19cfb162117aa4d7d831c5bc3cde3"
     },
     {
       "id": "aud-1788934033958",
@@ -378,7 +866,9 @@
       "actor": "Ramesh K",
       "action": "🚨 SOS Request created: Evacuation assistance needed at Katraj Ghat Tunnel by Ramesh K",
       "severity": "high",
-      "timestamp": "2026-09-09T06:07:13.959Z"
+      "timestamp": "2026-09-09T06:07:13.959Z",
+      "previousHash": "f1ee49eeda37648ba905699c06236c1fffb661699e47943ef9581d6e71ba77cb",
+      "hash": "c6ef057b5ebc65b0fc2a2c1558ec52ad52a694163df7464b4a690ce8e8d73455"
     },
     {
       "id": "aud-1788934033946",
@@ -386,7 +876,9 @@
       "actor": "Commander Kulkarni",
       "action": "New incident reported: Flash Flood at Mutha Right Bank Km 12",
       "severity": "high",
-      "timestamp": "2026-09-09T06:07:13.946Z"
+      "timestamp": "2026-09-09T06:07:13.946Z",
+      "previousHash": "84bd463a3e58878d27248807cf3893bdb2907fc30e7da8f1439b0b2bb0086dd7",
+      "hash": "f1ee49eeda37648ba905699c06236c1fffb661699e47943ef9581d6e71ba77cb"
     },
     {
       "id": "aud-1788934033931",
@@ -394,7 +886,9 @@
       "actor": "Commander Kulkarni",
       "action": "Commander Kulkarni signed in as Government Officer (Pune City, Pune)",
       "severity": "info",
-      "timestamp": "2026-09-09T06:07:13.931Z"
+      "timestamp": "2026-09-09T06:07:13.931Z",
+      "previousHash": "66a0722d931dbd5bc4689103d99ec2729a4e9a13659d7f50a41efc06a943a5fd",
+      "hash": "84bd463a3e58878d27248807cf3893bdb2907fc30e7da8f1439b0b2bb0086dd7"
     },
     {
       "id": "aud-1788934033921",
@@ -402,7 +896,9 @@
       "actor": "Suresh Patil",
       "action": "Suresh Patil signed in as Citizen (Pune City, Pune)",
       "severity": "info",
-      "timestamp": "2026-09-09T06:07:13.921Z"
+      "timestamp": "2026-09-09T06:07:13.921Z",
+      "previousHash": "4ba79fd88e474bb8c12ee1a70f45de0979a99d6bdc992c0ee28b8b3dea85aaee",
+      "hash": "66a0722d931dbd5bc4689103d99ec2729a4e9a13659d7f50a41efc06a943a5fd"
     },
     {
       "id": "aud-1788933780924",
@@ -410,7 +906,9 @@
       "actor": "Officer Deshmukh",
       "action": "🟢 EMERGENCY CRISIS STOOD DOWN by Officer Deshmukh (GOVERNMENT)",
       "severity": "info",
-      "timestamp": "2026-09-09T06:03:00.924Z"
+      "timestamp": "2026-09-09T06:03:00.924Z",
+      "previousHash": "c3dc5d9abacbaff85613643163a0e9118158b6a646a117b27881f7b2094c7616",
+      "hash": "4ba79fd88e474bb8c12ee1a70f45de0979a99d6bdc992c0ee28b8b3dea85aaee"
     },
     {
       "id": "aud-1788933780909",
@@ -418,7 +916,9 @@
       "actor": "Officer Deshmukh",
       "action": "🚨 CODE RED CRISIS TRIGGERED by Officer Deshmukh (GOVERNMENT)",
       "severity": "critical",
-      "timestamp": "2026-09-09T06:03:00.909Z"
+      "timestamp": "2026-09-09T06:03:00.909Z",
+      "previousHash": "8751e8217b136b2c957dc08cebb65f129b1ac3f0baf8d3406897f8fa9bc5a99e",
+      "hash": "c3dc5d9abacbaff85613643163a0e9118158b6a646a117b27881f7b2094c7616"
     },
     {
       "id": "aud-1788933780871",
@@ -426,7 +926,9 @@
       "actor": "Officer Deshmukh",
       "action": "Officer Deshmukh signed in as Government Officer (Pune City, Pune)",
       "severity": "info",
-      "timestamp": "2026-09-09T06:03:00.871Z"
+      "timestamp": "2026-09-09T06:03:00.871Z",
+      "previousHash": "3b9115a948bf5bd26f72e4e515e63aa65ac4fa2150159d5b90d5b08905bcac10",
+      "hash": "8751e8217b136b2c957dc08cebb65f129b1ac3f0baf8d3406897f8fa9bc5a99e"
     },
     {
       "id": "aud-1788933767958",
@@ -434,7 +936,9 @@
       "actor": "Officer Deshmukh",
       "action": "Unauthorized attempt to activate CRISIS MODE by Officer Deshmukh",
       "severity": "critical",
-      "timestamp": "2026-09-09T06:02:47.958Z"
+      "timestamp": "2026-09-09T06:02:47.958Z",
+      "previousHash": "9c6d895ea3eced9e637406a23d0c91c23f1b581c2c5f359ac3e69625fe60151a",
+      "hash": "3b9115a948bf5bd26f72e4e515e63aa65ac4fa2150159d5b90d5b08905bcac10"
     },
     {
       "id": "aud-1788933758369",
@@ -442,7 +946,9 @@
       "actor": "Officer Deshmukh",
       "action": "Officer Deshmukh signed in as Government Officer (Pune City, Pune)",
       "severity": "info",
-      "timestamp": "2026-09-09T06:02:38.370Z"
+      "timestamp": "2026-09-09T06:02:38.370Z",
+      "previousHash": "c409e115899ecb8a1eaeb948e69f7f425f414688994554291018b665886edb59",
+      "hash": "9c6d895ea3eced9e637406a23d0c91c23f1b581c2c5f359ac3e69625fe60151a"
     },
     {
       "id": "aud-1788933758341",
@@ -450,7 +956,9 @@
       "actor": "Officer Deshmukh",
       "action": "Unauthorized login attempt to GOVERNMENT role",
       "severity": "warning",
-      "timestamp": "2026-09-09T06:02:38.341Z"
+      "timestamp": "2026-09-09T06:02:38.341Z",
+      "previousHash": "0321b740dca85e63bcbbe0649a3fed3eb6a0487b52ea001a8244a8a3c4157af2",
+      "hash": "c409e115899ecb8a1eaeb948e69f7f425f414688994554291018b665886edb59"
     },
     {
       "id": "aud-1788933758316",
@@ -458,7 +966,9 @@
       "actor": "Asha Sharma",
       "action": "Asha Sharma signed in as Citizen (Pune City, Pune)",
       "severity": "info",
-      "timestamp": "2026-09-09T06:02:38.329Z"
+      "timestamp": "2026-09-09T06:02:38.329Z",
+      "previousHash": "aeef4077aaec96f0ad31431b1e206b0561b5df87e97d976539181f99fc7da38e",
+      "hash": "0321b740dca85e63bcbbe0649a3fed3eb6a0487b52ea001a8244a8a3c4157af2"
     },
     {
       "id": "aud-1",
@@ -466,7 +976,9 @@
       "actor": "Officer #024",
       "action": "broadcast Flood Alert",
       "severity": "high",
-      "timestamp": "2026-09-09T05:02:07.193Z"
+      "timestamp": "2026-09-09T05:02:07.193Z",
+      "previousHash": "6f1ed839d5bddda76a52422765cae39683faf3bf2bb3f058d2c80fbdc1d5f4ca",
+      "hash": "aeef4077aaec96f0ad31431b1e206b0561b5df87e97d976539181f99fc7da38e"
     },
     {
       "id": "aud-2",
@@ -474,7 +986,9 @@
       "actor": "NGO #018",
       "action": "accepted Request #RQ-1048",
       "severity": "info",
-      "timestamp": "2026-09-09T04:52:07.193Z"
+      "timestamp": "2026-09-09T04:52:07.193Z",
+      "previousHash": "527316fa99b83b46e0f799cf41e812590de1bd75990ba2cc5a260a06642e6418",
+      "hash": "6f1ed839d5bddda76a52422765cae39683faf3bf2bb3f058d2c80fbdc1d5f4ca"
     },
     {
       "id": "aud-3",
@@ -482,7 +996,9 @@
       "actor": "Admin #001",
       "action": "updated shelter capacity",
       "severity": "info",
-      "timestamp": "2026-09-09T04:42:07.193Z"
+      "timestamp": "2026-09-09T04:42:07.193Z",
+      "previousHash": "890b32d515968bcab227077882937d79f09d31c1ca52b58a5d23d3e10c85b020",
+      "hash": "527316fa99b83b46e0f799cf41e812590de1bd75990ba2cc5a260a06642e6418"
     },
     {
       "id": "aud-4",
@@ -490,7 +1006,9 @@
       "actor": "Citizen #781",
       "action": "reported flood incident",
       "severity": "medium",
-      "timestamp": "2026-09-09T04:32:07.193Z"
+      "timestamp": "2026-09-09T04:32:07.193Z",
+      "previousHash": "d65c095c074a663c258aa8215be94cc850228e813c38d55519ff0726fb656ce3",
+      "hash": "890b32d515968bcab227077882937d79f09d31c1ca52b58a5d23d3e10c85b020"
     },
     {
       "id": "aud-5",
@@ -498,8 +1016,11 @@
       "actor": "Officer #024",
       "action": "verified Request #RQ-1046",
       "severity": "info",
-      "timestamp": "2026-09-09T04:22:07.193Z"
+      "timestamp": "2026-09-09T04:22:07.193Z",
+      "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "hash": "d65c095c074a663c258aa8215be94cc850228e813c38d55519ff0726fb656ce3"
     }
   ],
-  "users": []
+  "users": [],
+  "idempotencyKeys": {}
 }

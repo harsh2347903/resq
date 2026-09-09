@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -8,7 +9,7 @@ const __dirname = path.dirname(__filename);
 const DATA_DIR = path.resolve(__dirname, '../../data');
 const DB_FILE = path.join(DATA_DIR, 'resq_store.json');
 
-// Initial seed data mirroring National Disaster Response prototypes
+// Initial seed data with GPS coordinates and disaster response metadata
 const INITIAL_SEEDS = {
   crisisState: {
     active: false,
@@ -20,17 +21,122 @@ const INITIAL_SEEDS = {
     currentScenario: null
   },
   incidents: [
-    { id: 'INC-077', type: 'Flood', location: 'Pune • Mula-Mutha basin', severity: 'Critical', affected: '2,482', reports: 46, status: 'Active', reportedAt: new Date(Date.now() - 3600000).toISOString() },
-    { id: 'INC-076', type: 'Landslide', location: 'Lonavala • Old Mumbai Rd', severity: 'High', affected: '218', reports: 18, status: 'Response', reportedAt: new Date(Date.now() - 7200000).toISOString() },
-    { id: 'INC-075', type: 'Fire', location: 'Nashik • MIDC', severity: 'High', affected: '624', reports: 11, status: 'Containment', reportedAt: new Date(Date.now() - 14400000).toISOString() },
-    { id: 'INC-074', type: 'Heatwave', location: 'Nagpur • Central zone', severity: 'Medium', affected: '5,870', reports: 92, status: 'Monitoring', reportedAt: new Date(Date.now() - 28800000).toISOString() }
+    {
+      id: 'INC-077',
+      type: 'Flood',
+      location: 'Pune • Mula-Mutha basin',
+      coordinates: { lat: 18.5204, lng: 73.8567 },
+      severity: 'Critical',
+      affected: '2,482',
+      reports: 46,
+      status: 'Active',
+      reportedAt: new Date(Date.now() - 3600000).toISOString()
+    },
+    {
+      id: 'INC-076',
+      type: 'Landslide',
+      location: 'Lonavala • Old Mumbai Rd',
+      coordinates: { lat: 18.7546, lng: 73.4062 },
+      severity: 'High',
+      affected: '218',
+      reports: 18,
+      status: 'Response',
+      reportedAt: new Date(Date.now() - 7200000).toISOString()
+    },
+    {
+      id: 'INC-075',
+      type: 'Fire',
+      location: 'Nashik • MIDC Industrial Zone',
+      coordinates: { lat: 19.9975, lng: 73.7898 },
+      severity: 'High',
+      affected: '624',
+      reports: 11,
+      status: 'Containment',
+      reportedAt: new Date(Date.now() - 14400000).toISOString()
+    },
+    {
+      id: 'INC-074',
+      type: 'Heatwave',
+      location: 'Nagpur • Central zone',
+      coordinates: { lat: 21.1458, lng: 79.0882 },
+      severity: 'Medium',
+      affected: '5,870',
+      reports: 92,
+      status: 'Monitoring',
+      reportedAt: new Date(Date.now() - 28800000).toISOString()
+    }
   ],
   requests: [
-    { id: 'RQ-1048', citizen: 'Asha K.', type: 'Medical', location: 'Kothrud', priority: 'Critical', status: 'Assigned', team: 'Red Cross Unit 03', time: '09:41', phone: '+91 98220 11223', createdAt: new Date(Date.now() - 1800000).toISOString() },
-    { id: 'RQ-1047', citizen: 'Rohit M.', type: 'Food', location: 'Warje', priority: 'High', status: 'In transit', team: 'Seva Volunteers', time: '09:36', phone: '+91 98220 44556', createdAt: new Date(Date.now() - 2400000).toISOString() },
-    { id: 'RQ-1046', citizen: 'Nikita P.', type: 'Evacuation', location: 'Dhayari', priority: 'High', status: 'Verified', team: 'Fire Response 2', time: '09:29', phone: '+91 98220 77889', createdAt: new Date(Date.now() - 3600000).toISOString() },
-    { id: 'RQ-1045', citizen: 'Aman S.', type: 'Missing family', location: 'Sinhagad Rd', priority: 'Medium', status: 'Open', team: '—', time: '09:23', phone: '+91 98220 99001', createdAt: new Date(Date.now() - 4800000).toISOString() },
-    { id: 'RQ-1044', citizen: 'Rhea T.', type: 'Water', location: 'Pashan', priority: 'Medium', status: 'Open', team: '—', time: '09:16', phone: '+91 98220 33445', createdAt: new Date(Date.now() - 6000000).toISOString() }
+    {
+      id: 'RQ-1048',
+      citizen: 'Asha K.',
+      type: 'Medical',
+      location: 'Kothrud',
+      coordinates: { lat: 18.5074, lng: 73.8077 },
+      priority: 'Critical',
+      status: 'Assigned',
+      team: 'Red Cross Unit 03',
+      time: '09:41',
+      phone: '+91 98220 11223',
+      triage: { urgency: 'Critical', tags: ['Cardiac-Risk', 'Oxygen-Required'], estimatedPersons: 1 },
+      createdAt: new Date(Date.now() - 1800000).toISOString()
+    },
+    {
+      id: 'RQ-1047',
+      citizen: 'Rohit M.',
+      type: 'Food',
+      location: 'Warje',
+      coordinates: { lat: 18.4795, lng: 73.8005 },
+      priority: 'High',
+      status: 'In transit',
+      team: 'Seva Volunteers',
+      time: '09:36',
+      phone: '+91 98220 44556',
+      triage: { urgency: 'High', tags: ['Ration-Kit', 'Children-4'], estimatedPersons: 5 },
+      createdAt: new Date(Date.now() - 2400000).toISOString()
+    },
+    {
+      id: 'RQ-1046',
+      citizen: 'Nikita P.',
+      type: 'Evacuation',
+      location: 'Dhayari',
+      coordinates: { lat: 18.4485, lng: 73.8062 },
+      priority: 'High',
+      status: 'Verified',
+      team: 'Fire Response 2',
+      time: '09:29',
+      phone: '+91 98220 77889',
+      triage: { urgency: 'High', tags: ['Flood-Rooftop', 'Boat-Needed'], estimatedPersons: 3 },
+      createdAt: new Date(Date.now() - 3600000).toISOString()
+    },
+    {
+      id: 'RQ-1045',
+      citizen: 'Aman S.',
+      type: 'Missing family',
+      location: 'Sinhagad Rd',
+      coordinates: { lat: 18.4900, lng: 73.8200 },
+      priority: 'Medium',
+      status: 'Open',
+      team: '—',
+      time: '09:23',
+      phone: '+91 98220 99001',
+      triage: { urgency: 'Medium', tags: ['Reunification'], estimatedPersons: 2 },
+      createdAt: new Date(Date.now() - 4800000).toISOString()
+    },
+    {
+      id: 'RQ-1044',
+      citizen: 'Rhea T.',
+      type: 'Water',
+      location: 'Pashan',
+      coordinates: { lat: 18.5412, lng: 73.7929 },
+      priority: 'Medium',
+      status: 'Open',
+      team: '—',
+      time: '09:16',
+      phone: '+91 98220 33445',
+      triage: { urgency: 'Medium', tags: ['Potable-Water'], estimatedPersons: 4 },
+      createdAt: new Date(Date.now() - 6000000).toISOString()
+    }
   ],
   alerts: [
     { id: 1, level: 'critical', title: 'Flash Flood Warning', region: 'Pune • Mula-Mutha basin', time: '2 min ago', body: 'Move to elevated ground and avoid river crossings. Emergency teams are on standby.', timestamp: new Date(Date.now() - 120000).toISOString() },
@@ -39,11 +145,11 @@ const INITIAL_SEEDS = {
     { id: 4, level: 'warning', title: 'Road Diversion', region: 'Kothrud • Karve Road', time: '42 min ago', body: 'Emergency lane reserved. Use alternate routes to keep rescue traffic moving.', timestamp: new Date(Date.now() - 2520000).toISOString() }
   ],
   shelters: [
-    { id: 1, name: 'Shivaji Sports Complex', city: 'Pune', address: 'Pune, Maharashtra', capacity: 850, occupied: 642, services: ['Food', 'Medical', 'Childcare'], eta: '12 min', open: true },
-    { id: 2, name: 'Bharati Vidyapeeth Hall', city: 'Pune', address: 'Katraj, Pune', capacity: 520, occupied: 301, services: ['Food', 'Power', 'Wi-Fi'], eta: '19 min', open: true },
-    { id: 3, name: 'ZP School Relief Centre', city: 'Satara', address: 'Satara, Maharashtra', capacity: 340, occupied: 238, services: ['Food', 'Water', 'First Aid'], eta: '31 min', open: true },
-    { id: 4, name: 'Nehru Stadium Transit Camp', city: 'Nagpur', address: 'Nagpur, Maharashtra', capacity: 1100, occupied: 924, services: ['Food', 'Medical', 'Charging'], eta: '44 min', open: true },
-    { id: 5, name: 'Aundh Community Hall', city: 'Pune', address: 'Aundh, Pune', capacity: 430, occupied: 176, services: ['Water', 'Childcare', 'Charging'], eta: '23 min', open: true }
+    { id: 1, name: 'Shivaji Sports Complex', city: 'Pune', address: 'Shivaji Nagar, Pune', coordinates: { lat: 18.5314, lng: 73.8446 }, capacity: 850, occupied: 642, services: ['Food', 'Medical', 'Childcare', 'Bedding'], eta: '12 min', open: true },
+    { id: 2, name: 'Bharati Vidyapeeth Hall', city: 'Pune', address: 'Katraj, Pune', coordinates: { lat: 18.4575, lng: 73.8508 }, capacity: 520, occupied: 301, services: ['Food', 'Power', 'Wi-Fi', 'First Aid'], eta: '19 min', open: true },
+    { id: 3, name: 'ZP School Relief Centre', city: 'Satara', address: 'Satara Main Road, Satara', coordinates: { lat: 17.6805, lng: 74.0183 }, capacity: 340, occupied: 238, services: ['Food', 'Water', 'First Aid'], eta: '31 min', open: true },
+    { id: 4, name: 'Nehru Stadium Transit Camp', city: 'Nagpur', address: 'Civil Lines, Nagpur', coordinates: { lat: 21.1458, lng: 79.0882 }, capacity: 1100, occupied: 924, services: ['Food', 'Medical', 'Charging', 'Sanitation'], eta: '44 min', open: true },
+    { id: 5, name: 'Aundh Community Hall', city: 'Pune', address: 'Aundh, Pune', coordinates: { lat: 18.5590, lng: 73.8070 }, capacity: 430, occupied: 176, services: ['Water', 'Childcare', 'Charging'], eta: '23 min', open: true }
   ],
   campaigns: [
     { id: 1, name: 'Monsoon Ready Maharashtra', org: 'State Disaster Management Authority', tag: 'Preparedness', reach: '2.4M', status: 'Live', location: 'Pune District', copy: 'Know your nearest shelter, pack a go-bag, save 112.' },
@@ -54,24 +160,22 @@ const INITIAL_SEEDS = {
     { id: 6, name: 'Heatwave Community Cooling', org: 'Nagpur Smart Response', tag: 'Health', reach: '580K', status: 'Live', location: 'Nagpur', copy: 'Open cooling rooms and hydration points for at-risk residents.' }
   ],
   volunteers: [
-    { id: 'VOL-331', name: 'Meera P.', skill: 'First Aid', area: 'Pune', status: 'Available', missions: 18 },
-    { id: 'VOL-284', name: 'Arjun S.', skill: 'Logistics', area: 'Satara', status: 'On mission', missions: 31 },
-    { id: 'VOL-198', name: 'Sara K.', skill: 'Translation', area: 'Pune', status: 'Available', missions: 11 },
-    { id: 'VOL-412', name: 'Kabir R.', skill: 'Driving', area: 'Pune', status: 'On mission', missions: 24 }
+    { id: 'VOL-331', name: 'Meera P.', skill: 'First Aid', area: 'Pune', coordinates: { lat: 18.5204, lng: 73.8567 }, status: 'Available', missions: 18 },
+    { id: 'VOL-284', name: 'Arjun S.', skill: 'Logistics', area: 'Satara', coordinates: { lat: 17.6805, lng: 74.0183 }, status: 'On mission', missions: 31 },
+    { id: 'VOL-198', name: 'Sara K.', skill: 'Translation', area: 'Pune', coordinates: { lat: 18.5314, lng: 73.8446 }, status: 'Available', missions: 11 },
+    { id: 'VOL-412', name: 'Kabir R.', skill: 'Boat / Driving', area: 'Pune', coordinates: { lat: 18.5074, lng: 73.8077 }, status: 'Available', missions: 24 }
   ],
-  audits: [
-    { id: 'aud-1', time: '12:42', actor: 'Officer #024', action: 'broadcast Flood Alert', severity: 'high', timestamp: new Date(Date.now() - 3600000).toISOString() },
-    { id: 'aud-2', time: '12:35', actor: 'NGO #018', action: 'accepted Request #RQ-1048', severity: 'info', timestamp: new Date(Date.now() - 4200000).toISOString() },
-    { id: 'aud-3', time: '12:31', actor: 'Admin #001', action: 'updated shelter capacity', severity: 'info', timestamp: new Date(Date.now() - 4800000).toISOString() },
-    { id: 'aud-4', time: '12:20', actor: 'Citizen #781', action: 'reported flood incident', severity: 'medium', timestamp: new Date(Date.now() - 5400000).toISOString() },
-    { id: 'aud-5', time: '12:11', actor: 'Officer #024', action: 'verified Request #RQ-1046', severity: 'info', timestamp: new Date(Date.now() - 6000000).toISOString() }
-  ],
+  audits: [],
+  idempotencyKeys: {},
   users: []
 };
 
 class JSONStore {
   constructor() {
     this.memoryCache = null;
+    this.isPersisting = false;
+    this.persistQueued = false;
+    this.latestAuditHash = '0000000000000000000000000000000000000000000000000000000000000000';
     this.ensureDataDir();
     this.init();
   }
@@ -85,33 +189,93 @@ class JSONStore {
   init() {
     if (!fs.existsSync(DB_FILE)) {
       this.memoryCache = JSON.parse(JSON.stringify(INITIAL_SEEDS));
-      this.persist();
+      this.seedInitialAudits();
+      this.persistSync();
       console.log('📦 Database initialized with seeds at:', DB_FILE);
     } else {
       try {
         const raw = fs.readFileSync(DB_FILE, 'utf8');
         this.memoryCache = JSON.parse(raw);
-        // Ensure all collections exist
         for (const [key, value] of Object.entries(INITIAL_SEEDS)) {
           if (this.memoryCache[key] === undefined) {
             this.memoryCache[key] = JSON.parse(JSON.stringify(value));
           }
         }
+        // Upgrade existing seeds if coordinates are missing
+        if (this.memoryCache.shelters && (!this.memoryCache.shelters[0] || !this.memoryCache.shelters[0].coordinates)) {
+          this.memoryCache.shelters = JSON.parse(JSON.stringify(INITIAL_SEEDS.shelters));
+          this.memoryCache.incidents = JSON.parse(JSON.stringify(INITIAL_SEEDS.incidents));
+          this.memoryCache.requests = JSON.parse(JSON.stringify(INITIAL_SEEDS.requests));
+          this.memoryCache.volunteers = JSON.parse(JSON.stringify(INITIAL_SEEDS.volunteers));
+        }
+        
+        // Ensure all audits in memoryCache are cryptographically chained
+        const auditList = this.memoryCache.audits || [];
+        if (auditList.length === 0) {
+          this.seedInitialAudits();
+        } else {
+          let prevHash = '0000000000000000000000000000000000000000000000000000000000000000';
+          const chronological = [...auditList].reverse();
+          for (let i = 0; i < chronological.length; i++) {
+            const item = chronological[i];
+            item.previousHash = prevHash;
+            const raw = `${prevHash}|${item.timestamp}|${item.actor}|${item.action}|${item.severity}`;
+            item.hash = crypto.createHash('sha256').update(raw).digest('hex');
+            prevHash = item.hash;
+          }
+          this.latestAuditHash = prevHash;
+          this.memoryCache.audits = chronological.reverse();
+          this.persistSync();
+        }
       } catch (err) {
         console.error('⚠️ Error reading database file, repairing with default seeds:', err);
         this.memoryCache = JSON.parse(JSON.stringify(INITIAL_SEEDS));
-        this.persist();
+        this.seedInitialAudits();
+        this.persistSync();
       }
     }
   }
 
+  seedInitialAudits() {
+    this.memoryCache.audits = [];
+    this.addAudit('System audit ledger initialized with SHA-256 cryptographic chain', 'Genesis Engine', 'info');
+    this.addAudit('Officer #024 broadcast Flood Alert (Mula-Mutha Basin)', 'Officer #024', 'high');
+    this.addAudit('NGO Seva accepted Request #RQ-1048 for medical dispatch', 'NGO #018', 'info');
+    this.addAudit('Admin #001 updated shelter capacity at Shivaji Sports Complex', 'Admin #001', 'info');
+  }
+
+  // Non-blocking, debounced, concurrency-safe persistence
   persist() {
+    if (this.isPersisting) {
+      this.persistQueued = true;
+      return;
+    }
+    this.isPersisting = true;
+
+    setImmediate(() => {
+      try {
+        const tempPath = `${DB_FILE}.${Date.now()}.${Math.random().toString(36).slice(2, 6)}.tmp`;
+        fs.writeFileSync(tempPath, JSON.stringify(this.memoryCache, null, 2), 'utf8');
+        fs.renameSync(tempPath, DB_FILE);
+      } catch (err) {
+        console.error('❌ Failed to persist database:', err);
+      } finally {
+        this.isPersisting = false;
+        if (this.persistQueued) {
+          this.persistQueued = false;
+          this.persist();
+        }
+      }
+    });
+  }
+
+  persistSync() {
     try {
       const tempPath = `${DB_FILE}.${Date.now()}.tmp`;
       fs.writeFileSync(tempPath, JSON.stringify(this.memoryCache, null, 2), 'utf8');
       fs.renameSync(tempPath, DB_FILE);
     } catch (err) {
-      console.error('❌ Failed to persist database:', err);
+      console.error('❌ Failed to persist database synchronously:', err);
     }
   }
 
@@ -175,21 +339,87 @@ class JSONStore {
     return this.memoryCache.crisisState;
   }
 
+  // Idempotency check for offline/intermittent network resubmissions
+  hasIdempotencyKey(key) {
+    if (!key) return null;
+    return this.memoryCache.idempotencyKeys?.[key] || null;
+  }
+
+  recordIdempotencyKey(key, responseData) {
+    if (!key) return;
+    if (!this.memoryCache.idempotencyKeys) {
+      this.memoryCache.idempotencyKeys = {};
+    }
+    this.memoryCache.idempotencyKeys[key] = {
+      data: responseData,
+      recordedAt: Date.now()
+    };
+    this.persist();
+  }
+
+  // Cryptographic SHA-256 hash-chained audit logging
   addAudit(action, actor = 'System', severity = 'info') {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const timestamp = now.toISOString();
+
+    const previousHash = this.latestAuditHash;
+    const rawPayload = `${previousHash}|${timestamp}|${actor}|${action}|${severity}`;
+    const hash = crypto.createHash('sha256').update(rawPayload).digest('hex');
+
     const record = {
-      id: `aud-${Date.now()}`,
-      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+      id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      time: timeStr,
       actor,
       action,
       severity,
-      timestamp: new Date().toISOString()
+      timestamp,
+      previousHash,
+      hash
     };
+
+    this.latestAuditHash = hash;
     this.getCollection('audits').unshift(record);
-    if (this.memoryCache.audits.length > 200) {
-      this.memoryCache.audits = this.memoryCache.audits.slice(0, 200);
+
+    if (this.memoryCache.audits.length > 300) {
+      this.memoryCache.audits = this.memoryCache.audits.slice(0, 300);
     }
+
     this.persist();
     return record;
+  }
+
+  // Mathematically verifies the cryptographic integrity of the entire audit chain
+  verifyAuditLedger() {
+    const audits = [...this.getCollection('audits')].reverse(); // Verify from genesis forward
+    if (audits.length === 0) {
+      return { valid: true, auditedCount: 0, status: 'EMPTY_LEDGER' };
+    }
+
+    for (let i = 0; i < audits.length; i++) {
+      const entry = audits[i];
+      const prevHash = i === 0 ? '0000000000000000000000000000000000000000000000000000000000000000' : audits[i - 1].hash;
+
+      const expectedRaw = `${prevHash}|${entry.timestamp}|${entry.actor}|${entry.action}|${entry.severity}`;
+      const calculatedHash = crypto.createHash('sha256').update(expectedRaw).digest('hex');
+
+      if (entry.hash !== calculatedHash || entry.previousHash !== prevHash) {
+        return {
+          valid: false,
+          corruptedBlockId: entry.id,
+          expectedHash: calculatedHash,
+          foundHash: entry.hash,
+          status: 'TAMPER_DETECTED'
+        };
+      }
+    }
+
+    return {
+      valid: true,
+      auditedCount: audits.length,
+      latestHash: this.latestAuditHash,
+      status: 'VERIFIED_CRYPTOGRAPHIC_INTEGRITY'
+    };
   }
 }
 

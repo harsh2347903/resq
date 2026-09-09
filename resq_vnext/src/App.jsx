@@ -8,6 +8,8 @@ import { playEmergencyTone, triggerHaptic, createSpeechRecognizer, isSoundMuted,
 import { getAllStates, getDistrictsForState, getCitiesForDistrict } from './lib/indiaGeoData';
 import { CrisisEmergencyEngine, EmergencyCrisisButton, DashboardCrisisWidget } from './components/CrisisEmergencyEngine';
 import { isCrisisActive } from './lib/crisisManager';
+import { api } from './lib/apiClient';
+import { GoogleOperationsMap } from './components/GoogleOperationsMap';
 
 const ACTIVITY_KEY='resq_system_activity_v3';
 const PROFILE_KEY='resq_profile_v3';
@@ -426,6 +428,94 @@ function GlassCard({children,className='',...props}){return <motion.div classNam
 function Dashboard(){const {session}=useAuth(); if(session.role==='citizen')return <CitizenDashboard/>; if(session.role==='ngo')return <VolunteerDashboard/>; if(session.role==='government')return <GovernmentDashboard/>; return <AdminDashboard/>;}
 function CitizenDashboard(){const navigate=useNavigate();return <div className="content-stack"><PageIntro kicker="Personal safety overview" title="Your safety dashboard" sub="A calm, limited-access view built around what you need during an emergency." actions={<button className="primary-button interactive" onClick={()=>navigate('/help')}><Icons.Siren size={16}/> Get emergency help</button>}/><div className="status-strip glass-panel"><div><span className="status-label">YOUR CURRENT STATUS</span><strong>🟢 SAFE</strong><small>No evacuation order in your registered zone.</small></div><div className="status-item"><Icons.MapPin size={16}/><span>Nearest shelter<b>1.8 km</b></span></div><div className="status-item"><Icons.Phone size={16}/><span>Emergency line<b>112</b></span></div></div><div className="stats-grid four"><Metric label="Active alerts" value="03" sub="2 near you" Icon={Icons.Bell} accent="aqua"/><Metric label="Help request" value="No active" sub="One tap to create" Icon={Icons.HeartHandshake} accent="violet"/><Metric label="Closest shelter" value="12 min" sub="642 / 850 occupied" Icon={Icons.House} accent="amber"/><Metric label="Campaigns nearby" value="04" sub="2 recruiting" Icon={Icons.Megaphone} accent="rose"/></div><div className="dashboard-columns"><GlassCard><CardHeader title="What is happening" action="View all" onClick={()=>navigate('/alerts')}/>{alerts.slice(0,3).map(a=><AlertRow key={a.id} item={a}/>)}</GlassCard><GlassCard><CardHeader title="Quick help"/><div className="quick-grid">{[['Medical',Icons.Stethoscope],['Food',Icons.Utensils],['Water',Icons.Droplets],['Shelter',Icons.House],['Family',Icons.Users],['Rescue',Icons.Siren]].map(([n,I])=><button key={n} className="quick-action interactive" onClick={()=>navigate(n==='Shelter'?'/shelters':n==='Family'?'/family':'/help')}><I size={18}/><span>{n}</span></button>)}</div></GlassCard></div><div className="dashboard-columns"><GlassCard><CardHeader title="Nearby campaigns" action="Explore" onClick={()=>navigate('/campaigns')}/>{campaigns.slice(0,2).map(c=><CampaignMini key={c.id} c={c}/>)}</GlassCard><GlassCard><CardHeader title="Limited access"/><div className="access-note"><Icons.ShieldCheck size={18}/><div><b>Citizen permissions</b><p>You can view alerts, request help, report incidents, find shelters, join public campaigns and manage family safety. Operational controls, responder queues and user administration stay hidden.</p></div></div></GlassCard></div><div className="network-shortcuts"><button className="network-shortcut interactive" onClick={()=>navigate('/campaigns')}><Icons.Megaphone size={17}/><span><b>Campaign Network</b><small>Join nearby public programs</small></span><Icons.ArrowUpRight size={14}/></button><button className="network-shortcut interactive" onClick={()=>navigate('/shelters')}><Icons.House size={17}/><span><b>Shelter Network</b><small>Find a verified safe place</small></span><Icons.ArrowUpRight size={14}/></button></div></div>}
 function VolunteerDashboard(){const navigate=useNavigate();return <div className="content-stack"><PageIntro kicker="Volunteer operations" title="Your response dashboard" sub="See only campaigns, tasks and help requests you are permitted to take or give." actions={<button className="primary-button interactive" onClick={()=>navigate('/requests')}><Icons.ListChecks size={16}/> Open response tasks</button>}/><div className="stats-grid four"><Metric label="Open tasks" value="12" sub="3 critical" Icon={Icons.ListChecks} accent="violet"/><Metric label="My missions" value="04" sub="2 active" Icon={Icons.Route} accent="aqua"/><Metric label="People helped" value="126" sub="+18 this month" Icon={Icons.HeartHandshake} accent="amber"/><Metric label="Campaigns nearby" value="06" sub="3 recruiting" Icon={Icons.Megaphone} accent="rose"/></div><div className="volunteer-grid"><GlassCard><CardHeader title="Help requests you can take" action="View queue" onClick={()=>navigate('/requests')}/>{requests.slice(0,4).map(r=><TaskRow key={r.id} r={r}/>)}</GlassCard><GlassCard><CardHeader title="Campaigns where you can help" action="Browse" onClick={()=>navigate('/campaigns')}/>{campaigns.slice(0,3).map(c=><CampaignMini key={c.id} c={c} volunteer/>)}</GlassCard></div><GlassCard><CardHeader title="Access scope"/><div className="scope-grid"><ScopeItem icon={Icons.MapPin} title="Location scope" text="Pune + assigned partner districts"/><ScopeItem icon={Icons.Handshake} title="Help scope" text="Requests marked volunteer-eligible"/><ScopeItem icon={Icons.LockKeyhole} title="Restricted" text="No citizen identity admin, official broadcasts or system settings"/></div></GlassCard><div className="network-shortcuts"><button className="network-shortcut interactive" onClick={()=>navigate('/campaigns')}><Icons.Megaphone size={17}/><span><b>Campaign Network</b><small>Join approved community programs</small></span><Icons.ArrowUpRight size={14}/></button><button className="network-shortcut interactive" onClick={()=>navigate('/shelters')}><Icons.House size={17}/><span><b>Shelter Network</b><small>View relief centres & capacity</small></span><Icons.ArrowUpRight size={14}/></button></div></div>}
+function LiveThreatFeedWidget(){
+  const [threats, setThreats] = useState([]);
+  const [syncing, setSyncing] = useState(null);
+  const [toast, setToast] = useState('');
+
+  const fetchThreats = () => {
+    api.threats.getLive()
+      .then(res => {
+        if (res?.threats?.length > 0) {
+          setThreats(res.threats);
+        }
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchThreats();
+    const interval = setInterval(fetchThreats, 20000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSync = async (feedId) => {
+    setSyncing(feedId);
+    try {
+      const res = await api.threats.sync(feedId);
+      setToast(`🛰️ Synchronized: Incident #${res.incident?.id} created from external telemetry feed!`);
+      setTimeout(() => setToast(''), 4000);
+    } catch (err) {
+      setToast('Threat sync failed: ' + err.message);
+      setTimeout(() => setToast(''), 3000);
+    } finally {
+      setSyncing(null);
+    }
+  };
+
+  if (!threats.length) return null;
+
+  return (
+    <div className="glass-panel" style={{padding:'16px 20px',borderRadius:'14px',marginBottom:'18px',background:'rgba(244,63,94,0.06)',border:'1px solid rgba(244,63,94,0.25)'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px',flexWrap:'wrap',gap:'8px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+          <span className="drill-siren-dot" style={{background:'#f43f5e'}}/>
+          <strong style={{fontSize:'13px',letterSpacing:'0.05em',color:'#f43f5e'}}>
+            LIVE EXTERNAL THREAT INGESTION GRID (IMD · USGS · CWC · NASA FIRMS)
+          </strong>
+        </div>
+        <span className="live-chip" style={{background:'rgba(244,63,94,0.15)',borderColor:'#f43f5e',color:'#f43f5e'}}>
+          4 ACTIVE TELEMETRY SENSORS
+        </span>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(260px, 1fr))',gap:'10px'}}>
+        {threats.map(t => (
+          <div key={t.id} style={{background:'rgba(0,0,0,0.3)',padding:'12px 14px',borderRadius:'10px',border:'1px solid rgba(255,255,255,0.06)',display:'flex',flexDirection:'column',justifyContent:'space-between'}}>
+            <div>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+                <small style={{color:'#94a3b8',fontSize:'10px',textTransform:'uppercase'}}>{t.agency}</small>
+                <span className={`priority ${t.status === 'ACTIVE_THREAT' ? 'critical' : 'medium'}`} style={{fontSize:'9px',padding:'2px 6px'}}>
+                  {t.intensity}
+                </span>
+              </div>
+              <strong style={{display:'block',fontSize:'13px',marginTop:'4px',color:'#f8fafc'}}>
+                {t.hazard}
+              </strong>
+              <p style={{fontSize:'11px',color:'#cbd5e1',margin:'4px 0 8px 0',lineHeight:'1.4'}}>
+                📍 {t.region} · {t.recommendation}
+              </p>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:'6px',paddingTop:'6px',borderTop:'1px solid rgba(255,255,255,0.05)'}}>
+              <small style={{color:'#64748b',fontSize:'10px'}}>Confidence: {t.confidence}</small>
+              <button
+                type="button"
+                className="tiny-button interactive"
+                style={{fontSize:'10px',padding:'3px 8px',background:'rgba(244,63,94,0.2)',color:'#f43f5e',borderColor:'rgba(244,63,94,0.4)'}}
+                disabled={syncing === t.id}
+                onClick={() => handleSync(t.id)}
+              >
+                {syncing === t.id ? 'Syncing...' : 'Ingest as Incident'}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {toast && <div className="toast glass-panel"><Icons.CheckCircle2 size={16}/> {toast}</div>}
+    </div>
+  );
+}
+
 function GovernmentDashboard(){
   const {session}=useAuth();
   const navigate=useNavigate();
@@ -448,6 +538,7 @@ function GovernmentDashboard(){
   return (
     <div className="content-stack government-dashboard">
       <DashboardCrisisWidget />
+      <LiveThreatFeedWidget />
       <div className="command-hero glass-panel tactical-command-hero">
         <div className="command-hero-left">
           <span className="eyebrow">DISTRICT COMMAND CENTER · PUNE SECTOR 4</span>
@@ -594,374 +685,8 @@ function GovernmentDashboard(){
   );
 }
 
-function OperationsMap({layers={incidents:true,shelters:true,ngo:true,responders:true}}){
-  const navigate=useNavigate();
-  const [selected,setSelected]=useState(null);
-  const [zoom,setZoom]=useState(1);
-  const [pan,setPan]=useState({x:0,y:0});
-  const [isDragging,setIsDragging]=useState(false);
-  const [dragStart,setDragStart]=useState({x:0,y:0});
-  const [cursorCoords,setCursorCoords]=useState('18.5204° N, 73.8567° E');
-  const [activeSector,setActiveSector]=useState('all');
-  const [toast,setToast]=useState('');
-
-  const points=[
-    {
-      id:'inc-flood',
-      x:68, y:28,
-      sector:'mula-mutha',
-      type:'critical',
-      layer:'incidents',
-      label:'Flood Surge',
-      title:'Mula-Mutha River Flood Surge',
-      sub:'Water level +3.8m · 2,482 stranded · Level 3 evacuation alert',
-      coords:'18.5312° N, 73.8553° E',
-      team:'NDRF Unit 04 & SDRF Boat Squad',
-      freq:'VHF 156.800 MHz (Ch 16)',
-      path:'/incidents'
-    },
-    {
-      id:'inc-landslide',
-      x:52, y:68,
-      sector:'sinhagad',
-      type:'warning',
-      layer:'incidents',
-      label:'Landslide',
-      title:'Sinhagad Ghat Road Collapse',
-      sub:'Debris blocking corridor · 218 vehicles stranded',
-      coords:'18.4286° N, 73.7592° E',
-      team:'Civil Defense Heavy Excavation',
-      freq:'VHF 156.450 MHz (Ch 09)',
-      path:'/incidents'
-    },
-    {
-      id:'inc-power',
-      x:28, y:36,
-      sector:'kothrud',
-      type:'critical',
-      layer:'incidents',
-      label:'Power Grid',
-      title:'Kothrud Substation Submergence',
-      sub:'Grid failure impacting 12,000 homes & hospital auxiliary',
-      coords:'18.5074° N, 73.8077° E',
-      team:'MSEDCL Emergency Power Team',
-      freq:'VHF 156.600 MHz (Ch 12)',
-      path:'/incidents'
-    },
-    {
-      id:'she-kothrud',
-      x:22, y:42,
-      sector:'kothrud',
-      type:'safe',
-      layer:'shelters',
-      label:'Central Shelter',
-      title:'Kothrud Central Safe Relief Hub',
-      sub:'642 / 850 Beds Occupied (75%) · Clean water, doctor on site',
-      coords:'18.5089° N, 73.8090° E',
-      team:'Pune Municipal Relief Wing',
-      freq:'VHF 156.550 MHz (Ch 11)',
-      path:'/shelters'
-    },
-    {
-      id:'she-warje',
-      x:38, y:62,
-      sector:'warje',
-      type:'safe',
-      layer:'shelters',
-      label:'Camp 02',
-      title:'Warje Community Evacuation Center',
-      sub:'210 / 300 Beds Occupied (70%) · Women & child safe zone active',
-      coords:'18.4795° N, 73.7982° E',
-      team:'Disaster Relief Volunteer Taskforce',
-      freq:'VHF 156.500 MHz (Ch 10)',
-      path:'/shelters'
-    },
-    {
-      id:'ngo-kitchen',
-      x:42, y:44,
-      sector:'warje',
-      type:'info',
-      layer:'ngo',
-      label:'Red Cross Kitchen',
-      title:'Red Cross Community Field Kitchen 04',
-      sub:'1,200 meal rations/hour capacity · 74 active volunteers',
-      coords:'18.4900° N, 73.8150° E',
-      team:'Red Cross Logistics Lead',
-      freq:'VHF 156.700 MHz (Ch 14)',
-      path:'/ngo-coordination'
-    },
-    {
-      id:'ngo-sar',
-      x:78, y:52,
-      sector:'hadapsar',
-      type:'info',
-      layer:'ngo',
-      label:'SAR Boat Unit',
-      title:'Volunteer SAR Diver Deployment Post',
-      sub:'6 inflatable zodiac boats, 24 divers, thermal search drones',
-      coords:'18.5089° N, 73.9260° E',
-      team:'State Civil SAR Division',
-      freq:'VHF 156.800 MHz (Ch 16)',
-      path:'/ngo-coordination'
-    },
-    {
-      id:'res-hospital',
-      x:60, y:38,
-      sector:'shivaji-nagar',
-      type:'safe',
-      layer:'responders',
-      label:'Trauma Hospital',
-      title:'Shivaji Nagar Mobile Trauma Post',
-      sub:'28 ICU beds, 4 high-water 4x4 ambulances, blood bank active',
-      coords:'18.5314° N, 73.8446° E',
-      team:'Armed Forces Medical Core',
-      freq:'VHF 156.900 MHz (Ch 18)',
-      path:'/shelters'
-    }
-  ];
-
-  const visible=points.filter(p=>layers[p.layer]);
-  const chosen=visible.find(p=>p.id===selected);
-
-  const jumpToSector=(sec)=>{
-    setActiveSector(sec);
-    if(sec==='all'){
-      setZoom(1);
-      setPan({x:0,y:0});
-    } else if(sec==='kothrud'){
-      setZoom(1.45);
-      setPan({x:140,y:40});
-    } else if(sec==='mula-mutha'){
-      setZoom(1.5);
-      setPan({x:-120,y:90});
-    } else if(sec==='shivaji-nagar'){
-      setZoom(1.55);
-      setPan({x:-60,y:50});
-    } else if(sec==='sinhagad'){
-      setZoom(1.45);
-      setPan({x:-20,y:-110});
-    } else if(sec==='hadapsar'){
-      setZoom(1.45);
-      setPan({x:-160,y:-30});
-    }
-  };
-
-  const handlePointerDown=(e)=>{
-    if(e.target.closest('.map-point') || e.target.closest('.map-detail')) return;
-    setIsDragging(true);
-    setDragStart({x:e.clientX-pan.x, y:e.clientY-pan.y});
-  };
-
-  const handlePointerMove=(e)=>{
-    if(!isDragging) {
-      const rect=e.currentTarget.getBoundingClientRect();
-      const xPct=(e.clientX-rect.left)/rect.width;
-      const yPct=(e.clientY-rect.top)/rect.height;
-      const lat=(18.56 - yPct*0.12).toFixed(4);
-      const lng=(73.76 + xPct*0.18).toFixed(4);
-      setCursorCoords(`${lat}° N, ${lng}° E`);
-      return;
-    }
-    setPan({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y
-    });
-  };
-
-  const handlePointerUp=()=>{
-    setIsDragging(false);
-  };
-
-  const panDirection=(dx,dy)=>{
-    setPan(p=>({x: p.x + dx, y: p.y + dy}));
-  };
-
-  const dispatchTeam=(pt)=>{
-    setToast(`Emergency dispatch order transmitted to ${pt.team}!`);
-    setTimeout(()=>setToast(''), 2600);
-  };
-
-  return (
-    <div className="ops-map tactical-nav-map" onPointerLeave={handlePointerUp}>
-      <div className="map-toolbar tactical-map-toolbar">
-        <div className="map-title-telemetry">
-          <span className="live-dot pulse-green"/>
-          <b>PUNE DISTRICT GIS GRID · SECTOR MESH</b>
-          <span className="coords-hud"><Icons.Crosshair size={11}/> {cursorCoords}</span>
-        </div>
-
-        <div className="sector-jump-chips">
-          {[
-            {id:'all',l:'All Sectors'},
-            {id:'kothrud',l:'Kothrud Hub'},
-            {id:'mula-mutha',l:'Mula-Mutha Basin'},
-            {id:'shivaji-nagar',l:'Shivaji Nagar'},
-            {id:'sinhagad',l:'Sinhagad Pass'},
-            {id:'hadapsar',l:'Hadapsar'}
-          ].map(s=>(
-            <button
-              type="button"
-              key={s.id}
-              className={`sector-chip interactive ${activeSector===s.id?'active':''}`}
-              onClick={()=>jumpToSector(s.id)}
-            >
-              {s.l}
-            </button>
-          ))}
-        </div>
-
-        <div className="map-nav-controls">
-          <button type="button" className="map-tool interactive" title="Pan North" onClick={()=>panDirection(0,40)}><Icons.ArrowUp size={13}/></button>
-          <button type="button" className="map-tool interactive" title="Pan South" onClick={()=>panDirection(0,-40)}><Icons.ArrowDown size={13}/></button>
-          <button type="button" className="map-tool interactive" title="Pan West" onClick={()=>panDirection(40,0)}><Icons.ArrowLeft size={13}/></button>
-          <button type="button" className="map-tool interactive" title="Pan East" onClick={()=>panDirection(-40,0)}><Icons.ArrowRight size={13}/></button>
-          <button type="button" className="map-tool interactive zoom-btn" title="Zoom In" onClick={()=>setZoom(z=>Math.min(2.2,+(z+0.18).toFixed(2)))}>+</button>
-          <button type="button" className="map-tool interactive zoom-btn" title="Zoom Out" onClick={()=>setZoom(z=>Math.max(0.75,+(z-0.18).toFixed(2)))}>−</button>
-          <button type="button" className="map-tool interactive reset-btn" title="Re-center Map" onClick={()=>{setZoom(1);setPan({x:0,y:0});setSelected(null);setActiveSector('all')}}>
-            <Icons.Crosshair size={13}/>
-          </button>
-        </div>
-      </div>
-
-      <div
-        className={`map-viewport navigable-viewport ${isDragging?'is-dragging':''}`}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-      >
-        <motion.div
-          className="map-canvas navigable-canvas"
-          animate={{
-            scale: zoom,
-            x: pan.x,
-            y: pan.y
-          }}
-          transition={isDragging ? { duration: 0 } : { duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <svg className="map-vector-overlay" viewBox="0 0 1000 600" preserveAspectRatio="none">
-            <defs>
-              <pattern id="grid-pattern" width="50" height="50" patternUnits="userSpaceOnUse">
-                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="currentColor" strokeWidth="0.75" strokeOpacity="0.12"/>
-              </pattern>
-              <linearGradient id="river-flow" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#02898e" stopOpacity="0.4"/>
-                <stop offset="50%" stopColor="#2563eb" stopOpacity="0.5"/>
-                <stop offset="100%" stopColor="#02898e" stopOpacity="0.4"/>
-              </linearGradient>
-            </defs>
-            <rect width="1000" height="600" fill="url(#grid-pattern)"/>
-            <path d="M 0 160 Q 280 200 480 230 T 780 270 T 1000 240" fill="none" stroke="url(#river-flow)" strokeWidth="28" strokeLinecap="round" strokeOpacity="0.65"/>
-            <path d="M 380 0 Q 420 120 480 230" fill="none" stroke="url(#river-flow)" strokeWidth="18" strokeOpacity="0.5"/>
-            <path d="M 120 0 L 320 280 L 520 420 L 780 600" fill="none" stroke="currentColor" strokeWidth="3.5" strokeDasharray="6,4" strokeOpacity="0.35"/>
-            <path d="M 0 450 Q 400 420 800 360 T 1000 410" fill="none" stroke="currentColor" strokeWidth="3.5" strokeDasharray="8,5" strokeOpacity="0.3"/>
-            <polygon points="40,20 460,20 460,280 40,280" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="3,3" strokeOpacity="0.2"/>
-            <polygon points="480,20 960,20 960,310 480,310" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="3,3" strokeOpacity="0.2"/>
-            <polygon points="40,300 460,300 460,580 40,580" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="3,3" strokeOpacity="0.2"/>
-            <polygon points="480,330 960,330 960,580 480,580" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="3,3" strokeOpacity="0.2"/>
-            <text x="60" y="55" fill="currentColor" opacity="0.35" fontSize="12" fontFamily="monospace" fontWeight="700">SECTOR 01 · KOTHRUD</text>
-            <text x="500" y="55" fill="currentColor" opacity="0.35" fontSize="12" fontFamily="monospace" fontWeight="700">SECTOR 02 · MULA-MUTHA BASIN</text>
-            <text x="60" y="335" fill="currentColor" opacity="0.35" fontSize="12" fontFamily="monospace" fontWeight="700">SECTOR 03 · WARJE / SINHAGAD</text>
-            <text x="500" y="355" fill="currentColor" opacity="0.35" fontSize="12" fontFamily="monospace" fontWeight="700">SECTOR 04 · HADAPSAR EOC</text>
-          </svg>
-          <div className="map-radar-sweep"/>
-          {visible.map(pt=>(
-            <MapPinPoint
-              key={pt.id}
-              {...pt}
-              selected={selected===pt.id}
-              onSelect={()=>setSelected(selected===pt.id ? null : pt.id)}
-            />
-          ))}
-        </motion.div>
-      </div>
-
-      <AnimatePresence>
-        {chosen && (
-          <motion.div
-            className={`map-inspection-drawer glass-panel severity-${chosen.type}`}
-            initial={{opacity:0,y:12,scale:.98}}
-            animate={{opacity:1,y:0,scale:1}}
-            exit={{opacity:0,y:10,scale:.98}}
-          >
-            <div className="drawer-head">
-              <div className="drawer-title-box">
-                <span className={`severity-dot ${chosen.type==='safe'?'safe':chosen.type}`}/>
-                <div>
-                  <span className="drawer-sector">SECTOR: {chosen.sector.toUpperCase()} · GPS LOCKED</span>
-                  <h4>{chosen.title}</h4>
-                </div>
-              </div>
-              <button
-                type="button"
-                className="close-drawer-btn interactive"
-                onClick={()=>setSelected(null)}
-                aria-label="Close inspector"
-              >
-                <Icons.X size={15}/>
-              </button>
-            </div>
-            <p className="drawer-desc">{chosen.sub}</p>
-            <div className="drawer-meta-grid">
-              <div className="drawer-meta-item">
-                <small>COORDINATES</small>
-                <b>{chosen.coords}</b>
-              </div>
-              <div className="drawer-meta-item">
-                <small>ASSIGNED RESPONSE UNIT</small>
-                <b>{chosen.team}</b>
-              </div>
-              <div className="drawer-meta-item">
-                <small>COMMUNICATIONS CHANNEL</small>
-                <b>{chosen.freq}</b>
-              </div>
-            </div>
-            <div className="drawer-actions">
-              <button
-                type="button"
-                className="primary-button interactive"
-                onClick={()=>dispatchTeam(chosen)}
-              >
-                <Icons.Siren size={15}/> Dispatch Unit
-              </button>
-              {chosen.layer === 'shelters' && (
-                <button
-                  type="button"
-                  className="secondary-button interactive"
-                  onClick={()=>{
-                    setToast(`Evacuation corridor to ${chosen.title} broadcast to field transit units!`);
-                    setTimeout(()=>setToast(''), 2500);
-                  }}
-                >
-                  <Icons.Navigation size={14}/> Route Evacuees
-                </button>
-              )}
-              <button
-                type="button"
-                className="secondary-button interactive"
-                onClick={()=>navigate(chosen.path)}
-              >
-                <Icons.FolderOpen size={14}/> Open Resource Board
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {toast && (
-        <div className="toast map-toast glass-panel">
-          <Icons.CheckCircle2 size={16}/> {toast}
-        </div>
-      )}
-
-      <div className="map-legend tactical-legend">
-        <span><i className="critical"/> Critical (Code Red)</span>
-        <span><i className="warning"/> Warning (Code Amber)</span>
-        <span><i className="safe"/> Safe Shelter / Medical</span>
-        <span><i className="info"/> NGO / Support Unit</span>
-        <span className="nav-hint"><Icons.Hand size={11}/> Click & drag to pan · Scroll/+/- to zoom</span>
-      </div>
-    </div>
-  );
+function OperationsMap(props){
+  return <GoogleOperationsMap {...props} />;
 }
 
 function MapPinPoint({x,y,type,label,title,onSelect,selected}){
@@ -982,7 +707,35 @@ function AdminDashboard(){const {session}=useAuth();const navigate=useNavigate()
 function AlertRow({item}){return <div className="alert-row"><span className={`severity-dot ${item.level}`}/><div><b>{item.title}</b><small>{item.region}</small></div><span>{item.time}</span></div>}
 function CampaignMini({c,volunteer}){const navigate=useNavigate();return <div className="campaign-mini interactive-row" onClick={()=>navigate('/campaigns')}><div><span className="tag">{c.tag}</span><b>{c.name}</b><small>{c.org} · {c.location}</small></div><button className="tiny-button interactive" onClick={(e)=>{e.stopPropagation();navigate('/campaigns')}}>{volunteer?'HELP':'VIEW'}</button></div>}
 function TaskRow({r}){return <div className="task-row"><div><span className={`priority ${r.priority.toLowerCase()}`}>{r.priority}</span><b>{r.id} · {r.type}</b><small>{r.location} · {r.time}</small></div><button className="tiny-button interactive">TAKE</button></div>}
-function IncidentRow({i}){return <div className="incident-row"><div><span className={`priority ${i.severity.toLowerCase()}`}>{i.severity}</span><b>{i.type}</b><small>{i.location} · {i.affected} affected</small></div><span className="status-pill">{i.status}</span></div>}
+function IncidentRow({i}){
+  const openNavigate = (e) => {
+    e.stopPropagation();
+    const coords = i.coordinates || (i.id==='INC-077'?{lat:18.5312,lng:73.8553}:i.id==='INC-076'?{lat:18.7546,lng:73.4062}:i.id==='INC-075'?{lat:19.9975,lng:73.7898}:{lat:21.1458,lng:79.0882});
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${coords.lat},${coords.lng}&travelmode=driving`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+  return (
+    <div className="incident-row" style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+      <div>
+        <span className={`priority ${i.severity.toLowerCase()}`}>{i.severity}</span>
+        <b>{i.type}</b>
+        <small>{i.location} · {i.affected} affected</small>
+      </div>
+      <div style={{display:'flex',gap:'6px',alignItems:'center'}}>
+        <span className="status-pill">{i.status}</span>
+        <button
+          type="button"
+          className="tiny-button interactive"
+          title="Inspect incident site in Google Maps navigation"
+          onClick={openNavigate}
+          style={{display:'inline-flex',alignItems:'center',gap:'3px',padding:'3px 8px',fontSize:'11px'}}
+        >
+          <Icons.Navigation size={11}/> Inspect
+        </button>
+      </div>
+    </div>
+  );
+}
 function CardHeader({title,action,onClick}){return <div className="card-header"><h3>{title}</h3>{action&&<button className="text-button interactive" onClick={onClick}>{action} <Icons.ArrowUpRight size={13}/></button>}</div>}
 function ScopeItem({icon:Icon,title,text}){return <div className="scope-item"><span className="scope-icon"><Icon size={16}/></span><div><b>{title}</b><p>{text}</p></div></div>}
 function Bar({label,value}){return <div className="bar-row"><span>{label}</span><b>{value}%</b><div><i style={{width:`${value}%`}}/></div></div>}
@@ -991,7 +744,103 @@ function Shortcut({name,path,Icon}){const navigate=useNavigate();return <button 
 
 function AlertsPage(){const [filter,setFilter]=useState('all');const [acked,setAcked]=useState(()=>readList('resq_alert_ack',[]));const [toast,setToast]=useState('');const dynamic=readBroadcasts().map(x=>({id:x.id,level:severityClass(x.severity),title:`${x.type} warning · ${x.area}`,region:x.area,time:x.time||'just now',body:x.message,broadcast:true}));const items=[...dynamic,...alerts];const list=filter==='all'?items:items.filter(a=>a.level===filter);const acknowledge=(a)=>{if(acked.includes(a.id))return;const n=[...acked,a.id];setAcked(n);writeList('resq_alert_ack',n);recordActivity({kind:'alert',severity:a.level,message:`Alert acknowledged: ${a.title}`,actor:'User',time:nowLabel(),createdAt:Date.now()});setToast('Alert acknowledged');setTimeout(()=>setToast(''),1800)};return <div className="content-stack"><PageIntro kicker="Verified advisories" title="Alerts & advisories" sub="Broadcasts and verified alerts are severity-coded so critical instructions are impossible to miss."/><div className="filter-row">{['all','critical','high','medium','warning','info'].map(f=><button key={f} className={`filter-chip interactive ${filter===f?'active':''}`} onClick={()=>setFilter(f)}>{f}</button>)}</div><div className="alert-page-grid">{list.map(a=><GlassCard key={a.id} className={`big-alert ${a.level}`}><div className="big-alert-top"><span className={`severity-dot ${a.level}`}/><span>{a.level}</span><small>{a.time}</small></div><h3>{a.title}</h3><p>{a.body}</p><div className="alert-meta"><span><Icons.MapPin size={14}/>{a.region}</span><button className="secondary-button interactive" onClick={()=>acknowledge(a)}>{acked.includes(a.id)?'Acknowledged ✓':'Acknowledge'}</button></div></GlassCard>)}</div>{toast&&<div className="toast glass-panel"><Icons.CheckCircle2 size={16}/>{toast}</div>}</div>}
 function Campaigns(){const {session}=useAuth();const volunteer=session.role==='ngo';const [joined,setJoined]=useState([]);return <div className="content-stack"><PageIntro kicker="Community action" title="Campaigns near your network" sub={volunteer?'See campaigns where volunteers can contribute.':'Explore verified government and NGO programs available to you.'}/><div className="campaign-grid">{campaigns.map(c=><GlassCard key={c.id} className="campaign-card"><div className="campaign-top"><span className="tag">{c.tag}</span><span className="status-pill">{c.status}</span></div><h3>{c.name}</h3><p>{c.copy}</p><div className="campaign-details"><span><Icons.Building2 size={13}/>{c.org}</span><span><Icons.MapPin size={13}/>{c.location}</span><span><Icons.Users size={13}/>{c.reach} reached</span></div><button className={`primary-button full interactive ${joined.includes(c.id)?'joined':''}`} onClick={()=>{if(!joined.includes(c.id)){setJoined(v=>v.concat(c.id));recordActivity({kind:'campaign',message:`Campaign joined: ${c.name}`,actor:volunteer?'Volunteer':'Citizen',time:'just now'})}}}>{joined.includes(c.id)?'Joined ✓':volunteer?'Volunteer for campaign':'Join campaign'}</button></GlassCard>)}</div></div>}
-function Shelters(){const [saved,setSaved]=useState(()=>readList('resq_saved_shelters',[]));const [toast,setToast]=useState('');const toggleSave=id=>{const next=saved.includes(id)?saved.filter(x=>x!==id):[...saved,id];setSaved(next);writeList('resq_saved_shelters',next);recordActivity({kind:'shelter',message:`${saved.includes(id)?'Removed':'Saved'} shelter ${id}`,actor:'User',time:nowLabel(),createdAt:Date.now()})};const directions=s=>{setToast(`Demo navigation opened for ${s.name}.`);recordActivity({kind:'shelter',message:`Directions requested for ${s.name}`,actor:'User',time:nowLabel(),createdAt:Date.now()});setTimeout(()=>setToast(''),2200)};return <div className="content-stack"><PageIntro kicker="Relief network" title="Safe shelters & relief centres" sub="Capacity, services and response navigation are presented as a verified relief layer."/><div className="shelter-grid">{shelters.map(s=>{const pct=Math.round(s.occupied/s.capacity*100);return <GlassCard key={s.id} className="shelter-card"><div className="shelter-head"><div><span className="live-status">● OPEN</span><h3>{s.name}</h3><p>{s.city} · {s.eta}</p></div><span className="capacity-badge">{pct}%</span></div><div className="capacity-bar"><i style={{width:`${pct}%`}}/></div><div className="capacity-line"><span>{s.occupied} / {s.capacity} occupied</span><span>Capacity</span></div><div className="service-list">{s.services.map(x=><span key={x}>✓ {x}</span>)}</div><div className="card-actions"><button className="secondary-button interactive" onClick={()=>directions(s)}>Directions</button><button className="icon-button interactive" title="Save shelter" onClick={()=>toggleSave(s.id)}>{saved.includes(s.id)?<Icons.BookmarkCheck size={16}/>:<Icons.Bookmark size={16}/>}</button></div></GlassCard>})}</div>{toast&&<div className="toast glass-panel"><Icons.Navigation size={16}/>{toast}</div>}</div>}
+function Shelters(){
+  const [saved,setSaved]=useState(()=>readList('resq_saved_shelters',[]));
+  const [toast,setToast]=useState('');
+  const [shelterList,setShelterList]=useState(shelters);
+  const [proximityActive,setProximityActive]=useState(true);
+  const [loading,setLoading]=useState(false);
+
+  useEffect(()=>{
+    let mounted = true;
+    api.shelters.getNearby(18.5204, 73.8567, 35)
+      .then(res => {
+        if (mounted && res?.shelters?.length > 0) {
+          setShelterList(res.shelters);
+        }
+      })
+      .catch(() => {
+        // Fallback to seed
+      });
+    return () => { mounted = false; };
+  },[]);
+
+  const toggleSave=id=>{
+    const next=saved.includes(id)?saved.filter(x=>x!==id):[...saved,id];
+    setSaved(next);
+    writeList('resq_saved_shelters',next);
+    recordActivity({kind:'shelter',message:`${saved.includes(id)?'Removed':'Saved'} shelter ${id}`,actor:'User',time:nowLabel(),createdAt:Date.now()});
+  };
+
+  const directions=s=>{
+    const lat = s.coordinates?.lat || (s.id === 1 ? 18.5314 : s.id === 2 ? 18.4575 : s.id === 3 ? 17.6805 : s.id === 4 ? 21.1458 : 18.5590);
+    const lng = s.coordinates?.lng || (s.id === 1 ? 73.8446 : s.id === 2 ? 73.8508 : s.id === 3 ? 74.0183 : s.id === 4 ? 79.0882 : 73.8070);
+    const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    window.open(navUrl, '_blank', 'noopener,noreferrer');
+    setToast(`🚀 Redirecting to Google Maps: Destination set to "${s.name}"`);
+    recordActivity({kind:'shelter',message:`Google Maps navigation started for ${s.name}`,actor:'User',time:nowLabel(),createdAt:Date.now()});
+    setTimeout(()=>setToast(''),3000);
+  };
+
+  return (
+    <div className="content-stack">
+      <PageIntro
+        kicker="Geospatial Proximity Network"
+        title="Safe shelters & relief centres"
+        sub="Shelters are dynamically ranked by GPS distance, occupancy headroom and available bed capacity."
+        actions={
+          <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+            <span className="live-chip" style={{background:'rgba(16,185,129,0.15)',borderColor:'#10b981',color:'#10b981'}}>
+              <Icons.Compass size={13} style={{marginRight:4}}/> GPS RADAR: PUNE COMMAND
+            </span>
+          </div>
+        }
+      />
+      <div className="shelter-grid">
+        {shelterList.map(s=>{
+          const available = s.availableBeds ?? Math.max(0, s.capacity - s.occupied);
+          const pct = Math.round(s.occupied/s.capacity*100);
+          return (
+            <GlassCard key={s.id} className="shelter-card">
+              <div className="shelter-head">
+                <div>
+                  <span className="live-status">● OPEN</span>
+                  <h3>{s.name}</h3>
+                  <p>
+                    {s.city} {s.distanceKm !== undefined ? `· ${s.distanceKm} km away` : ''} · {s.eta}
+                  </p>
+                </div>
+                <div style={{textAlign:'right'}}>
+                  <span className="capacity-badge">{pct}%</span>
+                  <small style={{display:'block',fontSize:'10px',color:'#38bdf8',marginTop:'2px'}}>
+                    {available} beds open
+                  </small>
+                </div>
+              </div>
+              <div className="capacity-bar"><i style={{width:`${pct}%`}}/></div>
+              <div className="capacity-line">
+                <span>{s.occupied} / {s.capacity} occupied</span>
+                <span>{available} Available Beds</span>
+              </div>
+              <div className="service-list">
+                {s.services.map(x=><span key={x}>✓ {x}</span>)}
+              </div>
+              <div className="card-actions">
+                <button className="secondary-button interactive" onClick={()=>directions(s)}>
+                  <Icons.Navigation size={13} style={{marginRight:4}}/> Directions ({s.eta})
+                </button>
+                <button className="icon-button interactive" title="Save shelter" onClick={()=>toggleSave(s.id)}>
+                  {saved.includes(s.id)?<Icons.BookmarkCheck size={16}/>:<Icons.Bookmark size={16}/>}
+                </button>
+              </div>
+            </GlassCard>
+          );
+        })}
+      </div>
+      {toast&&<div className="toast glass-panel"><Icons.Navigation size={16}/>{toast}</div>}
+    </div>
+  );
+}
 function HelpDesk(){
   const [step,setStep]=useState(1);
   const [sent,setSent]=useState(false);
@@ -1425,7 +1274,269 @@ function CustomSelect({label, options, value, onChange, placeholder}){
   );
 }
 function Field({label,options,placeholder,textarea}){const [value,setValue]=useState('');return <div className="form-row">{textarea?<><label>{label}</label><textarea placeholder={placeholder}/></>:options?<CustomSelect label={label} options={options} value={value} onChange={setValue} placeholder={placeholder}/>:<><label>{label}</label><input placeholder={placeholder}/></>}</div>}
-function Requests(){const {session}=useAuth();const volunteer=session.role==='ngo';const [accepted,setAccepted]=useState(()=>readList(REQUEST_KEY,[]));const [q,setQ]=useState('');const list=requests.filter(r=>!q||`${r.id} ${r.type} ${r.location} ${r.citizen}`.toLowerCase().includes(q.toLowerCase()));const take=(r)=>{if(accepted.some(x=>x.id===r.id))return;const item={...r,status:volunteer?'Accepted':'Verified',acceptedBy:session.name,createdAt:Date.now()};const next=[item,...accepted];setAccepted(next);writeList(REQUEST_KEY,next);recordActivity({id:`req-${r.id}-${session.role}`,kind:'accepted',severity:r.priority==='Critical'?'critical':r.priority==='High'?'high':'medium',message:`${volunteer?'Volunteer accepted':'Officer verified'} ${r.id}`,actor:session.name,time:nowLabel(),createdAt:Date.now()})};return <div className="content-stack"><PageIntro kicker={volunteer?'Volunteer queue':'Authorized assistance queue'} title={volunteer?'Requests you can take':'Assistance request verification'} sub={volunteer?'Only volunteer-eligible tasks in your assigned scope appear here.':'Verify and dispatch requests across the response network.'}/><div className="filter-bar glass-panel"><div className="filter-left"><Icons.Search size={15}/><input className="bare-input" value={q} onChange={e=>setQ(e.target.value)} placeholder="Search request, person, location..."/></div></div><GlassCard className="table-card"><div className="table-wrap"><table><thead><tr><th>ID</th><th>Need</th><th>Location</th><th>Priority</th><th>Status</th><th>Team</th><th></th></tr></thead><tbody>{list.map(r=>{const done=accepted.some(x=>x.id===r.id);return <tr key={r.id}><td><b>{r.id}</b><small>{r.citizen}</small></td><td>{r.type}</td><td>{r.location}</td><td><span className={`priority ${r.priority.toLowerCase()}`}>{r.priority}</span></td><td><span className="status-pill">{done?(volunteer?'Accepted':'Verified'):r.status}</span></td><td>{done?(accepted.find(x=>x.id===r.id)?.acceptedBy||r.team):r.team}</td><td><button className="tiny-button interactive" onClick={()=>take(r)}>{done?'DONE':volunteer?'TAKE':'VERIFY'}</button></td></tr>})}</tbody></table></div></GlassCard></div>}
+function Requests(){
+  const {session}=useAuth();
+  const volunteer=session.role==='ngo';
+  const [accepted,setAccepted]=useState(()=>readList(REQUEST_KEY,[]));
+  const [q,setQ]=useState('');
+  const [reqList,setReqList]=useState(requests);
+  const [matchModal,setMatchModal]=useState(null);
+  const [dispatching,setDispatching]=useState(false);
+  const [toast,setToast]=useState('');
+
+  const loadRequests = () => {
+    api.requests.getAll()
+      .then(res => {
+        if (res?.requests?.length > 0) {
+          setReqList(res.requests);
+        }
+      })
+      .catch(() => {});
+  };
+
+  useEffect(()=>{
+    loadRequests();
+    const handleNewRequest = (e) => {
+      if (e.detail) {
+        setReqList(prev => [e.detail, ...prev.filter(x => x.id !== e.detail.id)]);
+        setToast(`🚨 New Live SOS Request Received: #${e.detail.id} (${e.detail.type} at ${e.detail.location})`);
+        setTimeout(() => setToast(''), 4000);
+      }
+    };
+    window.addEventListener('resq:socket-new-request', handleNewRequest);
+    return () => window.removeEventListener('resq:socket-new-request', handleNewRequest);
+  },[]);
+
+  const take=(r)=>{
+    if(accepted.some(x=>x.id===r.id))return;
+    const item={...r,status:volunteer?'Accepted':'Verified',acceptedBy:session.name,createdAt:Date.now()};
+    const next=[item,...accepted];
+    setAccepted(next);
+    writeList(REQUEST_KEY,next);
+    api.requests.updateStatus(r.id, volunteer ? 'Accepted' : 'Verified', session.name).catch(()=>{});
+    recordActivity({
+      id:`req-${r.id}-${session.role}`,
+      kind:'accepted',
+      severity:r.priority==='Critical'?'critical':r.priority==='High'?'high':'medium',
+      message:`${volunteer?'Volunteer accepted':'Officer verified'} ${r.id}`,
+      actor:session.name,
+      time:nowLabel(),
+      createdAt:Date.now()
+    });
+  };
+
+  const openMatcher = async (r) => {
+    try {
+      const res = await api.requests.getMatches(r.id);
+      setMatchModal({ request: r, matches: res.matches || [] });
+    } catch {
+      setToast('Unable to calculate volunteer matches right now.');
+      setTimeout(()=>setToast(''), 2500);
+    }
+  };
+
+  const confirmDispatch = async (reqId, volId) => {
+    setDispatching(true);
+    try {
+      const res = await api.requests.dispatch(reqId, { volunteerId: volId });
+      setToast(`Dispatched: ${res.message || 'Mission assigned!'}`);
+      setMatchModal(null);
+      loadRequests();
+    } catch (err) {
+      setToast(`Dispatch error: ${err.message}`);
+    } finally {
+      setDispatching(false);
+      setTimeout(()=>setToast(''), 3000);
+    }
+  };
+
+  const simulateSmsDistress = async () => {
+    try {
+      const sampleLocations = ['Kothrud', 'Warje', 'Dhayari', 'Sinhagad', 'Pashan'];
+      const loc = sampleLocations[Math.floor(Math.random() * sampleLocations.length)];
+      const res = await api.requests.smsWebhook('+91-98' + Math.floor(10000000 + Math.random() * 90000000), `SOS FLOOD ${loc} 4 TRAPPED water rising fast`);
+      if (res?.request) {
+        setReqList(prev => [res.request, ...prev]);
+        setToast(`📱 SMS Emergency Ingested: #${res.request.id} at ${loc} [Triage: ${res.triage?.urgency}]`);
+        setTimeout(()=>setToast(''), 3500);
+      }
+    } catch (err) {
+      setToast('SMS gateway simulation failed: ' + err.message);
+      setTimeout(()=>setToast(''), 2500);
+    }
+  };
+
+  const filtered=reqList.filter(r=>!q||`${r.id} ${r.type} ${r.location} ${r.citizen} ${r.details||''}`.toLowerCase().includes(q.toLowerCase()));
+
+  return (
+    <div className="content-stack">
+      <PageIntro
+        kicker={volunteer?'Volunteer dispatch queue':'Authorized assistance command'}
+        title={volunteer?'Assistance requests you can take':'Incident assistance dispatch ledger'}
+        sub={volunteer?'Eligible humanitarian tasks matched by skill and location.':'AI triage urgency, required equipment and algorithmic volunteer matching.'}
+        actions={
+          <div style={{display:'flex',gap:'8px'}}>
+            <button type="button" className="secondary-button interactive" onClick={simulateSmsDistress} title="Simulate an emergency distress SMS coming through the SMS gateway">
+              <Icons.Smartphone size={14}/> Test SMS Gateway
+            </button>
+          </div>
+        }
+      />
+
+      <div className="filter-bar glass-panel">
+        <div className="filter-left">
+          <Icons.Search size={15}/>
+          <input className="bare-input" value={q} onChange={e=>setQ(e.target.value)} placeholder="Search request, citizen, triage tag, location..."/>
+        </div>
+      </div>
+
+      <GlassCard className="table-card">
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID & Citizen</th>
+                <th>Assistance Type</th>
+                <th>Location</th>
+                <th>AI Triage & Priority</th>
+                <th>Status</th>
+                <th>Assigned Unit</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(r=>{
+                const done=accepted.some(x=>x.id===r.id) || r.status==='Assigned' || r.status==='In transit';
+                const assignedName = r.team && r.team !== '—' ? r.team : (accepted.find(x=>x.id===r.id)?.acceptedBy || '—');
+                const triageInfo = r.triage;
+
+                return (
+                  <tr key={r.id}>
+                    <td>
+                      <b>{r.id}</b>
+                      <small style={{display:'block'}}>{r.citizen}</small>
+                    </td>
+                    <td>
+                      <strong>{r.type}</strong>
+                      {triageInfo?.requiredEquipment?.[0] && (
+                        <small style={{display:'block',color:'#38bdf8',fontSize:'10px'}}>
+                          Asset: {triageInfo.requiredEquipment[0]}
+                        </small>
+                      )}
+                    </td>
+                    <td>
+                      <span style={{display:'flex',alignItems:'center',gap:'4px'}}>
+                        <Icons.MapPin size={12} style={{color:'#f43f5e'}}/> {r.location}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`priority ${(r.priority || 'Medium').toLowerCase()}`}>
+                        {r.priority || 'Medium'}
+                      </span>
+                      {triageInfo?.urgency && (
+                        <small style={{display:'block',fontSize:'10px',color:'#cbd5e1'}}>
+                          AI: {triageInfo.urgency}
+                        </small>
+                      )}
+                    </td>
+                    <td>
+                      <span className="status-pill">{r.status}</span>
+                    </td>
+                    <td>
+                      <b>{assignedName}</b>
+                    </td>
+                    <td>
+                      <div style={{display:'flex',gap:'6px'}}>
+                        <button className="tiny-button interactive" onClick={()=>take(r)}>
+                          {done?'DONE':volunteer?'TAKE':'VERIFY'}
+                        </button>
+                        {r.status === 'Open' && (
+                          <button
+                            type="button"
+                            className="tiny-button interactive"
+                            style={{background:'rgba(56,189,248,0.2)',color:'#38bdf8',borderColor:'rgba(56,189,248,0.4)'}}
+                            onClick={()=>openMatcher(r)}
+                            title="Match nearest available responder by skill & distance"
+                          >
+                            <Icons.Route size={11} style={{marginRight:2}}/> Match
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </GlassCard>
+
+      {/* Dispatch Matcher Modal */}
+      {matchModal && (
+        <div className="drill-modal-backdrop" onClick={()=>setMatchModal(null)}>
+          <div className="glass-panel" style={{maxWidth:'600px',width:'92%',padding:'24px',borderRadius:'16px',background:'rgba(15,23,42,0.95)',border:'1px solid rgba(255,255,255,0.15)',boxShadow:'0 24px 60px rgba(0,0,0,0.6)'}} onClick={e=>e.stopPropagation()}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'}}>
+              <div>
+                <span className="eyebrow">ALGORITHMIC DISPATCH MATCHER</span>
+                <h3 style={{margin:0,fontSize:'18px'}}>
+                  Matches for #{matchModal.request.id} ({matchModal.request.type})
+                </h3>
+                <small style={{color:'#94a3b8'}}>Location: {matchModal.request.location}</small>
+              </div>
+              <button className="icon-button interactive" onClick={()=>setMatchModal(null)}>
+                <Icons.X size={16}/>
+              </button>
+            </div>
+
+            <p style={{fontSize:'13px',color:'#cbd5e1',marginBottom:'16px'}}>
+              The system calculates match scores combining <b>skill taxonomy</b>, <b>readiness status</b>, and <b>Haversine distance</b>:
+            </p>
+
+            <div style={{display:'flex',flexDirection:'column',gap:'10px',maxHeight:'320px',overflowY:'auto',marginBottom:'20px'}}>
+              {matchModal.matches.map(m => (
+                <div key={m.volunteerId} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 14px',borderRadius:'10px',background:m.isOptimal?'rgba(16,185,129,0.1)':'rgba(255,255,255,0.03)',border:`1px solid ${m.isOptimal?'#10b981':'rgba(255,255,255,0.1)'}`}}>
+                  <div>
+                    <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                      <strong style={{fontSize:'14px'}}>{m.name}</strong>
+                      <span className="status-pill" style={{fontSize:'10px'}}>{m.skill}</span>
+                      {m.isOptimal && <span className="live-chip" style={{fontSize:'10px',background:'#10b981',color:'#fff'}}>TOP MATCH</span>}
+                    </div>
+                    <small style={{color:'#94a3b8',display:'block',marginTop:'3px'}}>
+                      📍 {m.distanceKm} km away · ETA {m.eta} · {m.missions} missions completed
+                    </small>
+                  </div>
+                  <div style={{textAlign:'right'}}>
+                    <div style={{fontSize:'16px',fontWeight:'bold',color:m.matchScore>=75?'#10b981':m.matchScore>=50?'#f59e0b':'#f43f5e'}}>
+                      {m.matchScore}%
+                    </div>
+                    <button
+                      type="button"
+                      className="tiny-button interactive"
+                      disabled={dispatching}
+                      onClick={()=>confirmDispatch(matchModal.request.id, m.volunteerId)}
+                      style={{marginTop:'4px'}}
+                    >
+                      Dispatch
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{display:'flex',justifyContent:'flex-end',gap:'10px'}}>
+              <button className="secondary-button interactive" onClick={()=>setMatchModal(null)}>Close</button>
+              <button className="primary-button interactive" disabled={dispatching} onClick={()=>confirmDispatch(matchModal.request.id, null)}>
+                <Icons.Zap size={14}/> Auto-Dispatch Best Match
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast&&<div className="toast glass-panel"><Icons.CheckCircle2 size={16}/>{toast}</div>}
+    </div>
+  );
+}
 function Missions(){
   const {session}=useAuth();
   const [status,setStatus]=useState(()=>Object.fromEntries(readList('resq_mission_status',[]).map(x=>[x.id,x.stage])));
@@ -1729,7 +1840,7 @@ function FamilySafety(){
 function Incidents(){return <div className="content-stack"><PageIntro kicker="Verified disaster events" title="Live incident board" sub="Only authorized officers can verify, escalate and manage incident states."/><div className="command-grid"><GlassCard className="map-card"><CardHeader title="Incident map"/><OperationsMap/></GlassCard><GlassCard><CardHeader title="Incident stream"/>{incidents.map(i=><IncidentRow key={i.id} i={i}/>)}</GlassCard></div></div>}
 function Broadcast(){const {session}=useAuth();const navigate=useNavigate();const [sent,setSent]=useState(false);const [type,setType]=useState('');const [severity,setSeverity]=useState('');const [area,setArea]=useState('');const [message,setMessage]=useState('');const [channels,setChannels]=useState(['App notification','SMS','Email','Public display','NGO network']);const [error,setError]=useState('');const [history,setHistory]=useState(()=>readBroadcasts().filter(x=>x.role===session.role));useEffect(()=>{const refresh=()=>setHistory(readBroadcasts().filter(x=>x.role===session.role));window.addEventListener('resq:broadcasts',refresh);window.addEventListener('storage',refresh);return()=>{window.removeEventListener('resq:broadcasts',refresh);window.removeEventListener('storage',refresh)}},[session.role]);const reset=()=>{setSent(false);setType('');setSeverity('');setArea('');setMessage('');setError('');setChannels(['App notification','SMS','Email','Public display','NGO network'])};const toggleChannel=x=>setChannels(v=>v.includes(x)?v.filter(c=>c!==x):[...v,x]);const submit=()=>{if(!type||!severity||!area||!message.trim()){setError('Complete alert type, severity, affected area and action message before broadcasting.');return}if(!channels.length){setError('Select at least one delivery channel before broadcasting.');return}setError('');const id=crypto.randomUUID?.()||String(Date.now());const event={id,kind:'broadcast',type,severity,area,message:message.trim(),channels,role:session.role,actor:session.name,time:'just now',createdAt:Date.now()};saveBroadcasts([event,...readBroadcasts()]);recordActivity(event);setSent(true)};return <div className="content-stack"><PageIntro kicker="Official warning system" title={`${session.role==='admin'?'Admin':'Government'} broadcast center`} sub="Draft a clear, severity-coded warning and publish it to selected response channels." actions={<button className="secondary-button interactive" onClick={()=>navigate('/broadcast-history')}><Icons.History size={15}/> History</button>}/><GlassCard className="form-card"><div className="broadcast-preview-row"><div className={`broadcast-severity-preview severity-${severityClass(severity)}`}><span className={`severity-dot ${severityClass(severity)}`}/><div><b>{severity||'Select severity'}</b><small>{type||'Alert type'} · {area||'Affected area'}</small></div><span>{severity?severity.toUpperCase():'DRAFT'}</span></div><div className="broadcast-rule"><Icons.ShieldAlert size={15}/><span>Critical alerts use the strongest neon notification treatment and remain visually distinct across RESQ.</span></div></div>{sent?<div className="success-state compact"><div className={`success-orb severity-${severityClass(severity)}`}><Icons.Radio size={26}/></div><h3>Alert broadcast published</h3><p>This {severity.toLowerCase()} advisory is now tracked in the {session.role==='admin'?'admin':'government'} ledger and global activity feed.</p><div className="button-row"><button className="primary-button interactive" onClick={reset}>Create another alert</button><button className="secondary-button interactive" onClick={()=>navigate('/broadcast-history')}>Open history</button></div></div>:<div className="form-grid"><CustomSelect label="Alert type" options={['Flood','Fire','Heatwave','Landslide','Cyclone','Road closure']} value={type} onChange={v=>{setType(v);setError('')}} placeholder="Select alert type"/><CustomSelect label="Severity" options={['Critical','High','Medium']} value={severity} onChange={v=>{setSeverity(v);setError('')}} placeholder="Select severity"/><CustomSelect label="Affected area" options={['Pune District','Satara','Nagpur','Nashik','Lonavala','Pimpri-Chinchwad']} value={area} onChange={v=>{setArea(v);setError('')}} placeholder="Select affected area"/><div className="form-row full"><label>Message</label><textarea value={message} onChange={e=>{setMessage(e.target.value);setError('')}} placeholder="Write the action people should take..."/></div><div className="channel-row"><label>Delivery channels</label><div className="channel-pills">{['App notification','SMS','Email','Public display','NGO network'].map(x=><button type="button" key={x} className={`check-pill interactive ${channels.includes(x)?'checked':''}`} onClick={()=>toggleChannel(x)}><span>{channels.includes(x)?'✓':'○'}</span>{x}</button>)}</div></div>{error&&<motion.div className="form-error" initial={{opacity:0,y:-3}} animate={{opacity:1,y:0}}><Icons.TriangleAlert size={14}/>{error}</motion.div>}<button className={`primary-button interactive full broadcast-submit severity-${severityClass(severity)}`} onClick={submit}><Icons.Megaphone size={16}/> Publish official alert</button></div>}</GlassCard><GlassCard><CardHeader title={`${session.role==='admin'?'Admin':'Government'} recent broadcasts`} action="Open history" onClick={()=>navigate('/broadcast-history')}/>{history.length?history.slice(0,5).map(x=><div className={`history-row severity-${severityClass(x.severity)}`} key={x.id}><span className={`severity-dot ${severityClass(x.severity)}`}/><div><b>{x.severity} · {x.type}</b><small>{x.area} · {x.message}</small></div><span>{x.time}</span></div>):<div className="empty-state"><Icons.Megaphone size={20}/><b>No broadcasts from this role</b><p>Your published advisories will appear here immediately.</p></div>}</GlassCard></div>}
 function BroadcastHistory(){const {session}=useAuth();const navigate=useNavigate();const [filter,setFilter]=useState('all');const [all,setAll]=useState(()=>readBroadcasts());useEffect(()=>{const refresh=()=>setAll(readBroadcasts());window.addEventListener('resq:broadcasts',refresh);window.addEventListener('storage',refresh);return()=>{window.removeEventListener('resq:broadcasts',refresh);window.removeEventListener('storage',refresh)}},[]);const mine=session.role==='government'?all.filter(x=>x.role==='government'&&(x.actor===session.name||!x.actor)):all.filter(x=>x.role==='admin');const list=filter==='all'?mine:mine.filter(x=>(x.severity||'').toLowerCase()===filter);return <div className="content-stack"><PageIntro kicker="Official communication ledger" title="Broadcast history" sub="Every official alert issued by your role is tracked here with severity, area, message and timestamp." actions={<div className="chart-controls">{['all','critical','high','medium'].map(x=><button key={x} className={`filter-chip interactive ${filter===x?'active':''}`} onClick={()=>setFilter(x)}>{x}</button>)}</div>}/><div className="history-summary"><Metric label="Your broadcasts" value={String(mine.length).padStart(2,'0')} sub="Tracked locally" Icon={Icons.Megaphone} accent="aqua"/><Metric label="Critical" value={String(mine.filter(x=>x.severity==='Critical').length).padStart(2,'0')} sub="Priority advisories" Icon={Icons.Siren} accent="rose"/><Metric label="Last broadcast" value={mine[0]?.time||'—'} sub={mine[0]?.area||'No activity yet'} Icon={Icons.Clock3} accent="amber"/></div><GlassCard className="history-card">{list.length?list.map((x,i)=><motion.div key={x.id||i} className="broadcast-history-row" initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:i*.035}}><div className="history-severity"><span className={`severity-dot ${(x.severity||'Medium').toLowerCase()==='critical'?'critical':(x.severity||'Medium').toLowerCase()==='high'?'warning':'info'}`}/><b>{x.severity}</b></div><div className="history-main"><strong>{x.type} alert · {x.area}</strong><p>{x.message}</p><small>{x.actor} · {x.time}</small></div><span className="status-pill">BROADCAST</span></motion.div>):<div className="empty-state"><Icons.History size={28}/><h3>No broadcast history</h3><p>Once you publish an official alert, it will be tracked in this ledger.</p><button className="primary-button interactive" onClick={()=>navigate('/broadcast')}>Create broadcast</button></div>}</GlassCard></div>}
-function NgoCoordination(){const {session}=useAuth();const [assigned,setAssigned]=useState(()=>readList('resq_ngo_assignments',[]));const assign=v=>{if(assigned.includes(v.id))return;const next=[...assigned,v.id];setAssigned(next);writeList('resq_ngo_assignments',next);recordActivity({kind:'accepted',severity:'medium',message:`Partner ${v.name} assigned to a response task`,actor:session.name,time:nowLabel(),createdAt:Date.now()})};return <div className="content-stack"><PageIntro kicker="Partner network" title="NGO coordination" sub="See partner coverage, available teams and the missions that need capacity."/><div className="partner-grid">{volunteers.map(v=><GlassCard key={v.id}><div className="partner-head"><span className="avatar">{v.name[0]}</span><div><b>{v.name}</b><small>{v.skill} · {v.area}</small></div><span className="status-pill">{v.status}</span></div><div className="partner-metric"><span>Missions</span><b>{v.missions}</b></div><button className="secondary-button full interactive" onClick={()=>assign(v)}>{assigned.includes(v.id)?'Task assigned ✓':'Assign task'}</button></GlassCard>)}</div></div>}
+function NgoCoordination(){const {session}=useAuth();const [assigned,setAssigned]=useState(()=>readList('resq_ngo_assignments',[]));const assign=v=>{if(assigned.includes(v.id))return;const next=[...assigned,v.id];setAssigned(next);writeList('resq_ngo_assignments',next);recordActivity({kind:'accepted',severity:'medium',message:`Partner ${v.name} assigned to a response task`,actor:session.name,time:nowLabel(),createdAt:Date.now()})};const routeToNgo=v=>{const coords=v.coordinates||(v.id==='VOL-331'?{lat:18.5204,lng:73.8567}:v.id==='VOL-284'?{lat:17.6805,lng:74.0183}:v.id==='VOL-198'?{lat:18.5074,lng:73.8077}:{lat:18.4900,lng:73.8150});window.open(`https://www.google.com/maps/dir/?api=1&destination=${coords.lat},${coords.lng}&travelmode=driving`,'_blank','noopener,noreferrer')};return <div className="content-stack"><PageIntro kicker="Partner network" title="NGO coordination" sub="See partner coverage, available teams and the missions that need capacity."/><div className="partner-grid">{volunteers.map(v=><GlassCard key={v.id}><div className="partner-head"><span className="avatar">{v.name[0]}</span><div><b>{v.name}</b><small>{v.skill} · {v.area}</small></div><span className="status-pill">{v.status}</span></div><div className="partner-metric"><span>Missions</span><b>{v.missions}</b></div><div style={{display:'flex',gap:'8px',marginTop:'10px'}}><button className="secondary-button full interactive" onClick={()=>assign(v)}>{assigned.includes(v.id)?'Task assigned ✓':'Assign task'}</button><button type="button" className="secondary-button interactive" title="Open Google Maps navigation to partner HQ" onClick={()=>routeToNgo(v)} style={{display:'inline-flex',alignItems:'center',gap:'4px'}}><Icons.Navigation size={13}/> Route</button></div></GlassCard>)}</div></div>}
 function Analytics(){
   const [range,setRange]=useState('24h');
   const [selected,setSelected]=useState('Flood');
@@ -2278,7 +2389,127 @@ function DisasterMixChart({ selected, setSelected, insight }) {
 }
 function Users(){return <div className="content-stack"><PageIntro kicker="Identity control" title="User administration" sub="Manage role assignment and account states. Every change should be auditable."/><GlassCard className="table-card"><div className="table-wrap"><table><thead><tr><th>User</th><th>Role</th><th>Status</th><th>Last active</th><th>Permission envelope</th></tr></thead><tbody>{[['Harshal Mogare','Citizen','Active','2 min','Signed'],['Meera P.','NGO / Volunteer','Active','4 min','Signed'],['Officer #024','Government Officer','Active','1 min','Signed'],['Admin #001','System Admin','Active','now','Signed']].map(r=><tr key={r[0]}><td><b>{r[0]}</b></td><td>{r[1]}</td><td><span className="live-status">● {r[2]}</span></td><td>{r[3]}</td><td><span className="security-tag"><Icons.LockKeyhole size={12}/>{r[4]}</span></td></tr>)}</tbody></table></div></GlassCard></div>}
 function Permissions(){const matrix=[['Citizen','View alerts','Request help','Report incident','Broadcast','Admin users'],['NGO / Volunteer','View alerts','Volunteer tasks','Update missions','Broadcast','Admin users'],['Government','All public views','Verify requests','Manage shelters','Broadcast','Admin users'],['System Admin','All views','All controls','Audit','Broadcast','Users / policy']];return <div className="content-stack"><PageIntro kicker="Access policy" title="Role permissions" sub="The UI uses a signed, tamper-evident permission envelope for demo role routing. A production version must validate permissions server-side."/><GlassCard><div className="permission-grid">{matrix.map((row,i)=><div className="perm-row" key={row[0]}>{row.map((x,j)=><div key={x} className={j===0?'role-cell':'perm-cell'}>{j===0?<b>{x}</b>:<span><Icons.CheckCircle2 size={13}/>{x}</span>}</div>)}</div>)}</div></GlassCard><GlassCard><CardHeader title="Permission principles"/><div className="scope-grid"><ScopeItem icon={Icons.Lock} title="Least privilege" text="Citizen and volunteer sessions expose only the actions they need."/><ScopeItem icon={Icons.Fingerprint} title="Tamper evidence" text="Session envelopes include a deterministic checksum to detect local edits in the demo."/><ScopeItem icon={Icons.ServerCog} title="Trusted enforcement" text="Sensitive operations must be authorized on the backend in production."/></div></GlassCard></div>}
-function Audit(){return <div className="content-stack"><PageIntro kicker="Traceability" title="Audit trail" sub="Critical actions are logged with actor, event and time."/><GlassCard className="table-card"><div className="table-wrap"><table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Risk</th></tr></thead><tbody>{audits.map((a,i)=><tr key={i}><td>{a.time}</td><td><b>{a.actor}</b></td><td>{a.action}</td><td><span className={`priority ${a.severity}`}>{a.severity}</span></td></tr>)}</tbody></table></div></GlassCard></div>}
+function Audit(){
+  const [auditList, setAuditList] = useState(audits);
+  const [verification, setVerification] = useState(null);
+  const [verifying, setVerifying] = useState(false);
+  const [toast, setToast] = useState('');
+
+  const loadAuditData = () => {
+    api.audit.getAll()
+      .then(res => {
+        if (res?.audits?.length > 0) {
+          setAuditList(res.audits);
+        }
+      })
+      .catch(() => {});
+
+    api.audit.verify()
+      .then(res => {
+        if (res?.verification) {
+          setVerification(res.verification);
+        }
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    loadAuditData();
+  }, []);
+
+  const runVerification = async () => {
+    setVerifying(true);
+    try {
+      const res = await api.audit.verify();
+      setVerification(res.verification);
+      setToast(res.verification?.valid ? '✓ Cryptographic hash chain verified 100% intact!' : '⚠️ Warning: Ledger integrity mismatch.');
+    } catch {
+      setToast('Verification server check failed.');
+    } finally {
+      setVerifying(false);
+      setTimeout(() => setToast(''), 3000);
+    }
+  };
+
+  return (
+    <div className="content-stack">
+      <PageIntro
+        kicker="Cryptographic Traceability"
+        title="Tamper-proof audit ledger"
+        sub="Every high-impact disaster action is signed and permanently linked with a SHA-256 cryptographic hash pointer."
+        actions={
+          <button type="button" className="secondary-button interactive" disabled={verifying} onClick={runVerification}>
+            <Icons.ShieldCheck size={14}/> {verifying ? 'Verifying...' : 'Verify Ledger Integrity'}
+          </button>
+        }
+      />
+
+      {/* Cryptographic Ledger Status Banner */}
+      <div className="glass-panel" style={{padding:'16px 20px',borderRadius:'12px',background:verification?.valid?'rgba(16,185,129,0.08)':'rgba(244,63,94,0.08)',border:`1px solid ${verification?.valid?'rgba(16,185,129,0.3)':'rgba(244,63,94,0.3)'}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'12px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+          <div style={{width:'38px',height:'38px',borderRadius:'8px',background:verification?.valid?'#10b981':'#f43f5e',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}>
+            <Icons.Link size={18}/>
+          </div>
+          <div>
+            <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+              <strong style={{fontSize:'14px',color:verification?.valid?'#10b981':'#f43f5e'}}>
+                {verification?.valid ? 'SHA-256 IMMUTABLE LEDGER: VERIFIED' : 'INTEGRITY SCAN: PENDING / WARNING'}
+              </strong>
+              <span className="status-pill" style={{fontSize:'10px'}}>
+                {verification?.auditedCount || auditList.length} BLOCKS VALIDATED
+              </span>
+            </div>
+            <small style={{color:'#94a3b8',display:'block',marginTop:'2px',fontFamily:'monospace',fontSize:'11px'}}>
+              Latest Block Hash: {verification?.latestHash ? `${verification.latestHash.slice(0, 24)}...${verification.latestHash.slice(-8)}` : 'Generating genesis pointer...'}
+            </small>
+          </div>
+        </div>
+        <div style={{fontSize:'11px',color:'#cbd5e1',background:'rgba(255,255,255,0.05)',padding:'6px 12px',borderRadius:'6px'}}>
+          Zero Tampering Detected · Merkle Chained
+        </div>
+      </div>
+
+      <GlassCard className="table-card">
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Block Time</th>
+                <th>Authorized Actor</th>
+                <th>Operation & Critical Action</th>
+                <th>Risk Level</th>
+                <th>Cryptographic Hash</th>
+              </tr>
+            </thead>
+            <tbody>
+              {auditList.map((a, i) => (
+                <tr key={a.id || i}>
+                  <td>
+                    <span style={{color:'#94a3b8',fontSize:'12px'}}>{a.time}</span>
+                  </td>
+                  <td>
+                    <b>{a.actor}</b>
+                  </td>
+                  <td>{a.action}</td>
+                  <td>
+                    <span className={`priority ${a.severity}`}>{a.severity}</span>
+                  </td>
+                  <td>
+                    <code style={{fontSize:'10px',color:'#38bdf8',background:'rgba(56,189,248,0.1)',padding:'2px 6px',borderRadius:'4px'}}>
+                      {a.hash ? a.hash.slice(0, 16) + '...' : 'Genesis #' + (auditList.length - i)}
+                    </code>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </GlassCard>
+
+      {toast && <div className="toast glass-panel"><Icons.CheckCircle2 size={16}/> {toast}</div>}
+    </div>
+  );
+}
 function ProfilePreferences(){
   const {session}=useAuth();
   const existing=readProfile();

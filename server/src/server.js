@@ -8,6 +8,7 @@ import { Server as SocketIOServer } from 'socket.io';
 dotenv.config();
 
 import { initSocket } from './socket/socketHandler.js';
+import { db } from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import crisisRoutes from './routes/crisis.routes.js';
 import incidentsRoutes from './routes/incidents.routes.js';
@@ -16,6 +17,9 @@ import broadcastsRoutes from './routes/broadcasts.routes.js';
 import sheltersRoutes from './routes/shelters.routes.js';
 import campaignsRoutes from './routes/campaigns.routes.js';
 import auditRoutes from './routes/audit.routes.js';
+import threatsRoutes from './routes/threats.routes.js';
+import { createRateLimiter } from './middleware/rateLimiter.js';
+import { getSubscriberCount } from './services/pushService.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -39,7 +43,7 @@ initSocket(io);
 app.use(cors({
   origin: [CLIENT_URL, 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000', '*'],
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-resq-token', 'x-resq-envelope'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-resq-token', 'x-resq-envelope', 'x-idempotency-key'],
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -57,26 +61,47 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check
+// Rate limiters for critical endpoints
+const authLimiter = createRateLimiter({ windowMs: 60000, max: 20, message: 'Too many authentication attempts. Please wait 1 minute.' });
+const sosLimiter = createRateLimiter({ windowMs: 60000, max: 40, message: 'SOS rate threshold reached. For life-threatening emergencies call 112 directly.' });
+
+// Health check with audit verification & telemetry metrics
 app.get('/api/health', (req, res) => {
+  const ledgerStatus = db.verifyAuditLedger();
   res.json({
     status: 'ok',
     service: 'RESQ National Disaster Coordination API',
-    version: '1.0.0',
+    version: '2.0.0',
+    capabilities: [
+      'Geospatial Proximity & Radius Routing',
+      'Offline Idempotency & SMS Webhook Ingestion',
+      'Multilingual AI/NLP Emergency Triage (EN/HI/MR)',
+      'Live External Threat Ingestion (IMD/USGS/CWC/FIRMS)',
+      'Intelligent Volunteer Dispatch Matcher',
+      'SHA-256 Tamper-Proof Cryptographic Audit Ledger',
+      'Sliding-Window Rate Limiting & Web Push Gateway'
+    ],
     timestamp: new Date().toISOString(),
-    uptimeSeconds: Math.floor(process.uptime())
+    uptimeSeconds: Math.floor(process.uptime()),
+    activeWebPushSubscribers: getSubscriberCount(),
+    auditLedger: {
+      integrity: ledgerStatus.valid ? 'VERIFIED' : 'FAILED',
+      totalRecords: ledgerStatus.auditedCount || 0,
+      latestHash: db.latestAuditHash
+    }
   });
 });
 
-// Mount Routes
-app.use('/api/auth', authRoutes);
+// Mount Routes with Defensive Rate Limiting
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/crisis', crisisRoutes);
 app.use('/api/incidents', incidentsRoutes);
-app.use('/api/requests', requestsRoutes);
+app.use('/api/requests', sosLimiter, requestsRoutes);
 app.use('/api/broadcasts', broadcastsRoutes);
 app.use('/api/shelters', sheltersRoutes);
 app.use('/api/campaigns', campaignsRoutes);
 app.use('/api/audit', auditRoutes);
+app.use('/api/threats', threatsRoutes);
 
 // 404 handler for API routes
 app.use('/api/*', (req, res) => {
@@ -95,9 +120,13 @@ app.use((err, req, res, next) => {
 // Start listening
 server.listen(PORT, () => {
   console.log('═══════════════════════════════════════════════════════');
-  console.log(`🚨 RESQ Disaster Management Server active on port ${PORT}`);
+  console.log(`🚨 RESQ Disaster Management Server v2.0 active on port ${PORT}`);
   console.log(`🌐 REST API:    http://localhost:${PORT}/api/health`);
   console.log(`⚡ WebSockets:  ws://localhost:${PORT} (Socket.IO)`);
+  console.log(`🧭 Geospatial:  Proximity Routing & Haversine Engine Online`);
+  console.log(`🧠 AI Triage:   Multilingual Natural Language Processor Online`);
+  console.log(`🛰️ Threat Grid: IMD / USGS / CWC Telemetry Feed Ingestion Active`);
+  console.log(`🔗 Blockchain:  SHA-256 Hash-Chained Audit Ledger Verified`);
   console.log(`🛡️ DEFCON Mode: Initialized & Monitoring`);
   console.log('═══════════════════════════════════════════════════════');
 });

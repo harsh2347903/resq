@@ -4,12 +4,22 @@ import { optionalAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// GET /api/audit/verify - Cryptographic ledger integrity check
+router.get('/verify', (req, res) => {
+  const verification = db.verifyAuditLedger();
+  res.json({
+    success: true,
+    verification
+  });
+});
+
 // GET /api/audit
 router.get('/', (req, res) => {
   const audits = db.getCollection('audits');
   res.json({
     success: true,
     count: audits.length,
+    latestHash: db.latestAuditHash,
     audits
   });
 });

@@ -2,8 +2,33 @@ import express from 'express';
 import { db } from '../config/db.js';
 import { optionalAuth } from '../middleware/auth.js';
 import { broadcastNewAlert } from '../socket/socketHandler.js';
+import {
+  DEMO_VAPID_PUBLIC_KEY,
+  registerSubscription,
+  broadcastPushNotification,
+  getSubscriberCount
+} from '../services/pushService.js';
 
 const router = express.Router();
+
+// GET /api/broadcasts/vapid-key
+router.get('/vapid-key', (req, res) => {
+  res.json({
+    publicKey: DEMO_VAPID_PUBLIC_KEY,
+    subscribersActive: getSubscriberCount()
+  });
+});
+
+// POST /api/broadcasts/push-subscribe
+router.post('/push-subscribe', (req, res) => {
+  const { subscription } = req.body;
+  const registered = registerSubscription(subscription);
+  res.json({
+    success: true,
+    registered,
+    totalSubscribers: getSubscriberCount()
+  });
+});
 
 // GET /api/broadcasts
 router.get('/', (req, res) => {
@@ -39,9 +64,17 @@ router.post('/', optionalAuth, (req, res) => {
   db.addAudit(`Official advisory broadcast: ${title} (${region})`, actor, level === 'critical' ? 'high' : 'info');
   broadcastNewAlert(newAlert);
 
+  // Trigger Web Push Notification broadcast
+  const pushDelivery = broadcastPushNotification({
+    title: `🚨 EMERGENCY ADVISORY: ${title}`,
+    body: `${region} — ${body}`,
+    level
+  });
+
   res.status(201).json({
     success: true,
-    alert: newAlert
+    alert: newAlert,
+    pushDelivery
   });
 });
 

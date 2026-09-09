@@ -212,6 +212,9 @@ export const api = {
     getAll: async () => {
       return await request('/shelters');
     },
+    getNearby: async (lat, lng, radius = 25) => {
+      return await request(`/shelters/nearby?lat=${lat}&lng=${lng}&radius=${radius}`);
+    },
     update: async (id, updates) => {
       return await request(`/shelters/${id}`, {
         method: 'PATCH',
@@ -220,14 +223,82 @@ export const api = {
     }
   },
 
-  campaigns: {
-    getAll: async () => {
-      return await request('/campaigns');
+  requests: {
+    getAll: async (params = {}) => {
+      const q = new URLSearchParams(params).toString();
+      return await request(`/requests${q ? '?' + q : ''}`);
     },
-    create: async (campaign) => {
-      return await request('/campaigns', {
+    create: async (sosRequest, idempotencyKey) => {
+      return await request('/requests', {
         method: 'POST',
-        body: JSON.stringify(campaign)
+        headers: idempotencyKey ? { 'x-idempotency-key': idempotencyKey } : {},
+        body: JSON.stringify(sosRequest)
+      });
+    },
+    triage: async (text, priority) => {
+      return await request('/requests/triage', {
+        method: 'POST',
+        body: JSON.stringify({ text, priority })
+      });
+    },
+    smsWebhook: async (sender, body) => {
+      return await request('/requests/sms-webhook', {
+        method: 'POST',
+        body: JSON.stringify({ sender, body })
+      });
+    },
+    getMatches: async (id) => {
+      return await request(`/requests/${id}/matches`);
+    },
+    dispatch: async (id, payload = {}) => {
+      return await request(`/requests/${id}/dispatch`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+    },
+    assign: async (id, team) => {
+      return await request(`/requests/${id}/assign`, {
+        method: 'PATCH',
+        body: JSON.stringify({ team })
+      });
+    },
+    updateStatus: async (id, status, team) => {
+      return await request(`/requests/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, team })
+      });
+    }
+  },
+
+  threats: {
+    getLive: async () => {
+      return await request('/threats/live');
+    },
+    sync: async (feedId) => {
+      return await request('/threats/sync', {
+        method: 'POST',
+        body: JSON.stringify({ feedId })
+      });
+    }
+  },
+
+  broadcasts: {
+    getAll: async () => {
+      return await request('/broadcasts');
+    },
+    getVapidKey: async () => {
+      return await request('/broadcasts/vapid-key');
+    },
+    pushSubscribe: async (subscription) => {
+      return await request('/broadcasts/push-subscribe', {
+        method: 'POST',
+        body: JSON.stringify({ subscription })
+      });
+    },
+    create: async (alert) => {
+      return await request('/broadcasts', {
+        method: 'POST',
+        body: JSON.stringify(alert)
       });
     }
   },
@@ -235,6 +306,9 @@ export const api = {
   audit: {
     getAll: async () => {
       return await request('/audit');
+    },
+    verify: async () => {
+      return await request('/audit/verify');
     },
     log: async (action, severity = 'info') => {
       return await request('/audit', {
