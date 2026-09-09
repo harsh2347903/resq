@@ -9425,6 +9425,876 @@ html[data-theme="light"] .op-meta-cell .val {
   border: 1px solid rgba(145, 186, 196, 0.12) !important;
 }
 
+/* ==========================================================================
+   RESQ REAL-TIME DIGITAL TEMPERATURE TELEMETRY & MULTI-LOCATION STATION
+   Industrial Hardware Bezel, LED Digital Readout, GPS & Open-Meteo Integration
+   ========================================================================== */
+
+/* Navbar Live Temperature Badge */
+.live-temp-navbar-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 24px;
+  color: #f1f5f9;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.live-temp-navbar-pill:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(56, 189, 248, 0.6);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.22);
+}
+
+.live-temp-navbar-pill:active {
+  transform: translateY(0);
+}
+
+.temp-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulse-temp-live 2s infinite ease-in-out;
+}
+
+@keyframes pulse-temp-live {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(1.35); }
+}
+
+.temp-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.temp-degrees {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #38bdf8;
+}
+
+.temp-city-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #cbd5e1;
+  max-width: 110px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html[data-theme="light"] .live-temp-navbar-pill {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+}
+
+html[data-theme="light"] .temp-degrees {
+  color: #0284c7;
+}
+
+html[data-theme="light"] .temp-city-label {
+  color: #334155;
+}
+
+/* Modal Dialog & Backdrop */
+.modal-backdrop-blur {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(4, 9, 20, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.digital-temp-modal-dialog {
+  width: 100%;
+  max-width: 820px;
+  max-height: 94vh;
+  overflow-y: auto;
+  border-radius: 20px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(56, 189, 248, 0.25);
+}
+
+/* Industrial Hardware Frame */
+.digital-temperature-hardware-frame {
+  background: linear-gradient(155deg, #151d28 0%, #0c1219 100%);
+  border: 2px solid #233446;
+  border-radius: 20px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  color: #e2e8f0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Hardware Bezel Header */
+.hardware-bezel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+  margin-bottom: 18px;
+}
+
+.hardware-brand-tag {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.screws-cluster {
+  display: flex;
+  gap: 4px;
+}
+
+.screw-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #475569;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.hardware-title-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.hardware-title-text strong {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #38bdf8;
+  text-transform: uppercase;
+}
+
+.hardware-title-text small {
+  font-size: 10px;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+
+.hardware-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hardware-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hardware-icon-btn:hover {
+  background: rgba(51, 65, 85, 0.9);
+  color: #f1f5f9;
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.hardware-icon-btn.spinning svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.hardware-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+}
+
+/* Status Strip */
+.hardware-status-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: rgba(8, 14, 23, 0.65);
+  border: 1px solid rgba(56, 189, 248, 0.12);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+
+.status-sub-cluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hardware-led-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+}
+
+.telemetry-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.8px;
+}
+
+.station-geo-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.station-coords {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.station-sync-time {
+  font-size: 10.5px;
+  color: #64748b;
+}
+
+/* Sunken LED Display Panel */
+.digital-led-display-panel {
+  background: radial-gradient(circle at 50% 30%, #081a28 0%, #03080e 100%);
+  border: 2px solid #0f354a;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: inset 0 0 50px rgba(0, 210, 255, 0.1), 0 8px 24px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+.led-panel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: center;
+}
+
+@media (max-width: 680px) {
+  .led-panel-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* Giant LED Digital Digits */
+.giant-led-digits-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.giant-led-digits {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.temp-main-number {
+  font-family: 'DM Mono', monospace;
+  font-size: 76px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -2px;
+  color: #38bdf8;
+  text-shadow: 0 0 30px rgba(56, 189, 248, 0.5), 0 0 60px rgba(56, 189, 248, 0.2);
+}
+
+.temp-scale-switch {
+  display: flex;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.scale-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 4px 10px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.scale-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(2, 132, 199, 0.6);
+}
+
+.feels-like-readout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.5);
+  padding: 6px 12px;
+  border-radius: 8px;
+  width: fit-content;
+}
+
+.feels-like-readout b {
+  color: #f1f5f9;
+}
+
+/* Atmospheric Aux Metrics Grid */
+.led-aux-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.aux-metric-tile {
+  background: rgba(11, 23, 38, 0.65);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: border-color 0.2s ease;
+}
+
+.aux-metric-tile:hover {
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.tile-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tile-icon-wrap.cyan { background: rgba(6, 182, 212, 0.15); color: #06b6d4; }
+.tile-icon-wrap.blue { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.tile-icon-wrap.amber { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.tile-icon-wrap.emerald { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+
+.tile-data {
+  display: flex;
+  flex-direction: column;
+}
+
+.tile-label {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.6px;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.tile-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+/* Thermal Hazard Banner */
+.hazard-defcon-banner {
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 20px;
+  border: 1px solid;
+  transition: all 0.2s ease;
+}
+
+.hazard-left-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hazard-info-text strong {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  display: block;
+}
+
+.hazard-info-text p {
+  font-size: 11.5px;
+  margin: 2px 0 0 0;
+  opacity: 0.88;
+}
+
+.hazard-defcon-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.8px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid;
+}
+
+/* Action Toolbar (GPS + Multi-Location Search) */
+.hardware-action-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: rgba(11, 20, 31, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.12);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 18px;
+}
+
+.toolbar-search-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .toolbar-search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.gps-detect-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(2, 132, 199, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.gps-detect-btn:hover {
+  background: rgba(2, 132, 199, 0.35);
+  border-color: #38bdf8;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
+}
+
+.gps-detect-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.temp-location-search-box {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.temp-search-icon {
+  position: absolute;
+  left: 12px;
+  color: #64748b;
+  pointer-events: none;
+}
+
+.temp-search-input {
+  width: 100%;
+  padding: 10px 38px 10px 36px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
+  color: #f1f5f9;
+  font-size: 12.5px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.temp-search-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+}
+
+.temp-search-clear-btn {
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.temp-search-clear-btn:hover {
+  color: #f1f5f9;
+}
+
+/* Autocomplete Dropdown */
+.temp-search-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: #0f172a;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.temp-search-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #cbd5e1;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.temp-search-option:hover {
+  background: rgba(56, 189, 248, 0.12);
+  color: #f8fafc;
+}
+
+.loc-row-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.loc-name-text {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.loc-coords-tag {
+  font-size: 10.5px;
+  color: #64748b;
+}
+
+/* Preset Quick City Lookup Pills */
+.preset-cities-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.preset-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.8px;
+}
+
+.preset-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.preset-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preset-pill:hover {
+  background: rgba(51, 65, 85, 0.8);
+  color: #f8fafc;
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.preset-pill.active {
+  background: rgba(2, 132, 199, 0.3);
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.pill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ==========================================================================
+   TACTICAL MAP: SCOPE SWITCHER, CITY SEARCH & TELEMETRY INSPECTION
+   ========================================================================== */
+
+/* Header Search & Scope Switcher Row */
+.tactical-map-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(11, 20, 31, 0.75);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+}
+
+.gis-scope-toggle {
+  display: inline-flex;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.scope-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.scope-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.5);
+}
+
+.map-header-search-wrap {
+  position: relative;
+  min-width: 260px;
+}
+
+.map-header-search-input {
+  width: 100%;
+  padding: 7px 32px 7px 32px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  color: #f1f5f9;
+  font-size: 12px;
+  outline: none;
+}
+
+.map-header-search-input:focus {
+  border-color: #38bdf8;
+}
+
+.map-header-search-results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: #0f172a;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.map-search-result-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #cbd5e1;
+  text-align: left;
+  cursor: pointer;
+}
+
+.map-search-result-item:hover {
+  background: rgba(56, 189, 248, 0.14);
+  color: #f8fafc;
+}
+
+/* Popup & Drawer Temperature Inspect Buttons */
+.popup-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.popup-temp-inspect-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(2, 132, 199, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 8px;
+  color: #38bdf8;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.popup-temp-inspect-btn:hover {
+  background: rgba(2, 132, 199, 0.35);
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.popup-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  background: #10b981;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.popup-nav-btn:hover {
+  background: #059669;
+}
+
+.drawer-temp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: rgba(2, 132, 199, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 8px;
+  color: #38bdf8;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.drawer-temp-btn:hover {
+  background: rgba(2, 132, 199, 0.35);
+  border-color: #38bdf8;
+}
+
+.gis-telemetry-statusbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 14px;
+  font-size: 11px;
+}
+
+.gis-telemetry-statusbar .status-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gis-telemetry-statusbar .label {
+  font-family: 'DM Mono', monospace;
+  color: #64748b;
+  font-size: 10px;
+}
+
+.gis-telemetry-statusbar .val {
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.gis-telemetry-statusbar .val.highlight {
+  color: #38bdf8;
+}
+
+
 
 
 

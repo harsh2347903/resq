@@ -6,46 +6,125 @@ export const INDIA_GEO_DATA = {
       { city: "Kothrud", taluka: "Haveli", pincode: "411038", coordinates: { lat: 18.5074, lng: 73.8077 } },
       { city: "Hadapsar", taluka: "Haveli", pincode: "411028", coordinates: { lat: 18.5089, lng: 73.9260 } },
       { city: "Aundh", taluka: "Haveli", pincode: "411007", coordinates: { lat: 18.5590, lng: 73.8070 } },
+      { city: "Baner", taluka: "Haveli", pincode: "411045", coordinates: { lat: 18.5597, lng: 73.7799 } },
+      { city: "Balewadi", taluka: "Haveli", pincode: "411045", coordinates: { lat: 18.5789, lng: 73.7707 } },
+      { city: "Bavdhan", taluka: "Haveli", pincode: "411021", coordinates: { lat: 18.5158, lng: 73.7714 } },
+      { city: "Pashan", taluka: "Haveli", pincode: "411021", coordinates: { lat: 18.5412, lng: 73.7929 } },
       { city: "Katraj", taluka: "Haveli", pincode: "411046", coordinates: { lat: 18.4575, lng: 73.8508 } },
       { city: "Dhayari / Sinhagad Rd", taluka: "Haveli", pincode: "411041", coordinates: { lat: 18.4485, lng: 73.8062 } },
       { city: "Warje", taluka: "Haveli", pincode: "411058", coordinates: { lat: 18.4795, lng: 73.8005 } },
-      { city: "Pashan", taluka: "Haveli", pincode: "411021", coordinates: { lat: 18.5412, lng: 73.7929 } },
-      { city: "Pimpri-Chinchwad", taluka: "Haveli", pincode: "411018", coordinates: { lat: 18.6279, lng: 73.8009 } },
-      { city: "Lonavala", taluka: "Maval", pincode: "410401", coordinates: { lat: 18.7546, lng: 73.4062 } },
+      { city: "Karve Nagar", taluka: "Haveli", pincode: "411052", coordinates: { lat: 18.4912, lng: 73.8182 } },
+      { city: "Deccan Gymkhana", taluka: "Haveli", pincode: "411004", coordinates: { lat: 18.5175, lng: 73.8415 } },
+      { city: "Swargate", taluka: "Haveli", pincode: "411042", coordinates: { lat: 18.5018, lng: 73.8586 } },
+      { city: "Camp (Pune Cantonment)", taluka: "Haveli", pincode: "411001", coordinates: { lat: 18.5134, lng: 73.8788 } },
+      { city: "Koregaon Park", taluka: "Haveli", pincode: "411001", coordinates: { lat: 18.5362, lng: 73.8940 } },
+      { city: "Kalyani Nagar", taluka: "Haveli", pincode: "411006", coordinates: { lat: 18.5463, lng: 73.9033 } },
+      { city: "Viman Nagar", taluka: "Haveli", pincode: "411014", coordinates: { lat: 18.5679, lng: 73.9143 } },
+      { city: "Kharadi", taluka: "Haveli", pincode: "411014", coordinates: { lat: 18.5516, lng: 73.9349 } },
+      { city: "Wagholi", taluka: "Haveli", pincode: "412207", coordinates: { lat: 18.5804, lng: 73.9818 } },
+      { city: "Kondhwa", taluka: "Haveli", pincode: "411048", coordinates: { lat: 18.4695, lng: 73.8890 } },
+      { city: "Bibwewadi", taluka: "Haveli", pincode: "411037", coordinates: { lat: 18.4735, lng: 73.8617 } },
+      { city: "Hinjawadi Phase 1", taluka: "Mulshi", pincode: "411057", coordinates: { lat: 18.5913, lng: 73.7389 } },
+      { city: "Hinjawadi Phase 2 & 3", taluka: "Mulshi", pincode: "411057", coordinates: { lat: 18.5830, lng: 73.7120 } },
+      { city: "Wakad", taluka: "Mulshi", pincode: "411057", coordinates: { lat: 18.5987, lng: 73.7680 } },
+      { city: "Pimple Saudagar", taluka: "Haveli", pincode: "411027", coordinates: { lat: 18.5982, lng: 73.7978 } },
+      { city: "Pimpri", taluka: "Haveli", pincode: "411018", coordinates: { lat: 18.6279, lng: 73.8009 } },
+      { city: "Chinchwad", taluka: "Haveli", pincode: "411033", coordinates: { lat: 18.6298, lng: 73.7840 } },
+      { city: "Bhosari", taluka: "Haveli", pincode: "411026", coordinates: { lat: 18.6231, lng: 73.8437 } },
+      { city: "Nigdi / Pradhikaran", taluka: "Haveli", pincode: "411044", coordinates: { lat: 18.6548, lng: 73.7749 } },
+      { city: "Akurdi / Ravet", taluka: "Haveli", pincode: "411035", coordinates: { lat: 18.6496, lng: 73.7597 } },
+      { city: "Moshi / Alandi Rd", taluka: "Haveli", pincode: "412105", coordinates: { lat: 18.6750, lng: 73.8450 } },
+      { city: "Alandi", taluka: "Khed", pincode: "412105", coordinates: { lat: 18.6775, lng: 73.8970 } },
+      { city: "Chakan MIDC", taluka: "Khed", pincode: "410501", coordinates: { lat: 18.7617, lng: 73.8589 } },
+      { city: "Rajgurunagar (Khed)", taluka: "Khed", pincode: "410505", coordinates: { lat: 18.8550, lng: 73.9180 } },
       { city: "Talegaon Dabhade", taluka: "Maval", pincode: "410506", coordinates: { lat: 18.7300, lng: 73.6800 } },
-      { city: "Baramati", taluka: "Baramati", pincode: "413102", coordinates: { lat: 18.1517, lng: 74.5772 } },
-      { city: "Daund", taluka: "Daund", pincode: "413801", coordinates: { lat: 18.4633, lng: 74.5786 } },
-      { city: "Shirur", taluka: "Shirur", pincode: "412210", coordinates: { lat: 18.8258, lng: 74.3776 } },
-      { city: "Paud / Mulshi", taluka: "Mulshi", pincode: "412108", coordinates: { lat: 18.5337, lng: 73.6121 } },
-      { city: "Junnar", taluka: "Junnar", pincode: "410502", coordinates: { lat: 19.2064, lng: 73.8764 } },
+      { city: "Dehu Road", taluka: "Haveli", pincode: "412101", coordinates: { lat: 18.7180, lng: 73.7270 } },
+      { city: "Lonavala", taluka: "Maval", pincode: "410401", coordinates: { lat: 18.7546, lng: 73.4062 } },
+      { city: "Khandala Ghat", taluka: "Maval", pincode: "410301", coordinates: { lat: 18.7600, lng: 73.3750 } },
+      { city: "Kamshet", taluka: "Maval", pincode: "410405", coordinates: { lat: 18.7560, lng: 73.5580 } },
+      { city: "Paud / Mulshi Dam", taluka: "Mulshi", pincode: "412108", coordinates: { lat: 18.5337, lng: 73.6121 } },
+      { city: "Pirangut", taluka: "Mulshi", pincode: "412115", coordinates: { lat: 18.5080, lng: 73.6800 } },
+      { city: "Lavasa", taluka: "Mulshi", pincode: "412112", coordinates: { lat: 18.4090, lng: 73.5070 } },
+      { city: "Panshet", taluka: "Velhe", pincode: "412107", coordinates: { lat: 18.3750, lng: 73.6000 } },
+      { city: "Velhe", taluka: "Velhe", pincode: "412212", coordinates: { lat: 18.2970, lng: 73.6350 } },
       { city: "Bhor", taluka: "Bhor", pincode: "412206", coordinates: { lat: 18.1458, lng: 73.8436 } },
       { city: "Saswad", taluka: "Purandar", pincode: "412301", coordinates: { lat: 18.3440, lng: 74.0300 } },
-      { city: "Rajgurunagar", taluka: "Khed", pincode: "410505", coordinates: { lat: 18.8550, lng: 73.9180 } }
+      { city: "Jejuri", taluka: "Purandar", pincode: "412303", coordinates: { lat: 18.2750, lng: 74.1610 } },
+      { city: "Uruli Kanchan", taluka: "Haveli", pincode: "412202", coordinates: { lat: 18.4870, lng: 74.1350 } },
+      { city: "Loni Kalbhor", taluka: "Haveli", pincode: "412201", coordinates: { lat: 18.4900, lng: 74.0200 } },
+      { city: "Shirur", taluka: "Shirur", pincode: "412210", coordinates: { lat: 18.8258, lng: 74.3776 } },
+      { city: "Shikrapur", taluka: "Shirur", pincode: "412208", coordinates: { lat: 18.7300, lng: 74.1160 } },
+      { city: "Ranjangaon MIDC", taluka: "Shirur", pincode: "412209", coordinates: { lat: 18.7560, lng: 74.2400 } },
+      { city: "Junnar", taluka: "Junnar", pincode: "410502", coordinates: { lat: 19.2064, lng: 73.8764 } },
+      { city: "Narayangaon", taluka: "Junnar", pincode: "410504", coordinates: { lat: 19.1250, lng: 73.9750 } },
+      { city: "Otur", taluka: "Junnar", pincode: "412409", coordinates: { lat: 19.2600, lng: 73.9800 } },
+      { city: "Daund", taluka: "Daund", pincode: "413801", coordinates: { lat: 18.4633, lng: 74.5786 } },
+      { city: "Kurkumbh MIDC", taluka: "Daund", pincode: "413802", coordinates: { lat: 18.4100, lng: 74.5300 } },
+      { city: "Baramati", taluka: "Baramati", pincode: "413102", coordinates: { lat: 18.1517, lng: 74.5772 } },
+      { city: "Indapur", taluka: "Indapur", pincode: "413106", coordinates: { lat: 18.1150, lng: 75.0250 } }
     ],
     "Mumbai City": [
       { city: "Fort / Colaba", taluka: "Colaba", pincode: "400001", coordinates: { lat: 18.9067, lng: 72.8147 } },
+      { city: "Cuffe Parade", taluka: "Colaba", pincode: "400005", coordinates: { lat: 18.9150, lng: 72.8190 } },
       { city: "Nariman Point / Marine Drive", taluka: "Colaba", pincode: "400021", coordinates: { lat: 18.9260, lng: 72.8230 } },
-      { city: "Dadar", taluka: "Dadar", pincode: "400014", coordinates: { lat: 19.0178, lng: 72.8478 } },
+      { city: "Churchgate", taluka: "Colaba", pincode: "400020", coordinates: { lat: 18.9322, lng: 72.8264 } },
+      { city: "Girgaon / Chowpatty", taluka: "Malabar Hill", pincode: "400004", coordinates: { lat: 18.9540, lng: 72.8120 } },
+      { city: "Malabar Hill", taluka: "Malabar Hill", pincode: "400006", coordinates: { lat: 18.9500, lng: 72.7950 } },
+      { city: "Tardeo / Mumbai Central", taluka: "Byculla", pincode: "400034", coordinates: { lat: 18.9700, lng: 72.8180 } },
       { city: "Byculla", taluka: "Byculla", pincode: "400027", coordinates: { lat: 18.9750, lng: 72.8333 } },
-      { city: "Worli / Lower Parel", taluka: "Worli", pincode: "400018", coordinates: { lat: 19.0166, lng: 72.8169 } }
+      { city: "Worli Seaface", taluka: "Worli", pincode: "400018", coordinates: { lat: 19.0166, lng: 72.8169 } },
+      { city: "Lower Parel", taluka: "Worli", pincode: "400013", coordinates: { lat: 18.9950, lng: 72.8300 } },
+      { city: "Prabhadevi", taluka: "Worli", pincode: "400025", coordinates: { lat: 19.0140, lng: 72.8290 } },
+      { city: "Dadar West", taluka: "Dadar", pincode: "400028", coordinates: { lat: 19.0178, lng: 72.8420 } },
+      { city: "Dadar East / Parel", taluka: "Dadar", pincode: "400014", coordinates: { lat: 19.0160, lng: 72.8520 } },
+      { city: "Wadala", taluka: "Dadar", pincode: "400031", coordinates: { lat: 19.0180, lng: 72.8680 } },
+      { city: "Sion / Matunga", taluka: "Dadar", pincode: "400022", coordinates: { lat: 19.0390, lng: 72.8610 } },
+      { city: "Mahim", taluka: "Dadar", pincode: "400016", coordinates: { lat: 19.0350, lng: 72.8400 } }
     ],
     "Mumbai Suburban": [
-      { city: "Andheri West", taluka: "Andheri", pincode: "400053", coordinates: { lat: 19.1136, lng: 72.8697 } },
-      { city: "Andheri East (MIDC)", taluka: "Andheri", pincode: "400069", coordinates: { lat: 19.1197, lng: 72.8644 } },
-      { city: "Bandra / BKC", taluka: "Andheri", pincode: "400050", coordinates: { lat: 19.0596, lng: 72.8295 } },
-      { city: "Borivali", taluka: "Borivali", pincode: "400092", coordinates: { lat: 19.2307, lng: 72.8567 } },
-      { city: "Kurla", taluka: "Kurla", pincode: "400070", coordinates: { lat: 19.0726, lng: 72.8845 } },
-      { city: "Ghatkopar", taluka: "Kurla", pincode: "400086", coordinates: { lat: 19.0860, lng: 72.9090 } },
-      { city: "Malad", taluka: "Borivali", pincode: "400064", coordinates: { lat: 19.1874, lng: 72.8484 } },
-      { city: "Kandivali", taluka: "Borivali", pincode: "400067", coordinates: { lat: 19.2045, lng: 72.8376 } }
+      { city: "Bandra West / Bandstand", taluka: "Andheri", pincode: "400050", coordinates: { lat: 19.0550, lng: 72.8250 } },
+      { city: "Bandra East / BKC", taluka: "Andheri", pincode: "400051", coordinates: { lat: 19.0650, lng: 72.8620 } },
+      { city: "Khar / Santacruz West", taluka: "Andheri", pincode: "400054", coordinates: { lat: 19.0800, lng: 72.8350 } },
+      { city: "Vile Parle", taluka: "Andheri", pincode: "400057", coordinates: { lat: 19.1000, lng: 72.8450 } },
+      { city: "Juhu", taluka: "Andheri", pincode: "400049", coordinates: { lat: 19.1070, lng: 72.8270 } },
+      { city: "Andheri West (Lokhandwala)", taluka: "Andheri", pincode: "400053", coordinates: { lat: 19.1360, lng: 72.8280 } },
+      { city: "Andheri East (MIDC / SEEPZ)", taluka: "Andheri", pincode: "400093", coordinates: { lat: 19.1220, lng: 72.8720 } },
+      { city: "Versova", taluka: "Andheri", pincode: "400061", coordinates: { lat: 19.1350, lng: 72.8130 } },
+      { city: "Jogeshwari", taluka: "Andheri", pincode: "400060", coordinates: { lat: 19.1410, lng: 72.8490 } },
+      { city: "Goregaon West / East", taluka: "Borivali", pincode: "400063", coordinates: { lat: 19.1660, lng: 72.8520 } },
+      { city: "Malad West / Link Rd", taluka: "Borivali", pincode: "400064", coordinates: { lat: 19.1874, lng: 72.8384 } },
+      { city: "Kandivali East / West", taluka: "Borivali", pincode: "400067", coordinates: { lat: 19.2045, lng: 72.8476 } },
+      { city: "Borivali West", taluka: "Borivali", pincode: "400092", coordinates: { lat: 19.2307, lng: 72.8467 } },
+      { city: "Dahisar", taluka: "Borivali", pincode: "400068", coordinates: { lat: 19.2550, lng: 72.8620 } },
+      { city: "Kurla West / East", taluka: "Kurla", pincode: "400070", coordinates: { lat: 19.0726, lng: 72.8845 } },
+      { city: "Ghatkopar East / West", taluka: "Kurla", pincode: "400077", coordinates: { lat: 19.0860, lng: 72.9090 } },
+      { city: "Vikhroli", taluka: "Kurla", pincode: "400079", coordinates: { lat: 19.1100, lng: 72.9280 } },
+      { city: "Kanjurmarg / Bhandup", taluka: "Kurla", pincode: "400078", coordinates: { lat: 19.1400, lng: 72.9350 } },
+      { city: "Mulund", taluka: "Kurla", pincode: "400080", coordinates: { lat: 19.1720, lng: 72.9560 } },
+      { city: "Powai / IIT", taluka: "Kurla", pincode: "400076", coordinates: { lat: 19.1197, lng: 72.9050 } },
+      { city: "Chembur", taluka: "Kurla", pincode: "400071", coordinates: { lat: 19.0520, lng: 72.8990 } },
+      { city: "Trombay / Mankhurd", taluka: "Kurla", pincode: "400088", coordinates: { lat: 19.0400, lng: 72.9300 } }
     ],
     "Thane": [
-      { city: "Thane City", taluka: "Thane", pincode: "400601", coordinates: { lat: 19.2183, lng: 72.9781 } },
-      { city: "Kalyan-Dombivli", taluka: "Kalyan", pincode: "421201", coordinates: { lat: 19.2403, lng: 73.1305 } },
+      { city: "Thane City (Naupada)", taluka: "Thane", pincode: "400602", coordinates: { lat: 19.1983, lng: 72.9750 } },
+      { city: "Ghodbunder Road", taluka: "Thane", pincode: "400615", coordinates: { lat: 19.2680, lng: 72.9620 } },
+      { city: "Wagle Estate MIDC", taluka: "Thane", pincode: "400604", coordinates: { lat: 19.1900, lng: 72.9450 } },
+      { city: "Majiwada", taluka: "Thane", pincode: "400601", coordinates: { lat: 19.2183, lng: 72.9781 } },
+      { city: "Kalwa / Mumbra", taluka: "Thane", pincode: "400605", coordinates: { lat: 19.1850, lng: 73.0050 } },
+      { city: "Diva", taluka: "Thane", pincode: "400612", coordinates: { lat: 19.1880, lng: 73.0450 } },
       { city: "Navi Mumbai (Vashi)", taluka: "Thane", pincode: "400703", coordinates: { lat: 19.0771, lng: 72.9986 } },
+      { city: "Navi Mumbai (Nerul & Belapur)", taluka: "Thane", pincode: "400706", coordinates: { lat: 19.0330, lng: 73.0180 } },
+      { city: "Navi Mumbai (Kopar Khairane / Airoli)", taluka: "Thane", pincode: "400709", coordinates: { lat: 19.1150, lng: 73.0030 } },
       { city: "Mira-Bhayandar", taluka: "Thane", pincode: "401107", coordinates: { lat: 19.2952, lng: 72.8544 } },
+      { city: "Kalyan City", taluka: "Kalyan", pincode: "421301", coordinates: { lat: 19.2403, lng: 73.1305 } },
+      { city: "Dombivli", taluka: "Kalyan", pincode: "421201", coordinates: { lat: 19.2180, lng: 73.0860 } },
+      { city: "Titwala", taluka: "Kalyan", pincode: "421605", coordinates: { lat: 19.2980, lng: 73.2080 } },
       { city: "Ulhasnagar", taluka: "Ulhasnagar", pincode: "421001", coordinates: { lat: 19.2215, lng: 73.1645 } },
-      { city: "Bhiwandi", taluka: "Bhiwandi", pincode: "421302", coordinates: { lat: 19.2967, lng: 73.0631 } }
+      { city: "Ambernath", taluka: "Ambernath", pincode: "421501", coordinates: { lat: 19.2000, lng: 73.1900 } },
+      { city: "Badlapur", taluka: "Ambernath", pincode: "421503", coordinates: { lat: 19.1660, lng: 73.2350 } },
+      { city: "Bhiwandi", taluka: "Bhiwandi", pincode: "421302", coordinates: { lat: 19.2967, lng: 73.0631 } },
+      { city: "Shahapur", taluka: "Shahapur", pincode: "421601", coordinates: { lat: 19.4500, lng: 73.3300 } },
+      { city: "Murbad", taluka: "Murbad", pincode: "421401", coordinates: { lat: 19.2500, lng: 73.4000 } }
     ],
     "Nagpur": [
       { city: "Nagpur City (Civil Lines)", taluka: "Nagpur Urban", pincode: "440001", coordinates: { lat: 21.1458, lng: 79.0882 } },
@@ -816,4 +895,44 @@ export const getAllLocationsForDistrict = (state, district) => {
     };
   });
 };
+
+// Flatten every single small-to-big city across all states and districts in India
+export const getAllCitiesAcrossIndia = () => {
+  const list = [];
+  Object.entries(INDIA_GEO_DATA).forEach(([state, districts]) => {
+    Object.entries(districts).forEach(([district, cities]) => {
+      cities.forEach(c => {
+        const coords = c.coordinates || getCoordinatesForLocation(state, district, c.taluka, c.city);
+        list.push({
+          state,
+          district,
+          taluka: c.taluka || district,
+          city: c.city,
+          name: c.city,
+          pincode: c.pincode || '',
+          coordinates: coords
+        });
+      });
+    });
+  });
+  return list;
+};
+
+// Return list of all district centers across all states in India
+export const getAllDistrictsAcrossIndia = () => {
+  const list = [];
+  Object.entries(INDIA_GEO_DATA).forEach(([state, districts]) => {
+    Object.keys(districts).forEach(district => {
+      const center = getDistrictCenter(state, district);
+      list.push({
+        state,
+        district,
+        name: `${district} (${state})`,
+        coordinates: { lat: center.lat, lng: center.lng }
+      });
+    });
+  });
+  return list;
+};
+
 

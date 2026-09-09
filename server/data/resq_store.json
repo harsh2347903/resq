@@ -23,6 +23,74 @@
   },
   "incidents": [
     {
+      "type": "Earthquake",
+      "location": "Koyna-Warna Fault Zone (SW Maharashtra)",
+      "coordinates": {
+        "lat": 17.4,
+        "lng": 73.75
+      },
+      "severity": "High",
+      "affected": "3,000+",
+      "reports": 1,
+      "status": "Active",
+      "details": "National Seismological Network / USGS warning: Crustal Epicenter Tremor M 4.8 (Depth 10km · Modified Mercalli VI). Inspect old masonry bridges and transmission towers for shearing.",
+      "reporter": "Automated Sensor Grid (National Seismological Network / USGS)",
+      "reportedAt": "2026-09-09T09:03:31.376Z",
+      "id": "INC-1376",
+      "createdAt": "2026-09-09T09:03:31.376Z"
+    },
+    {
+      "type": "Earthquake",
+      "location": "Koyna-Warna Fault Zone (SW Maharashtra)",
+      "coordinates": {
+        "lat": 17.4,
+        "lng": 73.75
+      },
+      "severity": "High",
+      "affected": "3,000+",
+      "reports": 1,
+      "status": "Active",
+      "details": "National Seismological Network / USGS warning: Crustal Epicenter Tremor M 4.8 (Depth 10km · Modified Mercalli VI). Inspect old masonry bridges and transmission towers for shearing.",
+      "reporter": "Automated Sensor Grid (National Seismological Network / USGS)",
+      "reportedAt": "2026-09-09T09:03:31.166Z",
+      "id": "INC-1166",
+      "createdAt": "2026-09-09T09:03:31.166Z"
+    },
+    {
+      "type": "Earthquake",
+      "location": "Koyna-Warna Fault Zone (SW Maharashtra)",
+      "coordinates": {
+        "lat": 17.4,
+        "lng": 73.75
+      },
+      "severity": "High",
+      "affected": "3,000+",
+      "reports": 1,
+      "status": "Active",
+      "details": "National Seismological Network / USGS warning: Crustal Epicenter Tremor M 4.8 (Depth 10km · Modified Mercalli VI). Inspect old masonry bridges and transmission towers for shearing.",
+      "reporter": "Automated Sensor Grid (National Seismological Network / USGS)",
+      "reportedAt": "2026-09-09T09:03:30.976Z",
+      "id": "INC-0976",
+      "createdAt": "2026-09-09T09:03:30.976Z"
+    },
+    {
+      "type": "Earthquake",
+      "location": "Koyna-Warna Fault Zone (SW Maharashtra)",
+      "coordinates": {
+        "lat": 17.4,
+        "lng": 73.75
+      },
+      "severity": "High",
+      "affected": "3,000+",
+      "reports": 1,
+      "status": "Active",
+      "details": "National Seismological Network / USGS warning: Crustal Epicenter Tremor M 4.8 (Depth 10km · Modified Mercalli VI). Inspect old masonry bridges and transmission towers for shearing.",
+      "reporter": "Automated Sensor Grid (National Seismological Network / USGS)",
+      "reportedAt": "2026-09-09T09:03:29.927Z",
+      "id": "INC-9927",
+      "createdAt": "2026-09-09T09:03:29.927Z"
+    },
+    {
       "type": "Fire",
       "location": "MIDC Industrial Corridor · Kurkumbh",
       "coordinates": {
@@ -282,8 +350,8 @@
         "lng": 73.82
       },
       "priority": "Medium",
-      "status": "Open",
-      "team": "—",
+      "status": "Assigned",
+      "team": "Kabir R. (Boat / Driving)",
       "time": "09:23",
       "phone": "+91 98220 99001",
       "triage": {
@@ -293,7 +361,8 @@
         ],
         "estimatedPersons": 2
       },
-      "createdAt": "2026-09-09T05:24:34.873Z"
+      "createdAt": "2026-09-09T05:24:34.873Z",
+      "updatedAt": "2026-09-09T09:01:43.013Z"
     },
     {
       "id": "RQ-1044",
@@ -565,11 +634,92 @@
         "lat": 18.5074,
         "lng": 73.8077
       },
-      "status": "Available",
-      "missions": 24
+      "status": "On mission",
+      "missions": 24,
+      "updatedAt": "2026-09-09T09:01:43.012Z"
     }
   ],
   "audits": [
+    {
+      "id": "aud-1788944677692-ng5l",
+      "time": "14:34",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Bhandara City, Bhandara)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:04:37.692Z",
+      "previousHash": "b6be20c8b9b77a93305070b0bbb85392d3f537b6b1778cfdbf0ac7192ee9ebd1",
+      "hash": "ba9dc8d3844f226ed51a9a4e907910136d66504a3d0f83fd7689d85face324f8"
+    },
+    {
+      "id": "aud-1788944611376-iazp",
+      "time": "14:33",
+      "actor": "National Seismological Network / USGS",
+      "action": "🛰️ Automated Threat Ingestion: Crustal Epicenter Tremor M 4.8 created Incident #INC-1376",
+      "severity": "critical",
+      "timestamp": "2026-09-09T09:03:31.376Z",
+      "previousHash": "d58913a021b2600d6b110ebdd2a8a98e9f942f7d6fb3a31e457e4697c44f4b45",
+      "hash": "b6be20c8b9b77a93305070b0bbb85392d3f537b6b1778cfdbf0ac7192ee9ebd1"
+    },
+    {
+      "id": "aud-1788944611166-i2ms",
+      "time": "14:33",
+      "actor": "National Seismological Network / USGS",
+      "action": "🛰️ Automated Threat Ingestion: Crustal Epicenter Tremor M 4.8 created Incident #INC-1166",
+      "severity": "critical",
+      "timestamp": "2026-09-09T09:03:31.166Z",
+      "previousHash": "3d1ebcb64ab4912e0b75e4ea02c246b56908e3d14a42d86cb3f98d07925b523c",
+      "hash": "d58913a021b2600d6b110ebdd2a8a98e9f942f7d6fb3a31e457e4697c44f4b45"
+    },
+    {
+      "id": "aud-1788944610976-0cwd",
+      "time": "14:33",
+      "actor": "National Seismological Network / USGS",
+      "action": "🛰️ Automated Threat Ingestion: Crustal Epicenter Tremor M 4.8 created Incident #INC-0976",
+      "severity": "critical",
+      "timestamp": "2026-09-09T09:03:30.976Z",
+      "previousHash": "4dbeacdbca7ddb2b9503fe2a141d42ec4203cfa78fdee819cb9b203f9994f0d7",
+      "hash": "3d1ebcb64ab4912e0b75e4ea02c246b56908e3d14a42d86cb3f98d07925b523c"
+    },
+    {
+      "id": "aud-1788944609927-vps1",
+      "time": "14:33",
+      "actor": "National Seismological Network / USGS",
+      "action": "🛰️ Automated Threat Ingestion: Crustal Epicenter Tremor M 4.8 created Incident #INC-9927",
+      "severity": "critical",
+      "timestamp": "2026-09-09T09:03:29.927Z",
+      "previousHash": "a576c0a9c1cb4d6bd9e9ac0945fc99e644a31beaf19675b4cb726e94a11cce96",
+      "hash": "4dbeacdbca7ddb2b9503fe2a141d42ec4203cfa78fdee819cb9b203f9994f0d7"
+    },
+    {
+      "id": "aud-1788944602070-6ayy",
+      "time": "14:33",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Sitabuldi / Dharampeth, Nagpur)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:03:22.070Z",
+      "previousHash": "e823915e5b42be24c03047da26c7b91c3dbec8969202530fcbd297c029521e87",
+      "hash": "a576c0a9c1cb4d6bd9e9ac0945fc99e644a31beaf19675b4cb726e94a11cce96"
+    },
+    {
+      "id": "aud-1788944503013-vokg",
+      "time": "14:31",
+      "actor": "Harshal",
+      "action": "🎯 Dispatched Kabir R. (Boat / Driving) to Request #RQ-1045 (Sinhagad Rd)",
+      "severity": "high",
+      "timestamp": "2026-09-09T09:01:43.013Z",
+      "previousHash": "2537245b3ae612de817395f9a174a67dff870b113f2bbdeb85ed4562bb128701",
+      "hash": "e823915e5b42be24c03047da26c7b91c3dbec8969202530fcbd297c029521e87"
+    },
+    {
+      "id": "aud-1788944438167-i3j3",
+      "time": "14:30",
+      "actor": "Harshal",
+      "action": "Harshal signed in as System Admin (Sitabuldi / Dharampeth, Nagpur)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:00:38.166Z",
+      "previousHash": "c0a5a170c080bc9d77cbe7a569425407fc23eda69e4633f2f467ebb1f0671587",
+      "hash": "2537245b3ae612de817395f9a174a67dff870b113f2bbdeb85ed4562bb128701"
+    },
     {
       "id": "aud-1788943735733-axkr",
       "time": "14:18",

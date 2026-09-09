@@ -10,8 +10,8 @@ import { useSectorLocation } from './context/LocationContext';
 import { LocationSwitcherBadge } from './components/LocationSwitcherModal';
 import { CrisisEmergencyEngine, EmergencyCrisisButton, DashboardCrisisWidget } from './components/CrisisEmergencyEngine';
 import { isCrisisActive } from './lib/crisisManager';
-import { api } from './lib/apiClient';
 import { GoogleOperationsMap } from './components/GoogleOperationsMap';
+import { DigitalTemperatureReader, LiveTemperatureNavPill } from './components/DigitalTemperatureReader';
 
 
 const ACTIVITY_KEY='resq_system_activity_v3';
@@ -333,6 +333,7 @@ function Shell({children}){
     )}
     <header className="topbar"><div><span className="eyebrow">National resilience network</span><h1>{pageMeta[location.pathname]?.[0]||'RESQ'}</h1></div><div className="top-actions">
      <LocationSwitcherBadge />
+     <LiveTemperatureNavPill onClick={() => window.dispatchEvent(new CustomEvent('resq:open-temp-reader'))} />
      <EmergencyCrisisButton />
 
      {canRunDrill && (
@@ -701,7 +702,14 @@ function GovernmentDashboard(){
 }
 
 function OperationsMap(props){
-  return <GoogleOperationsMap {...props} />;
+  return (
+    <GoogleOperationsMap
+      {...props}
+      onInspectTemperature={(loc) => {
+        window.dispatchEvent(new CustomEvent('resq:open-temp-reader', { detail: loc }));
+      }}
+    />
+  );
 }
 
 function MapPinPoint({x,y,type,label,title,onSelect,selected}){
@@ -3462,6 +3470,7 @@ function Landing(){
       </div>
 
       <div className="landing-theme-actions">
+        <LiveTemperatureNavPill onClick={() => window.dispatchEvent(new CustomEvent('resq:open-temp-reader'))} />
         <ThemeToggle/>
         <button className="primary-button interactive command-portal-btn" onClick={()=>navigate('/login')}>
           <Icons.ShieldCheck size={16}/> Incident Command Portal <Icons.ArrowRight size={14}/>
@@ -3810,19 +3819,35 @@ function Landing(){
 }
 
 export default function App(){
+  const [tempModalOpen, setTempModalOpen] = useState(false);
+  const [tempModalLocation, setTempModalLocation] = useState(null);
+
   useEffect(()=>{
     applyGlobalPreferences();
     const fn=e=>applyGlobalPreferences(e.detail);
     window.addEventListener('resq:preferences',fn);
     window.addEventListener('storage',()=>applyGlobalPreferences());
+
+    const onOpenTemp = (e) => {
+      setTempModalLocation(e.detail || null);
+      setTempModalOpen(true);
+    };
+    window.addEventListener('resq:open-temp-reader', onOpenTemp);
+
     return()=>{
       window.removeEventListener('resq:preferences',fn);
       window.removeEventListener('storage',()=>applyGlobalPreferences());
+      window.removeEventListener('resq:open-temp-reader', onOpenTemp);
     };
   },[]);
   return (
     <>
       <CrisisEmergencyEngine />
+      <DigitalTemperatureReader
+        isOpen={tempModalOpen}
+        onClose={() => { setTempModalOpen(false); setTempModalLocation(null); }}
+        initialLocation={tempModalLocation}
+      />
       <Routes>
         <Route path="/" element={<Landing/>}/>
         <Route path="/login" element={<Login/>}/>

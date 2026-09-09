@@ -10,7 +10,8 @@ import {
   getCitiesForDistrict,
   getDistrictCenter,
   getDistrictBounds,
-  getAllLocationsForDistrict
+  getAllLocationsForDistrict,
+  getAllCitiesAcrossIndia
 } from '../lib/indiaGeoData';
 import { LocationSwitcherBadge } from './LocationSwitcherModal';
 
@@ -33,7 +34,7 @@ const BASEMAP_TILES = {
   satellite: {
     name: 'Satellite (Realistic)',
     icon: Icons.Globe,
-    desc: 'High-resolution aerial satellite photography with terrain relief',
+    desc: 'High-resolution aerial satellite photography with terrain relief & road labels',
     base: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     overlay: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
     maxZoom: 19,
@@ -66,7 +67,10 @@ const BASEMAP_TILES = {
   }
 };
 
-export function CustomTacticalMap({ layers = { incidents: true, shelters: true, ngo: true, responders: true } }) {
+export function CustomTacticalMap({
+  layers = { incidents: true, shelters: true, ngo: true, responders: true },
+  onInspectTemperature
+}) {
   const { activeLocation, switchLocation } = useLocation();
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -74,8 +78,11 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
   const markersLayerRef = useRef(null);
 
   const [activeBasemap, setActiveBasemap] = useState('satellite');
+  const [mapScope, setMapScope] = useState('district'); // 'district' | 'all-cities'
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [searchFilter, setSearchFilter] = useState('');
+  const [headerSearchQuery, setHeaderSearchQuery] = useState('');
+  const [headerSearchResults, setHeaderSearchResults] = useState([]);
   const [cursorCoords, setCursorCoords] = useState('');
   const [currentZoom, setCurrentZoom] = useState(12);
   const [toast, setToast] = useState('');
@@ -132,31 +139,61 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
     return getAllLocationsForDistrict(activeLocation.state, activeLocation.district);
   }, [activeLocation.state, activeLocation.district]);
 
+  // Nationwide small-to-big cities list
+  const allNationwideCities = useMemo(() => {
+    return getAllCitiesAcrossIndia();
+  }, []);
+
   // Master List of Plotted Locations: Locality stations + Incidents + Shelters + NGOs
   const allLocations = useMemo(() => {
-    // 1. Every location/area in the selected district is represented
-    const localityNodes = districtLocations.map((loc, idx) => {
-      const lat = loc.coordinates?.lat || (currentCenter.lat + ((idx % 5) - 2) * 0.025);
-      const lng = loc.coordinates?.lng || (currentCenter.lng + (Math.floor(idx / 5) - 1) * 0.025);
-      return {
-        id: `loc-${loc.city.replace(/[^a-zA-Z0-9]/g, '-')}`,
+    // 1. Locality nodes based on mapScope
+    let localityNodes = [];
+
+    if (mapScope === 'all-cities') {
+      // Map EVERY single city across India (small to large)
+      localityNodes = allNationwideCities.map((c, idx) => ({
+        id: `city-${c.state}-${c.district}-${c.city.replace(/[^a-zA-Z0-9]/g, '-')}`,
         category: 'locality',
         type: 'locality',
-        name: loc.city,
-        title: `${loc.city} (${loc.taluka || 'Sector'})`,
-        district: activeLocation.district,
-        taluka: loc.taluka || activeLocation.district,
-        city: loc.city,
-        pincode: loc.pincode || '',
-        sub: `Sector Operations Base · PIN ${loc.pincode || 'Active'} · Quick Response Hub`,
-        lat,
-        lng,
-        team: `${loc.city} Disaster Cell & Civil Defense`,
-        services: ['Local Command Post', 'Shelter Access Hub', 'Field Triage Base']
-      };
-    });
+        name: c.city,
+        title: `${c.city} (${c.district}, ${c.state})`,
+        district: c.district,
+        state: c.state,
+        taluka: c.taluka || c.district,
+        city: c.city,
+        pincode: c.pincode || '',
+        sub: `${c.district} District &bull; PIN ${c.pincode || 'Active'} &bull; Municipal Sector Hub`,
+        lat: c.coordinates.lat,
+        lng: c.coordinates.lng,
+        team: `${c.city} Civil Defense Core`,
+        services: ['Local Station', 'Shelter Hub', 'Field Triage Base']
+      }));
+    } else {
+      // Micro-focus: Every single location in active district
+      localityNodes = districtLocations.map((loc, idx) => {
+        const lat = loc.coordinates?.lat || (currentCenter.lat + ((idx % 5) - 2) * 0.025);
+        const lng = loc.coordinates?.lng || (currentCenter.lng + (Math.floor(idx / 5) - 1) * 0.025);
+        return {
+          id: `loc-${loc.city.replace(/[^a-zA-Z0-9]/g, '-')}`,
+          category: 'locality',
+          type: 'locality',
+          name: loc.city,
+          title: `${loc.city} (${loc.taluka || 'Sector'})`,
+          district: activeLocation.district,
+          state: activeLocation.state,
+          taluka: loc.taluka || activeLocation.district,
+          city: loc.city,
+          pincode: loc.pincode || '',
+          sub: `Sector Operations Base &bull; PIN ${loc.pincode || 'Active'} &bull; Quick Response Hub`,
+          lat,
+          lng,
+          team: `${loc.city} Disaster Cell & Civil Defense`,
+          services: ['Local Command Post', 'Shelter Access Hub', 'Field Triage Base']
+        };
+      });
+    }
 
-    // 2. Incidents (filter to district or nearby)
+    // 2. Incidents
     const incs = (incidentsList.length ? incidentsList : [
       { id: 'INC-077', type: 'Flood', district: 'Pune', taluka: 'Haveli', location: 'Pune • Mula-Mutha basin', coordinates: { lat: 18.5312, lng: 73.8553 }, severity: 'Critical', affected: '2,482', details: 'Water surge +3.8m above danger mark.' },
       { id: 'INC-076', type: 'Landslide', district: 'Pune', taluka: 'Maval', location: 'Lonavala • Old Mumbai Rd', coordinates: { lat: 18.7546, lng: 73.4062 }, severity: 'High', affected: '218', details: 'Debris blocking transit corridor.' },
@@ -165,7 +202,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
       { id: 'INC-075', type: 'Fire', district: 'Nashik', taluka: 'Nashik', location: 'Nashik • MIDC Industrial Zone', coordinates: { lat: 19.9975, lng: 73.7898 }, severity: 'High', affected: '624', details: 'Chemical storage vapor flare containment.' },
       { id: 'INC-074', type: 'Heatwave', district: 'Nagpur', taluka: 'Nagpur Urban', location: 'Nagpur • Central zone', coordinates: { lat: 21.1458, lng: 79.0882 }, severity: 'Medium', affected: '5,870', details: 'Severe thermal warning.' },
       { id: 'INC-079', type: 'Landslide', district: 'Satara', taluka: 'Wai', location: 'Wai-Pasarni Ghat Corridor', coordinates: { lat: 17.9480, lng: 73.8920 }, severity: 'Critical', affected: '340', details: 'Hillside rockfall blocking access.' }
-    ]).filter(i => (i.district || '').toLowerCase() === (activeLocation.district || '').toLowerCase()).map(i => ({
+    ]).filter(i => mapScope === 'all-cities' || (i.district || '').toLowerCase() === (activeLocation.district || '').toLowerCase()).map(i => ({
       id: i.id || `inc-${Math.random()}`,
       category: 'incident',
       type: (i.severity?.toLowerCase() === 'critical' ? 'critical' : 'warning'),
@@ -173,6 +210,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
       title: `${i.type} at ${i.location}`,
       sub: i.details || `Impact zone: ${i.affected || 'Multiple'} citizens affected`,
       district: i.district || activeLocation.district,
+      state: activeLocation.state,
       taluka: i.taluka || '',
       lat: i.coordinates?.lat ?? currentCenter.lat,
       lng: i.coordinates?.lng ?? currentCenter.lng,
@@ -194,15 +232,16 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
       { id: 4, name: 'Nehru Stadium Transit Camp', district: 'Nagpur', taluka: 'Nagpur Urban', city: 'Nagpur', address: 'Civil Lines, Nagpur', coordinates: { lat: 21.1458, lng: 79.0882 }, capacity: 1100, occupied: 620, services: ['Food', 'Medical', 'Cooling Rooms'], eta: '12 min' },
       { id: 17, name: 'Golf Club Ground Relief Camp', district: 'Nashik', taluka: 'Nashik', city: 'Nashik', address: 'Old Agra Rd, Nashik', coordinates: { lat: 19.9975, lng: 73.7898 }, capacity: 700, occupied: 310, services: ['Food', 'Water'], eta: '9 min' },
       { id: 3, name: 'ZP School Relief Centre', district: 'Satara', taluka: 'Satara', city: 'Satara', address: 'Satara Main Rd', coordinates: { lat: 17.6805, lng: 74.0183 }, capacity: 340, occupied: 210, services: ['Food', 'Water', 'First Aid'], eta: '15 min' }
-    ]).filter(s => (s.district || '').toLowerCase() === (activeLocation.district || '').toLowerCase()).map(s => ({
+    ]).filter(s => mapScope === 'all-cities' || (s.district || '').toLowerCase() === (activeLocation.district || '').toLowerCase()).map(s => ({
       id: `she-${s.id}`,
       category: 'shelter',
       type: 'safe',
       name: s.name,
       title: s.name,
       district: s.district || activeLocation.district,
+      state: activeLocation.state,
       taluka: s.taluka || '',
-      sub: `${s.capacity - s.occupied} Available Beds · ${Math.round((s.occupied / s.capacity) * 100)}% Occupancy`,
+      sub: `${s.capacity - s.occupied} Available Beds &bull; ${Math.round((s.occupied / s.capacity) * 100)}% Occupancy`,
       lat: s.coordinates?.lat ?? currentCenter.lat,
       lng: s.coordinates?.lng ?? currentCenter.lng,
       capacity: s.capacity,
@@ -223,8 +262,9 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
         name: 'Seva Food Kitchen Base',
         title: 'Seva Relief Mobile Kitchen 04',
         district: 'Pune',
+        state: 'Maharashtra',
         taluka: 'Haveli',
-        sub: '1,200 survival rations/hr · 42 Active Volunteers',
+        sub: '1,200 survival rations/hr &bull; 42 Active Volunteers',
         lat: 18.4900,
         lng: 73.8150,
         team: 'Seva Collective Logistics Unit',
@@ -237,6 +277,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
         name: 'Kabir R. Watercraft Squad',
         title: 'NDRF Inflatable Zodiac Boat Squad',
         district: 'Pune',
+        state: 'Maharashtra',
         taluka: 'Haveli',
         sub: '6 motorized rescue watercraft deployed for evacuations',
         lat: 18.5074,
@@ -251,6 +292,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
         name: 'Coastal Lifeguard Volunteer Core',
         title: 'Mumbai Coastal SAR Squad',
         district: 'Mumbai City',
+        state: 'Maharashtra',
         taluka: 'Worli',
         sub: 'Jet-skis and flood rafts staged at Marine Lines',
         lat: 18.9400,
@@ -265,6 +307,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
         name: 'Vidarbha Heat Relief Volunteers',
         title: 'Vidarbha Cooling Taskforce',
         district: 'Nagpur',
+        state: 'Maharashtra',
         taluka: 'Nagpur Urban',
         sub: 'Hydration and electrolyte distribution for field citizens',
         lat: 21.1400,
@@ -272,13 +315,13 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
         team: 'Nagpur Red Cross Unit',
         services: ['ORAS Pouches', 'Mobile Ambulances']
       }
-    ].filter(n => (n.district || '').toLowerCase() === (activeLocation.district || '').toLowerCase()).map(n => ({
+    ].filter(n => mapScope === 'all-cities' || (n.district || '').toLowerCase() === (activeLocation.district || '').toLowerCase()).map(n => ({
       ...n,
       address: `${n.title}, ${n.district}`
     }));
 
     return [...incs, ...shels, ...ngos, ...localityNodes];
-  }, [districtLocations, incidentsList, sheltersList, activeLocation, currentCenter]);
+  }, [mapScope, allNationwideCities, districtLocations, incidentsList, sheltersList, activeLocation, currentCenter]);
 
   // Filter plotted points based on active layer toggles and search query
   const visibleLocations = useMemo(() => {
@@ -347,7 +390,6 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    // Remove existing tile layers
     if (tileLayersRef.current.base) {
       map.removeLayer(tileLayersRef.current.base);
       tileLayersRef.current.base = null;
@@ -359,7 +401,6 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
 
     const cfg = BASEMAP_TILES[activeBasemap] || BASEMAP_TILES.satellite;
 
-    // Add base tiles
     const baseLayer = L.tileLayer(cfg.base, {
       maxZoom: cfg.maxZoom,
       subdomains: cfg.subdomains || 'abc',
@@ -367,7 +408,6 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
     }).addTo(map);
     tileLayersRef.current.base = baseLayer;
 
-    // Add overlay labels (e.g. roads & place names on satellite)
     if (cfg.overlay) {
       const overlayLayer = L.tileLayer(cfg.overlay, {
         maxZoom: cfg.maxZoom,
@@ -377,12 +417,15 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
     }
   }, [activeBasemap]);
 
-  // Center/Fit map when district changes
+  // Center/Fit map when district or scope changes
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    if (activeBounds && activeBounds.minLat && activeBounds.maxLat) {
+    if (mapScope === 'all-cities') {
+      // Zoom out to regional / statewide view
+      map.setView([19.5, 75.5], 7, { animate: true });
+    } else if (activeBounds && activeBounds.minLat && activeBounds.maxLat) {
       map.fitBounds([
         [activeBounds.minLat, activeBounds.minLng],
         [activeBounds.maxLat, activeBounds.maxLng]
@@ -390,7 +433,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
     } else {
       map.setView([currentCenter.lat, currentCenter.lng], 12, { animate: true });
     }
-  }, [activeLocation.district, activeLocation.state, activeBounds, currentCenter]);
+  }, [mapScope, activeLocation.district, activeLocation.state, activeBounds, currentCenter]);
 
   // Render Realistic Leaflet Markers
   useEffect(() => {
@@ -403,7 +446,6 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
       const isSelected = selectedPoint?.id === loc.id;
       const distKm = calculateHaversineKm(currentCenter.lat, currentCenter.lng, loc.lat, loc.lng);
 
-      // Distinct realistic icon styling based on category
       let iconColor = '#00f0ff';
       let iconBadge = '📍';
       let pinClass = 'pin-locality';
@@ -448,7 +490,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
 
       const marker = L.marker([loc.lat, loc.lng], { icon: customIcon });
 
-      // Rich realistic operational popup with 1-click Google Maps Navigation
+      // Rich realistic operational popup with 1-click Google Maps Navigation & Temperature Telemetry
       const popupHtml = `
         <div class="resq-leaflet-popup-card">
           <div class="popup-card-header" style="border-left: 4px solid ${iconColor};">
@@ -467,14 +509,14 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
               </div>
               ${loc.pincode ? `
                 <div class="detail-row">
-                  <span class="label">Postal Code:</span>
+                  <span class="label">Postal Index:</span>
                   <span class="val">${loc.pincode}</span>
                 </div>
               ` : ''}
               ${loc.capacity ? `
                 <div class="detail-row">
-                  <span class="label">Bed Capacity:</span>
-                  <span class="val">${loc.capacity - (loc.occupied || 0)} available / ${loc.capacity} total</span>
+                  <span class="label">Capacity:</span>
+                  <span class="val">${loc.capacity - (loc.occupied || 0)} available / ${loc.capacity}</span>
                 </div>
               ` : ''}
               <div class="detail-row">
@@ -484,13 +526,20 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
             </div>
           </div>
           <div class="popup-card-footer">
+            <button
+              type="button"
+              class="popup-temp-inspect-btn"
+              data-loc-id="${loc.id}"
+            >
+              🌡️ Check Real-time Temperature Telemetry
+            </button>
             <a
               href="https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}&travelmode=driving"
               target="_blank"
               rel="noopener noreferrer"
               class="popup-nav-btn"
             >
-              🚗 Open Driving Directions in Google Maps
+              🚗 Navigate via Google Maps
             </a>
           </div>
         </div>
@@ -502,15 +551,37 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
         closeButton: true
       });
 
+      marker.on('popupopen', (e) => {
+        const el = e.popup.getElement();
+        if (el) {
+          const tempBtn = el.querySelector('.popup-temp-inspect-btn');
+          if (tempBtn) {
+            tempBtn.onclick = () => {
+              const locPayload = {
+                name: loc.title || loc.name,
+                district: loc.district,
+                state: loc.state || activeLocation.state,
+                lat: loc.lat,
+                lng: loc.lng
+              };
+              if (onInspectTemperature) {
+                onInspectTemperature(locPayload);
+              }
+              window.dispatchEvent(new CustomEvent('resq:open-temp-reader', { detail: locPayload }));
+            };
+          }
+        }
+      });
+
       marker.on('click', () => {
         setSelectedPoint(loc);
       });
 
       markersLayerRef.current.addLayer(marker);
     });
-  }, [visibleLocations, selectedPoint, currentCenter]);
+  }, [visibleLocations, selectedPoint, currentCenter, onInspectTemperature, activeLocation.state]);
 
-  // Fly to specific location when clicked in quick-fly list
+  // Fly to specific location
   const handleFlyToLocation = useCallback((loc) => {
     setSelectedPoint(loc);
     const map = mapInstanceRef.current;
@@ -519,7 +590,6 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
         duration: 1.2,
         easeLinearity: 0.25
       });
-      // Find corresponding marker and open popup
       markersLayerRef.current.eachLayer((marker) => {
         const pos = marker.getLatLng();
         if (Math.abs(pos.lat - loc.lat) < 0.0001 && Math.abs(pos.lng - loc.lng) < 0.0001) {
@@ -533,7 +603,9 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
   const handleResetDistrictView = useCallback(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
-    if (activeBounds) {
+    if (mapScope === 'all-cities') {
+      map.setView([19.5, 75.5], 7, { animate: true });
+    } else if (activeBounds) {
       map.fitBounds([
         [activeBounds.minLat, activeBounds.minLng],
         [activeBounds.maxLat, activeBounds.maxLng]
@@ -542,7 +614,23 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
       map.setView([currentCenter.lat, currentCenter.lng], 12, { animate: true });
     }
     setSelectedPoint(null);
-  }, [activeBounds, currentCenter]);
+  }, [mapScope, activeBounds, currentCenter]);
+
+  // Header quick search filter
+  useEffect(() => {
+    if (!headerSearchQuery.trim()) {
+      setHeaderSearchResults([]);
+      return;
+    }
+    const q = headerSearchQuery.toLowerCase();
+    const matches = allNationwideCities.filter(c =>
+      c.city.toLowerCase().includes(q) ||
+      c.district.toLowerCase().includes(q) ||
+      c.taluka.toLowerCase().includes(q) ||
+      c.pincode.includes(q)
+    ).slice(0, 8);
+    setHeaderSearchResults(matches);
+  }, [headerSearchQuery, allNationwideCities]);
 
   // Copy GPS to clipboard
   const handleCopyCoords = useCallback((loc) => {
@@ -566,6 +654,28 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
           <LocationSwitcherBadge/>
         </div>
 
+        {/* Map Scope Toggle (District Micro vs All-India Macro) */}
+        <div className="gis-scope-toggle">
+          <button
+            type="button"
+            className={`scope-pill-btn ${mapScope === 'district' ? 'active' : ''}`}
+            onClick={() => setMapScope('district')}
+            title="Focus on active district and its micro-localities"
+          >
+            <Icons.MapPin size={12}/>
+            <span>{activeLocation.district} Micro-Sectors ({districtLocations.length})</span>
+          </button>
+          <button
+            type="button"
+            className={`scope-pill-btn ${mapScope === 'all-cities' ? 'active' : ''}`}
+            onClick={() => setMapScope('all-cities')}
+            title="Cover every city small to big across the state and country"
+          >
+            <Icons.Globe size={12}/>
+            <span>All Cities Coverage ({allNationwideCities.length}+)</span>
+          </button>
+        </div>
+
         {/* Basemap Style Switcher */}
         <div className="gis-basemap-selector">
           {Object.entries(BASEMAP_TILES).map(([key, cfg]) => {
@@ -586,8 +696,63 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
           })}
         </div>
 
-        {/* Right Tools */}
+        {/* Right Search & Controls */}
         <div className="gis-header-right">
+          {/* Quick City Search Box */}
+          <div className="map-header-search-wrap">
+            <Icons.Search size={12} className="map-search-ico"/>
+            <input
+              type="text"
+              className="map-header-search-input"
+              placeholder="Search any small/big city..."
+              value={headerSearchQuery}
+              onChange={(e) => setHeaderSearchQuery(e.target.value)}
+            />
+            {headerSearchQuery && (
+              <button type="button" className="clear-map-search" onClick={() => setHeaderSearchQuery('')}>
+                <Icons.X size={11}/>
+              </button>
+            )}
+
+            {/* Quick search dropdown */}
+            <AnimatePresence>
+              {headerSearchResults.length > 0 && (
+                <motion.div
+                  className="map-header-search-dropdown glass-panel"
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                >
+                  {headerSearchResults.map((c) => (
+                    <button
+                      key={`${c.city}-${c.district}`}
+                      type="button"
+                      className="map-search-row"
+                      onClick={() => {
+                        handleFlyToLocation({
+                          ...c,
+                          id: `city-${c.city}`,
+                          category: 'locality',
+                          name: c.city,
+                          title: `${c.city} (${c.district})`,
+                          lat: c.coordinates.lat,
+                          lng: c.coordinates.lng,
+                          sub: `${c.district} District &bull; PIN ${c.pincode || 'Active'}`
+                        });
+                        setHeaderSearchQuery('');
+                        setHeaderSearchResults([]);
+                      }}
+                    >
+                      <Icons.MapPin size={12}/>
+                      <span className="search-city-name">{c.city}</span>
+                      <span className="search-dist-tag">{c.district}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <button
             type="button"
             className="gis-action-btn"
@@ -595,7 +760,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
             title="Auto-Fit District Bounds"
           >
             <Icons.Maximize2 size={13}/>
-            <span>Fit {activeLocation.district}</span>
+            <span>Fit {mapScope === 'all-cities' ? 'Region' : activeLocation.district}</span>
           </button>
         </div>
       </div>
@@ -716,12 +881,12 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
             <span className="val mono">{cursorCoords || `${currentCenter.lat.toFixed(4)}° N, ${currentCenter.lng.toFixed(4)}° E`}</span>
           </div>
           <div className="status-item">
-            <span className="label">SECTOR:</span>
-            <span className="val">{activeLocation.district} • {activeLocation.taluka || 'All Talukas'}</span>
+            <span className="label">SCOPE:</span>
+            <span className="val highlight">{mapScope === 'all-cities' ? 'ALL CITIES (STATEWIDE)' : `${activeLocation.district} LOCALITIES`}</span>
           </div>
           <div className="status-item">
             <span className="label">MAPPED HUBS:</span>
-            <span className="val highlight">{visibleLocations.length} active points</span>
+            <span className="val highlight">{visibleLocations.length} active hubs</span>
           </div>
           <div className="status-item">
             <span className="label">BASEMAP:</span>
@@ -773,14 +938,34 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
                 <span className="col-sub">Logistics Team: {selectedPoint.team || 'Civil Defense & NDRF'}</span>
               </div>
               <div className="drawer-col actions-col">
+                <button
+                  type="button"
+                  className="drawer-temp-btn"
+                  onClick={() => {
+                    const locPayload = {
+                      name: selectedPoint.title || selectedPoint.name,
+                      district: selectedPoint.district,
+                      state: selectedPoint.state || activeLocation.state,
+                      lat: selectedPoint.lat,
+                      lng: selectedPoint.lng
+                    };
+                    if (onInspectTemperature) {
+                      onInspectTemperature(locPayload);
+                    }
+                    window.dispatchEvent(new CustomEvent('resq:open-temp-reader', { detail: locPayload }));
+                  }}
+                >
+                  <Icons.Thermometer size={13}/>
+                  <span>Live Temp Telemetry</span>
+                </button>
                 <a
                   href={`https://www.google.com/maps/dir/?api=1&destination=${selectedPoint.lat},${selectedPoint.lng}&travelmode=driving`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="drawer-nav-link"
                 >
-                  <Icons.Navigation size={14}/>
-                  <span>Navigate in Google Maps</span>
+                  <Icons.Navigation size={13}/>
+                  <span>Google Maps</span>
                 </a>
                 <button
                   type="button"
@@ -788,7 +973,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
                   onClick={() => handleCopyCoords(selectedPoint)}
                 >
                   <Icons.Copy size={13}/>
-                  <span>Copy Coordinates</span>
+                  <span>Copy GPS</span>
                 </button>
               </div>
             </div>
