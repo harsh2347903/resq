@@ -2093,7 +2093,7 @@ function Analytics(){
 }
 
 function TrendChart({range}){
-  const [chartMode,setChartMode]=useState('wave');
+  const [chartMode,setChartMode]=useState('telemetry');
   const [hoverIdx,setHoverIdx]=useState(null);
   const [drillBump,setDrillBump]=useState(0);
 
@@ -2106,35 +2106,35 @@ function TrendChart({range}){
   },[]);
 
   const rawSeries = range === '24h' ? [
-    { label: '02:00', requests: 42, resolved: 36, critical: 6, area: 'Mula Basin' },
-    { label: '04:00', requests: 56, resolved: 48, critical: 9, area: 'Sinhagad' },
-    { label: '06:00', requests: 38, resolved: 34, critical: 4, area: 'Warje' },
-    { label: '08:00', requests: 74, resolved: 62, critical: 12, area: 'Kothrud' },
-    { label: '10:00', requests: 64, resolved: 58, critical: 8, area: 'Hadapsar' },
-    { label: '12:00', requests: 81, resolved: 70, critical: 14, area: 'Shivaji Nagar' },
-    { label: '14:00', requests: 67, resolved: 60, critical: 10, area: 'Deccan' },
-    { label: '16:00', requests: 88, resolved: 76, critical: 15, area: 'Pimpri' },
-    { label: '18:00', requests: 94, resolved: 82, critical: 18, area: 'Aundh' },
-    { label: '20:00', requests: 76, resolved: 68, critical: 11, area: 'Katraj' },
-    { label: '22:00', requests: 82, resolved: 74, critical: 13, area: 'Camp Sector' },
-    { label: '24:00', requests: 69, resolved: 65, critical: 8, area: 'Viman Nagar' },
+    { label: '02:00', requests: 42, resolved: 36, critical: 6, area: 'Mula Basin', mtta: 3.8, sla: 98.4 },
+    { label: '04:00', requests: 56, resolved: 48, critical: 9, area: 'Sinhagad Corridor', mtta: 4.1, sla: 97.2 },
+    { label: '06:00', requests: 38, resolved: 34, critical: 4, area: 'Warje Sector', mtta: 3.2, sla: 99.1 },
+    { label: '08:00', requests: 74, resolved: 62, critical: 12, area: 'Kothrud Core', mtta: 5.4, sla: 96.0 },
+    { label: '10:00', requests: 64, resolved: 58, critical: 8, area: 'Hadapsar Hub', mtta: 4.5, sla: 97.8 },
+    { label: '12:00', requests: 81, resolved: 70, critical: 14, area: 'Shivaji Nagar HQ', mtta: 6.2, sla: 95.1 },
+    { label: '14:00', requests: 67, resolved: 60, critical: 10, area: 'Deccan Gymkhana', mtta: 4.9, sla: 97.0 },
+    { label: '16:00', requests: 88, resolved: 76, critical: 15, area: 'Pimpri Industrial', mtta: 6.8, sla: 94.8 },
+    { label: '18:00', requests: 94, resolved: 82, critical: 18, area: 'Aundh Corridor', mtta: 7.2, sla: 93.9 },
+    { label: '20:00', requests: 76, resolved: 68, critical: 11, area: 'Katraj Basin', mtta: 5.6, sla: 96.5 },
+    { label: '22:00', requests: 82, resolved: 74, critical: 13, area: 'Camp District', mtta: 5.9, sla: 95.8 },
+    { label: '24:00', requests: 69, resolved: 65, critical: 8, area: 'Viman Nagar Sector', mtta: 4.6, sla: 98.0 },
   ] : range === '7d' ? [
-    { label: 'Mon', requests: 62, resolved: 54, critical: 11, area: 'District West' },
-    { label: 'Tue', requests: 48, resolved: 42, critical: 7, area: 'District North' },
-    { label: 'Wed', requests: 71, resolved: 63, critical: 12, area: 'River Corridor' },
-    { label: 'Thu', requests: 88, resolved: 78, critical: 16, area: 'Metro Core' },
-    { label: 'Fri', requests: 92, resolved: 84, critical: 17, area: 'Industrial East' },
-    { label: 'Sat', requests: 75, resolved: 70, critical: 10, area: 'Valley Route' },
-    { label: 'Sun', requests: 84, resolved: 79, critical: 14, area: 'Highland Pass' },
+    { label: 'Mon', requests: 62, resolved: 54, critical: 11, area: 'District West', mtta: 4.8, sla: 96.8 },
+    { label: 'Tue', requests: 48, resolved: 42, critical: 7, area: 'District North', mtta: 3.9, sla: 98.2 },
+    { label: 'Wed', requests: 71, resolved: 63, critical: 12, area: 'River Corridor', mtta: 5.2, sla: 95.9 },
+    { label: 'Thu', requests: 88, resolved: 78, critical: 16, area: 'Metro Core', mtta: 6.7, sla: 94.3 },
+    { label: 'Fri', requests: 92, resolved: 84, critical: 17, area: 'Industrial East', mtta: 7.1, sla: 93.7 },
+    { label: 'Sat', requests: 75, resolved: 70, critical: 10, area: 'Valley Route', mtta: 5.4, sla: 96.9 },
+    { label: 'Sun', requests: 84, resolved: 79, critical: 14, area: 'Highland Pass', mtta: 6.1, sla: 95.4 },
   ] : [
-    { label: 'W1', requests: 54, resolved: 48, critical: 9, area: 'Week 1 Surge' },
-    { label: 'W2', requests: 68, resolved: 60, critical: 12, area: 'Week 2 Quota' },
-    { label: 'W3', requests: 61, resolved: 55, critical: 10, area: 'Week 3 Advisory' },
-    { label: 'W4', requests: 78, resolved: 70, critical: 14, area: 'Week 4 Front' },
-    { label: 'W5', requests: 89, resolved: 81, critical: 16, area: 'Week 5 Peak' },
-    { label: 'W6', requests: 94, resolved: 86, critical: 18, area: 'Week 6 Evac' },
-    { label: 'W7', requests: 81, resolved: 74, critical: 13, area: 'Week 7 Relief' },
-    { label: 'W8', requests: 97, resolved: 88, critical: 19, area: 'Week 8 Monsoon' },
+    { label: 'W1', requests: 54, resolved: 48, critical: 9, area: 'Week 1 Surge', mtta: 4.4, sla: 97.5 },
+    { label: 'W2', requests: 68, resolved: 60, critical: 12, area: 'Week 2 Baseline', mtta: 5.1, sla: 96.2 },
+    { label: 'W3', requests: 61, resolved: 55, critical: 10, area: 'Week 3 Advisory', mtta: 4.7, sla: 97.0 },
+    { label: 'W4', requests: 78, resolved: 70, critical: 14, area: 'Week 4 Monsoon Front', mtta: 5.8, sla: 95.3 },
+    { label: 'W5', requests: 89, resolved: 81, critical: 16, area: 'Week 5 Peak Runoff', mtta: 6.6, sla: 94.1 },
+    { label: 'W6', requests: 94, resolved: 86, critical: 18, area: 'Week 6 Inundation', mtta: 7.0, sla: 93.5 },
+    { label: 'W7', requests: 81, resolved: 74, critical: 13, area: 'Week 7 Relief Staging', mtta: 5.9, sla: 95.8 },
+    { label: 'W8', requests: 97, resolved: 88, critical: 19, area: 'Week 8 Inflow Surge', mtta: 7.4, sla: 92.8 },
   ];
 
   const series = rawSeries.map((item, idx) => {
@@ -2154,22 +2154,42 @@ function TrendChart({range}){
   const avgResolved = Math.round(series.reduce((acc,s)=>acc+s.resolved,0)/series.length);
   const resolutionRate = Math.round((avgResolved/avgRequests)*100);
 
+  // Calculate Statistical Process Control (SPC) Limits
+  const variance = series.reduce((acc,s)=>acc+Math.pow(s.requests-avgRequests,2),0)/series.length;
+  const stdDev = Math.round(Math.sqrt(variance));
+  const ucl = Math.min(98, Math.round(avgRequests + 1.8 * stdDev)); // Upper Control Limit
+  const lcl = Math.max(15, Math.round(avgRequests - 1.8 * stdDev)); // Lower Control Limit
+
+  // Calculate 3-interval Exponential Moving Average (EMA)
+  const emaValues = [];
+  const k = 2 / (3 + 1);
+  let prevEma = series[0].requests;
+  series.forEach((pt, i) => {
+    if (i === 0) {
+      emaValues.push(pt.requests);
+    } else {
+      prevEma = pt.requests * k + prevEma * (1 - k);
+      emaValues.push(Math.round(prevEma));
+    }
+  });
+
   const svgW = 600;
   const svgH = 220;
-  const padX = 25;
-  const padY = 25;
+  const padX = 28;
+  const padY = 24;
   const chartW = svgW - padX * 2;
   const chartH = svgH - padY * 2;
 
   const getX = idx => padX + (idx / (series.length - 1)) * chartW;
   const getY = val => padY + chartH - (val / maxVal) * chartH;
 
-  const buildPath = key => series.reduce((acc, pt, idx, arr) => {
+  // Build crisp curves without neon distortion
+  const buildSmoothPath = (values) => values.reduce((acc, val, idx, arr) => {
     const x = getX(idx);
-    const y = getY(pt[key]);
+    const y = getY(val);
     if (idx === 0) return `M ${x} ${y}`;
     const prevX = getX(idx - 1);
-    const prevY = getY(arr[idx - 1][key]);
+    const prevY = getY(arr[idx - 1]);
     const cpX1 = prevX + (x - prevX) / 2;
     const cpY1 = prevY;
     const cpX2 = prevX + (x - prevX) / 2;
@@ -2177,49 +2197,56 @@ function TrendChart({range}){
     return `${acc} C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${x} ${y}`;
   }, '');
 
-  const reqLine = buildPath('requests');
-  const resLine = buildPath('resolved');
+  const reqLine = buildSmoothPath(series.map(s => s.requests));
+  const emaLine = buildSmoothPath(emaValues);
   const reqArea = `${reqLine} L ${getX(series.length - 1)} ${padY + chartH} L ${getX(0)} ${padY + chartH} Z`;
 
   return (
-    <div className="enhanced-trend-chart">
+    <div className="enhanced-trend-chart realistic-analytics-chart">
+      {/* Telemetry Header KPIs */}
       <div className="chart-telemetry-header">
         <div className="chart-stat-chips">
           <div className="telemetry-chip peak-chip">
-            <span className="chip-indicator"><Icons.TrendingUp size={12}/> PEAK LOAD</span>
+            <span className="chip-indicator"><Icons.TrendingUp size={12}/> SURGE PEAK</span>
             <b>{peakPoint.requests} req/h</b>
-            <small>at {peakPoint.label}</small>
+            <small>at {peakPoint.label} ({peakPoint.area})</small>
           </div>
           <div className="telemetry-chip avg-chip">
-            <span className="chip-indicator"><Icons.Activity size={12}/> AVG VOLUME</span>
+            <span className="chip-indicator"><Icons.Activity size={12}/> MEAN INFLOW</span>
             <b>{avgRequests} req/h</b>
-            <small>±4.2% variance</small>
+            <small>±{stdDev} σ standard dev</small>
           </div>
           <div className="telemetry-chip rate-chip">
-            <span className="chip-indicator"><Icons.CheckCircle2 size={12}/> RESOLUTION</span>
+            <span className="chip-indicator"><Icons.CheckCircle2 size={12}/> DISPATCH VELOCITY</span>
             <b>{resolutionRate}%</b>
-            <small>Dispatched</small>
+            <small>{avgResolved} units/hr deployed</small>
+          </div>
+          <div className="telemetry-chip sla-chip">
+            <span className="chip-indicator"><Icons.ShieldCheck size={12}/> SLA RELIABILITY</span>
+            <b>96.8%</b>
+            <small>Mean MTTA 4.8 min</small>
           </div>
         </div>
 
         <div className="chart-view-toggles">
           <button
             type="button"
-            className={`chart-mode-btn ${chartMode === 'wave' ? 'active' : ''}`}
-            onClick={() => setChartMode('wave')}
+            className={`chart-mode-btn ${chartMode === 'telemetry' ? 'active' : ''}`}
+            onClick={() => setChartMode('telemetry')}
           >
-            <Icons.Waves size={13}/> Telemetry Wave
+            <Icons.TrendingUp size={12}/> Statistical Telemetry
           </button>
           <button
             type="button"
-            className={`chart-mode-btn ${chartMode === 'bars' ? 'active' : ''}`}
-            onClick={() => setChartMode('bars')}
+            className={`chart-mode-btn ${chartMode === 'histogram' ? 'active' : ''}`}
+            onClick={() => setChartMode('histogram')}
           >
-            <Icons.BarChart2 size={13}/> Dual Pillars
+            <Icons.BarChart2 size={12}/> Triage Histogram
           </button>
         </div>
       </div>
 
+      {/* Main Visual Chart */}
       <div className="chart-canvas-wrapper" onMouseLeave={() => setHoverIdx(null)}>
         <div className="chart-axis-y">
           <span>100</span>
@@ -2232,114 +2259,186 @@ function TrendChart({range}){
         <div className="svg-chart-container">
           <svg viewBox={`0 0 ${svgW} ${svgH}`} className="telemetry-svg" preserveAspectRatio="none">
             <defs>
-              <linearGradient id="reqGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#00f0ff" stopOpacity="0.4"/>
-                <stop offset="65%" stopColor="#00f0ff" stopOpacity="0.08"/>
-                <stop offset="100%" stopColor="#00f0ff" stopOpacity="0.0"/>
+              {/* Subtle professional gradient fill without neon glow */}
+              <linearGradient id="realisticReqArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#0284c7" stopOpacity="0.28"/>
+                <stop offset="60%" stopColor="#0284c7" stopOpacity="0.08"/>
+                <stop offset="100%" stopColor="#0284c7" stopOpacity="0.01"/>
               </linearGradient>
-              <linearGradient id="reqStroke" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#00f0ff"/>
-                <stop offset="50%" stopColor="#38bdf8"/>
-                <stop offset="100%" stopColor="#818cf8"/>
+              <linearGradient id="realBarReq" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#0284c7" stopOpacity="0.85"/>
+                <stop offset="100%" stopColor="#0369a1" stopOpacity="0.45"/>
               </linearGradient>
-              <linearGradient id="barGradientReq" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#00f0ff" stopOpacity="0.95"/>
-                <stop offset="100%" stopColor="#0284c7" stopOpacity="0.35"/>
+              <linearGradient id="realBarRes" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.85"/>
+                <stop offset="100%" stopColor="#047857" stopOpacity="0.45"/>
               </linearGradient>
-              <linearGradient id="barGradientRes" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#10b981" stopOpacity="0.9"/>
-                <stop offset="100%" stopColor="#047857" stopOpacity="0.3"/>
-              </linearGradient>
-              <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="3" result="blur"/>
-                <feMerge>
-                  <feMergeNode in="blur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
             </defs>
 
+            {/* Gridlines */}
             {[0, 25, 50, 75, 100].map(val => (
               <line key={val} x1={padX} y1={getY(val)} x2={svgW - padX} y2={getY(val)} className="chart-gridline"/>
             ))}
 
-            <line x1={padX} y1={getY(80)} x2={svgW - padX} y2={getY(80)} className="redline-threshold-line"/>
+            {/* Upper Control Limit (UCL) & Lower Control Limit (LCL) */}
+            <line x1={padX} y1={getY(ucl)} x2={svgW - padX} y2={getY(ucl)} className="spc-ucl-line"/>
+            <text x={svgW - padX - 6} y={getY(ucl) - 4} className="spc-label ucl-label" textAnchor="end">
+              UCL (+2σ): {ucl} req/h
+            </text>
 
-            {chartMode === 'wave' ? (
+            <line x1={padX} y1={getY(lcl)} x2={svgW - padX} y2={getY(lcl)} className="spc-lcl-line"/>
+            <text x={svgW - padX - 6} y={getY(lcl) + 10} className="spc-label lcl-label" textAnchor="end">
+              LCL (-2σ): {lcl} req/h
+            </text>
+
+            {/* Mean Baseline */}
+            <line x1={padX} y1={getY(avgRequests)} x2={svgW - padX} y2={getY(avgRequests)} className="spc-mean-line"/>
+
+            {chartMode === 'telemetry' ? (
               <>
-                <path d={reqArea} fill="url(#reqGradient)" />
-                <path d={resLine} fill="none" stroke="#10b981" strokeWidth="2" strokeDasharray="4 4" opacity="0.85" />
-                <path d={reqLine} fill="none" stroke="url(#reqStroke)" strokeWidth="3.2" filter="url(#neonGlow)" />
+                {/* Background Triage Throughput Columns */}
+                {series.map((pt, i) => {
+                  const cx = getX(i);
+                  const barW = (chartW / series.length) * 0.45;
+                  const resH = (pt.resolved / maxVal) * chartH;
+                  return (
+                    <rect
+                      key={`res-bar-${i}`}
+                      x={cx - barW / 2}
+                      y={padY + chartH - resH}
+                      width={barW}
+                      height={resH}
+                      fill="#10b981"
+                      opacity="0.22"
+                      rx="2"
+                    />
+                  );
+                })}
 
+                {/* Primary Area Fill */}
+                <path d={reqArea} fill="url(#realisticReqArea)" />
+
+                {/* Exponential Moving Average (Trend Line) */}
+                <path d={emaLine} fill="none" stroke="#f59e0b" strokeWidth="1.8" strokeDasharray="5 3" opacity="0.9" />
+
+                {/* Real SOS Distress Line */}
+                <path d={reqLine} fill="none" stroke="#0284c7" strokeWidth="2.4" />
+
+                {/* Data Points */}
                 {series.map((pt, i) => {
                   const cx = getX(i);
                   const cy = getY(pt.requests);
                   const isHovered = hoverIdx === i;
                   return (
                     <g key={i} className="point-group">
-                      <circle cx={cx} cy={cy} r={isHovered ? 6 : 3.5} className={`wave-point ${isHovered ? 'point-active' : ''}`} />
-                      {isHovered && <circle cx={cx} cy={cy} r={12} className="wave-point-ping" />}
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={isHovered ? 5.5 : 3}
+                        fill={isHovered ? '#38bdf8' : '#071521'}
+                        stroke="#0284c7"
+                        strokeWidth={isHovered ? 2.5 : 1.8}
+                        className="realistic-data-dot"
+                      />
                     </g>
                   );
                 })}
               </>
             ) : (
+              /* Histogram Mode: Clean dual-column bars */
               <g className="bars-group">
                 {series.map((pt, i) => {
                   const cx = getX(i);
-                  const barWidth = Math.max(7, Math.min(18, (chartW / series.length) * 0.36));
+                  const barWidth = Math.max(8, Math.min(18, (chartW / series.length) * 0.36));
                   const gap = 3;
                   const reqH = (pt.requests / maxVal) * chartH;
                   const resH = (pt.resolved / maxVal) * chartH;
                   const isHovered = hoverIdx === i;
                   return (
                     <g key={i} className={`dual-bar-pair ${isHovered ? 'bar-pair-hover' : ''}`}>
-                      <rect x={cx - barWidth - gap/2} y={padY + chartH - reqH} width={barWidth} height={reqH} rx={barWidth/2} fill="url(#barGradientReq)" className="req-rect" />
-                      <rect x={cx + gap/2} y={padY + chartH - resH} width={barWidth} height={resH} rx={barWidth/2} fill="url(#barGradientRes)" className="res-rect" />
+                      <rect
+                        x={cx - barWidth - gap/2}
+                        y={padY + chartH - reqH}
+                        width={barWidth}
+                        height={reqH}
+                        rx="2"
+                        fill="url(#realBarReq)"
+                        className="req-rect"
+                      />
+                      <rect
+                        x={cx + gap/2}
+                        y={padY + chartH - resH}
+                        width={barWidth}
+                        height={resH}
+                        rx="2"
+                        fill="url(#realBarRes)"
+                        className="res-rect"
+                      />
                     </g>
                   );
                 })}
               </g>
             )}
 
+            {/* Hairline Scrubber */}
             {hoverIdx !== null && (
-              <line x1={getX(hoverIdx)} y1={padY} x2={getX(hoverIdx)} y2={padY + chartH} className="chart-hover-scrubber"/>
+              <line
+                x1={getX(hoverIdx)}
+                y1={padY}
+                x2={getX(hoverIdx)}
+                y2={padY + chartH}
+                className="realistic-scrubber-line"
+              />
             )}
           </svg>
 
+          {/* Interactive Hitbox Strips */}
           <div className="chart-hitboxes">
             {series.map((s, i) => (
               <div key={i} className="chart-hitbox-col" onMouseEnter={() => setHoverIdx(i)} />
             ))}
           </div>
 
+          {/* Precision Tooltip */}
           {hoverIdx !== null && (
             <motion.div
-              className="chart-hud-tooltip glass-panel"
-              initial={{ opacity: 0, y: 6, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.12 }}
+              className="chart-hud-tooltip realistic-tooltip glass-panel"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.1 }}
               style={{
-                left: `${(hoverIdx / (series.length - 1)) * 72 + 14}%`,
-                top: '10%'
+                left: `${(hoverIdx / (series.length - 1)) * 68 + 16}%`,
+                top: '6%'
               }}
             >
               <div className="tooltip-topbar">
                 <span className="tooltip-time">{series[hoverIdx].label} Window</span>
                 <span className="tooltip-zone">{series[hoverIdx].area}</span>
               </div>
-              <div className="tooltip-metrics">
-                <div className="tooltip-m-item incoming">
-                  <span>Distress Calls</span>
-                  <b>{series[hoverIdx].requests}</b>
+              <div className="tooltip-metrics-matrix">
+                <div className="matrix-cell">
+                  <span className="matrix-lbl">SOS Inflow</span>
+                  <b className="matrix-val blue">{series[hoverIdx].requests} <small>req/h</small></b>
                 </div>
-                <div className="tooltip-m-item cleared">
-                  <span>Dispatched</span>
-                  <b>{series[hoverIdx].resolved}</b>
+                <div className="matrix-cell">
+                  <span className="matrix-lbl">Dispatched</span>
+                  <b className="matrix-val green">{series[hoverIdx].resolved} <small>units</small></b>
                 </div>
-                <div className="tooltip-m-item critical">
-                  <span>Code Red</span>
-                  <b>{series[hoverIdx].critical}</b>
+                <div className="matrix-cell">
+                  <span className="matrix-lbl">Code Red</span>
+                  <b className="matrix-val red">{series[hoverIdx].critical} <small>high</small></b>
+                </div>
+                <div className="matrix-cell">
+                  <span className="matrix-lbl">Ack Latency</span>
+                  <b className="matrix-val">{series[hoverIdx].mtta} <small>min</small></b>
+                </div>
+                <div className="matrix-cell">
+                  <span className="matrix-lbl">SLA Score</span>
+                  <b className="matrix-val amber">{series[hoverIdx].sla}%</b>
+                </div>
+                <div className="matrix-cell">
+                  <span className="matrix-lbl">EMA Trend</span>
+                  <b className="matrix-val">{emaValues[hoverIdx]} <small>moving</small></b>
                 </div>
               </div>
             </motion.div>
@@ -2347,6 +2446,7 @@ function TrendChart({range}){
         </div>
       </div>
 
+      {/* X Axis */}
       <div className="chart-axis-x">
         {series.map((s, i) => (
           <span key={i} className={`x-tick ${hoverIdx === i ? 'tick-highlight' : ''}`}>
@@ -2355,18 +2455,23 @@ function TrendChart({range}){
         ))}
       </div>
 
-      <div className="chart-footer-legend">
+      {/* Professional Telemetry Legend */}
+      <div className="chart-footer-legend realistic-legend">
         <div className="legend-indicator-item">
-          <span className="legend-sample-line req-line-sample"/>
-          <span>Incoming Requests (SOS Triage)</span>
+          <span className="legend-sample-line req-sample"/>
+          <span>SOS Distress Rate (req/h)</span>
         </div>
         <div className="legend-indicator-item">
-          <span className="legend-sample-line res-line-sample"/>
-          <span>Cleared / Units Dispatched</span>
+          <span className="legend-sample-line ema-sample"/>
+          <span>7-Period Moving Average</span>
         </div>
-        <div className="legend-indicator-item redline-item">
-          <span className="legend-sample-line redline-sample"/>
-          <span>Threshold (80 req/h)</span>
+        <div className="legend-indicator-item">
+          <span className="legend-sample-box res-box-sample"/>
+          <span>Dispatched Units Capacity</span>
+        </div>
+        <div className="legend-indicator-item">
+          <span className="legend-sample-line ucl-sample"/>
+          <span>Upper Control Limit (UCL)</span>
         </div>
       </div>
     </div>
@@ -2375,54 +2480,71 @@ function TrendChart({range}){
 
 function DisasterMixChart({ selected, setSelected, insight }) {
   const [hoveredVector, setHoveredVector] = useState(null);
+  const [mixMode, setMixMode] = useState('segmented'); // 'segmented' | 'pareto'
 
   const vectors = [
     {
       id: 'Flood',
-      name: 'Flood & Water Rescue',
+      name: 'Flood & Inundation Rescue',
       percent: 42,
       incidents: 539,
-      color: '#00f0ff',
-      secondary: '#0284c7',
+      color: '#0284c7',
+      secondary: '#0369a1',
       severity: 'CRITICAL',
-      trend: '+12% surge',
-      sector: 'Mula-Mutha River Basin',
+      defcon: 'CODE 1',
+      mttr: '38 min',
+      saturation: '84%',
+      fieldUnits: 38,
+      trend: '+12.4% vs 24h baseline',
+      sector: 'Mula-Mutha River Corridor',
       ico: Icons.Waves
     },
     {
       id: 'Fire',
-      name: 'Industrial Fire & Collapse',
+      name: 'Industrial Fire & Hazmat',
       percent: 21,
       incidents: 269,
-      color: '#f59e0b',
-      secondary: '#d97706',
+      color: '#d97706',
+      secondary: '#b45309',
       severity: 'ELEVATED',
-      trend: '-4% contained',
-      sector: 'Hadapsar Industrial Zone',
+      defcon: 'CODE 2',
+      mttr: '52 min',
+      saturation: '61%',
+      fieldUnits: 22,
+      trend: '-4.2% contained',
+      sector: 'Hadapsar MIDC Corridor',
       ico: Icons.Flame
     },
     {
       id: 'Heatwave',
-      name: 'Extreme Heat & Power Grid',
+      name: 'Extreme Thermal & Power Grid',
       percent: 18,
       incidents: 231,
-      color: '#a855f7',
-      secondary: '#7e22ce',
+      color: '#7c3aed',
+      secondary: '#6d28d9',
       severity: 'MONITORED',
-      trend: '+8% afternoon',
-      sector: 'Shivaji Nagar Core Hub',
+      defcon: 'CODE 3',
+      mttr: '24 min',
+      saturation: '45%',
+      fieldUnits: 16,
+      trend: '+7.8% afternoon surge',
+      sector: 'Shivaji Nagar Core Metro',
       ico: Icons.SunMedium
     },
     {
       id: 'Other',
-      name: 'Medical & Escort Missions',
+      name: 'Medical Escort & Structural SAR',
       percent: 19,
       incidents: 244,
-      color: '#ef4444',
+      color: '#dc2626',
       secondary: '#b91c1c',
       severity: 'STANDBY',
-      trend: 'Normal baseline',
-      sector: 'Sinhagad Valley Pass',
+      defcon: 'CODE 4',
+      mttr: '19 min',
+      saturation: '52%',
+      fieldUnits: 19,
+      trend: 'Normal statistical baseline',
+      sector: 'Sinhagad Mountain Corridor',
       ico: Icons.Siren
     }
   ];
@@ -2431,30 +2553,40 @@ function DisasterMixChart({ selected, setSelected, insight }) {
   const ActiveIcon = activeVector.ico;
 
   const size = 200;
-  const radius = 76;
+  const radius = 74;
   const circumference = 2 * Math.PI * radius;
   let cumulative = 0;
 
   return (
-    <div className="enhanced-disaster-mix">
+    <div className="enhanced-disaster-mix realistic-disaster-mix">
+      {/* Top Telemetry Row */}
       <div className="mix-visual-row">
-        <div className="donut-radar-container">
-          <svg viewBox={`0 0 ${size} ${size}`} className="donut-radar-svg">
-            <defs>
-              <filter id="donutGlow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="3.5" result="blur"/>
-                <feMerge>
-                  <feMergeNode in="blur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
+        {/* Crisp Segmented Telemetry Ring without neon blur */}
+        <div className="donut-radar-container realistic-ring-container">
+          <svg viewBox={`0 0 ${size} ${size}`} className="donut-radar-svg realistic-ring-svg">
+            {/* Background Track */}
+            <circle
+              cx={size/2}
+              cy={size/2}
+              r={radius}
+              className="donut-bg-track"
+              strokeWidth="14"
+            />
+            {/* Azimuth tick marks */}
+            <circle
+              cx={size/2}
+              cy={size/2}
+              r={radius + 12}
+              className="donut-azimuth-ring"
+              strokeDasharray="2 8"
+              strokeWidth="1"
+            />
 
-            <circle cx={size/2} cy={size/2} r={radius} className="donut-bg-track" strokeWidth="16" />
-            <circle cx={size/2} cy={size/2} r={radius + 14} className="donut-azimuth-ring" strokeDasharray="2 10" strokeWidth="1" />
-
+            {/* Clean Segment Arcs */}
             {vectors.map((vec) => {
-              const strokeDasharray = `${(vec.percent / 100) * circumference} ${circumference}`;
+              const arcLength = (vec.percent / 100) * circumference;
+              const gap = 2.5; // Clean crisp separator gap
+              const strokeDasharray = `${Math.max(0, arcLength - gap)} ${circumference}`;
               const strokeDashoffset = -((cumulative / 100) * circumference);
               cumulative += vec.percent;
               const isSelected = selected === vec.id;
@@ -2468,38 +2600,41 @@ function DisasterMixChart({ selected, setSelected, insight }) {
                   r={radius}
                   fill="transparent"
                   stroke={vec.color}
-                  strokeWidth={isSelected || isHovered ? 20 : 15}
+                  strokeWidth={isSelected || isHovered ? 18 : 13}
                   strokeDasharray={strokeDasharray}
                   strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round"
-                  className={`donut-segment-circle ${isSelected ? 'segment-selected' : ''}`}
+                  strokeLinecap="butt"
+                  className={`donut-segment-circle realistic-segment ${isSelected ? 'segment-selected' : ''}`}
                   onClick={() => setSelected(vec.id)}
                   onMouseEnter={() => setHoveredVector(vec.id)}
                   onMouseLeave={() => setHoveredVector(null)}
-                  filter={isSelected ? 'url(#donutGlow)' : 'none'}
                 />
               );
             })}
           </svg>
 
+          {/* Clean Data Matrix Center Hub */}
           <div
-            className="donut-center-hub interactive"
+            className="donut-center-hub realistic-center-hub interactive"
             onClick={() => {
               const nextIdx = (vectors.findIndex(v => v.id === selected) + 1) % vectors.length;
               setSelected(vectors[nextIdx].id);
             }}
           >
-            <div className="center-hub-pulse" style={{ borderColor: activeVector.color }}/>
             <div className="center-hub-ico" style={{ color: activeVector.color }}>
-              <ActiveIcon size={22}/>
+              <ActiveIcon size={20}/>
             </div>
             <strong className="center-hub-pct">{activeVector.percent}%</strong>
             <span className="center-hub-name">{activeVector.id}</span>
-            <small className="center-hub-tag">{activeVector.severity}</small>
+            <div className="center-hub-mini-matrix">
+              <span>{activeVector.incidents} Incidents</span>
+              <span>MTTR {activeVector.mttr}</span>
+            </div>
           </div>
         </div>
 
-        <div className="vector-cards-stack">
+        {/* Detailed Operational Vector Breakdown Matrix */}
+        <div className="vector-cards-stack realistic-vector-table">
           {vectors.map((vec) => {
             const isSelected = selected === vec.id;
             const Icon = vec.ico;
@@ -2508,28 +2643,45 @@ function DisasterMixChart({ selected, setSelected, insight }) {
               <button
                 type="button"
                 key={vec.id}
-                className={`vector-item-card interactive ${isSelected ? 'vector-active' : ''}`}
+                className={`vector-item-card realistic-vector-row interactive ${isSelected ? 'vector-active' : ''}`}
                 onClick={() => setSelected(vec.id)}
                 onMouseEnter={() => setHoveredVector(vec.id)}
                 onMouseLeave={() => setHoveredVector(null)}
                 style={{
                   '--vec-color': vec.color,
-                  '--vec-bg': `${vec.color}15`
+                  '--vec-bg': `${vec.color}12`
                 }}
               >
                 <div className="vector-card-head">
                   <span className="vector-icon" style={{ color: vec.color }}>
                     <Icon size={14}/>
                   </span>
-                  <span className="vector-title">{vec.name}</span>
-                  <span className="vector-pct-badge" style={{ color: vec.color, borderColor: `${vec.color}40` }}>
+                  <div className="vector-titles-col">
+                    <span className="vector-title">{vec.name}</span>
+                    <small className="vector-sector-sub">{vec.sector}</small>
+                  </div>
+                  <span className="vector-pct-badge" style={{ color: vec.color, borderColor: `${vec.color}35` }}>
                     {vec.percent}%
                   </span>
                 </div>
 
-                <div className="vector-card-meta">
-                  <span className="vector-count"><b>{vec.incidents}</b> incidents</span>
-                  <span className="vector-trend">{vec.trend}</span>
+                <div className="vector-operational-meta-grid">
+                  <div className="op-meta-cell">
+                    <span className="lbl">INCIDENTS</span>
+                    <b className="val">{vec.incidents}</b>
+                  </div>
+                  <div className="op-meta-cell">
+                    <span className="lbl">AVG MTTR</span>
+                    <b className="val">{vec.mttr}</b>
+                  </div>
+                  <div className="op-meta-cell">
+                    <span className="lbl">SATURATION</span>
+                    <b className="val">{vec.saturation}</b>
+                  </div>
+                  <div className="op-meta-cell">
+                    <span className="lbl">STATUS</span>
+                    <b className="val code" style={{ color: vec.color }}>{vec.defcon}</b>
+                  </div>
                 </div>
 
                 <div className="vector-progress-rail">
@@ -2537,7 +2689,7 @@ function DisasterMixChart({ selected, setSelected, insight }) {
                     className="vector-progress-fill"
                     style={{
                       width: `${vec.percent}%`,
-                      background: `linear-gradient(90deg, ${vec.secondary}, ${vec.color})`
+                      background: vec.color
                     }}
                   />
                 </div>
@@ -2547,20 +2699,21 @@ function DisasterMixChart({ selected, setSelected, insight }) {
         </div>
       </div>
 
-      <div className="mix-intelligence-footbar">
+      {/* Intelligence Directive Footer */}
+      <div className="mix-intelligence-footbar realistic-intel-foot">
         <div className="intel-foot-left">
           <span className="intel-label">
-            <Icons.Radio size={12}/> ACTIVE TELEMETRY VECTOR:
+            <Icons.Radio size={12}/> SITUATIONAL INTELLIGENCE DIRECTIVE:
           </span>
           <strong className="intel-vector-title" style={{ color: activeVector.color }}>
-            {activeVector.name} ({activeVector.sector})
+            {activeVector.name} &bull; {activeVector.sector}
           </strong>
           <p className="intel-vector-desc">
-            {insight[selected] || 'High incident density correlated with meteorological radar readings.'}
+            {insight[selected] || 'High incident density correlated with meteorological radar readings. Field units assigned at ' + activeVector.saturation + ' capacity.'}
           </p>
         </div>
         <div className="intel-foot-right">
-          <span className="intel-urgency-badge" style={{ color: activeVector.color, borderColor: `${activeVector.color}44` }}>
+          <span className="intel-urgency-badge" style={{ color: activeVector.color, borderColor: `${activeVector.color}40`, background: `${activeVector.color}15` }}>
             {activeVector.severity} DEFCON
           </span>
         </div>
@@ -2568,6 +2721,7 @@ function DisasterMixChart({ selected, setSelected, insight }) {
     </div>
   );
 }
+
 function Users(){return <div className="content-stack"><PageIntro kicker="Identity control" title="User administration" sub="Manage role assignment and account states. Every change should be auditable."/><GlassCard className="table-card"><div className="table-wrap"><table><thead><tr><th>User</th><th>Role</th><th>Status</th><th>Last active</th><th>Permission envelope</th></tr></thead><tbody>{[['Harshal Mogare','Citizen','Active','2 min','Signed'],['Meera P.','NGO / Volunteer','Active','4 min','Signed'],['Officer #024','Government Officer','Active','1 min','Signed'],['Admin #001','System Admin','Active','now','Signed']].map(r=><tr key={r[0]}><td><b>{r[0]}</b></td><td>{r[1]}</td><td><span className="live-status">● {r[2]}</span></td><td>{r[3]}</td><td><span className="security-tag"><Icons.LockKeyhole size={12}/>{r[4]}</span></td></tr>)}</tbody></table></div></GlassCard></div>}
 function Permissions(){const matrix=[['Citizen','View alerts','Request help','Report incident','Broadcast','Admin users'],['NGO / Volunteer','View alerts','Volunteer tasks','Update missions','Broadcast','Admin users'],['Government','All public views','Verify requests','Manage shelters','Broadcast','Admin users'],['System Admin','All views','All controls','Audit','Broadcast','Users / policy']];return <div className="content-stack"><PageIntro kicker="Access policy" title="Role permissions" sub="The UI uses a signed, tamper-evident permission envelope for demo role routing. A production version must validate permissions server-side."/><GlassCard><div className="permission-grid">{matrix.map((row,i)=><div className="perm-row" key={row[0]}>{row.map((x,j)=><div key={x} className={j===0?'role-cell':'perm-cell'}>{j===0?<b>{x}</b>:<span><Icons.CheckCircle2 size={13}/>{x}</span>}</div>)}</div>)}</div></GlassCard><GlassCard><CardHeader title="Permission principles"/><div className="scope-grid"><ScopeItem icon={Icons.Lock} title="Least privilege" text="Citizen and volunteer sessions expose only the actions they need."/><ScopeItem icon={Icons.Fingerprint} title="Tamper evidence" text="Session envelopes include a deterministic checksum to detect local edits in the demo."/><ScopeItem icon={Icons.ServerCog} title="Trusted enforcement" text="Sensitive operations must be authorized on the backend in production."/></div></GlassCard></div>}
 function Audit(){

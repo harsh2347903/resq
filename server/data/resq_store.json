@@ -571,6 +571,26 @@
   ],
   "audits": [
     {
+      "id": "aud-1788943735733-axkr",
+      "time": "14:18",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Thane City, Thane)",
+      "severity": "info",
+      "timestamp": "2026-09-09T08:48:55.733Z",
+      "previousHash": "09887a49eb506be946d93a796e8dbc4f78b547d4228fbdb71962003dfba7ea9b",
+      "hash": "c0a5a170c080bc9d77cbe7a569425407fc23eda69e4633f2f467ebb1f0671587"
+    },
+    {
+      "id": "aud-1788943717723-6img",
+      "time": "14:18",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Citizen (Thane City, Thane)",
+      "severity": "info",
+      "timestamp": "2026-09-09T08:48:37.723Z",
+      "previousHash": "7ba65b74650100c4c3a8613a4b7419893977f07e2bcf83e9c075ffd575a8512b",
+      "hash": "09887a49eb506be946d93a796e8dbc4f78b547d4228fbdb71962003dfba7ea9b"
+    },
+    {
       "id": "aud-1788943304419-0mol",
       "time": "14:11",
       "actor": "Harshal",
