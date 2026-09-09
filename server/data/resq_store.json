@@ -2,7 +2,7 @@
   "crisisState": {
     "active": false,
     "defcon": "DEFCON 5 · NORMAL MONITORING",
-    "activatedAt": 1788937761280,
+    "activatedAt": 1788942503621,
     "activatedBy": "Harshal",
     "role": "government",
     "reason": "State-level Emergency Crisis Protocol Triggered",
@@ -17,8 +17,8 @@
       "actionLabel": "View Safe Shelters",
       "actionRoute": "/shelters"
     },
-    "updatedAt": "2026-09-09T07:09:41.612Z",
-    "stoodDownAt": 1788937781612,
+    "updatedAt": "2026-09-09T08:28:27.692Z",
+    "stoodDownAt": 1788942507692,
     "stoodDownBy": "Harshal"
   },
   "incidents": [
@@ -570,6 +570,56 @@
     }
   ],
   "audits": [
+    {
+      "id": "aud-1788942507693-upaj",
+      "time": "13:58",
+      "actor": "Harshal",
+      "action": "🟢 EMERGENCY CRISIS STOOD DOWN by Harshal (GOVERNMENT)",
+      "severity": "info",
+      "timestamp": "2026-09-09T08:28:27.692Z",
+      "previousHash": "7df17c093c0837c4321ff580596c64f2d8917e5a48e163a6343107c5a59a240c",
+      "hash": "e3f60b504b22d04fcb8ee3fb7e54056fb9069c3f42f3a48d10afd8c1f9a824da"
+    },
+    {
+      "id": "aud-1788942507687-0sqm",
+      "time": "13:58",
+      "actor": "Harshal",
+      "action": "🟢 EMERGENCY CRISIS STOOD DOWN by Harshal (GOVERNMENT)",
+      "severity": "info",
+      "timestamp": "2026-09-09T08:28:27.687Z",
+      "previousHash": "15376631b715ea2e99abdcb55204af0f3e6142bfd925198398a500d1117e4be4",
+      "hash": "7df17c093c0837c4321ff580596c64f2d8917e5a48e163a6343107c5a59a240c"
+    },
+    {
+      "id": "aud-1788942503622-j37h",
+      "time": "13:58",
+      "actor": "Harshal",
+      "action": "🚨 CODE RED CRISIS TRIGGERED by Harshal (GOVERNMENT)",
+      "severity": "critical",
+      "timestamp": "2026-09-09T08:28:23.621Z",
+      "previousHash": "416ef011764b5bfac6a9b9bfb1cac42e2ba4d59b1086e37587629f8930f36d47",
+      "hash": "15376631b715ea2e99abdcb55204af0f3e6142bfd925198398a500d1117e4be4"
+    },
+    {
+      "id": "aud-1788942503613-x9bh",
+      "time": "13:58",
+      "actor": "Harshal",
+      "action": "🚨 CODE RED CRISIS TRIGGERED by Harshal (GOVERNMENT)",
+      "severity": "critical",
+      "timestamp": "2026-09-09T08:28:23.613Z",
+      "previousHash": "061c58e2cde98e5aefcdcb1f0f1a687fcb972bf7a006a9a520dd52573910afa2",
+      "hash": "416ef011764b5bfac6a9b9bfb1cac42e2ba4d59b1086e37587629f8930f36d47"
+    },
+    {
+      "id": "aud-1788942495995-a45l",
+      "time": "13:58",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T08:28:15.994Z",
+      "previousHash": "0c3d97ba0464e2b0aebbdcda62635dab06b5c235885ae1f92572fe716d92d0f4",
+      "hash": "061c58e2cde98e5aefcdcb1f0f1a687fcb972bf7a006a9a520dd52573910afa2"
+    },
     {
       "id": "aud-1788939843028-bafy",
       "time": "13:14",

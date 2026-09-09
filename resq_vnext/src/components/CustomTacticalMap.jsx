@@ -2,38 +2,32 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as Icons from 'lucide-react';
 import { api } from '../lib/apiClient';
+import { useLocation } from '../context/LocationContext';
+import { getTalukasForDistrict, getCitiesForDistrict, getDistrictCenter } from '../lib/indiaGeoData';
+import { LocationSwitcherBadge } from './LocationSwitcherModal';
 
-// District Command Center (EOC HQ) Baseline Coordinates (Pune City Center)
-const COMMAND_HQ = { lat: 18.5204, lng: 73.8567, title: 'District Incident Command HQ (EOC)', sector: 'Shivaji Nagar' };
-
-// Real Geographic Bounding Box for Pune Metropolitan & Disaster Zones
-const GEO_BOUNDS = {
-  minLat: 18.4100, // South (Sinhagad / Katraj)
-  maxLat: 18.5750, // North (Aundh / Mula-Mutha confluence)
-  minLng: 73.7400, // West (Bavdhan / Kothrud hills)
-  maxLng: 73.9400  // East (Hadapsar / Manjri)
-};
-
-// Canvas Coordinate Mapping: Converts real GPS (lat, lng) to SVG (x, y) coordinates
-function projectGpsToSvg(lat, lng, width = 1000, height = 650) {
-  const x = ((lng - GEO_BOUNDS.minLng) / (GEO_BOUNDS.maxLng - GEO_BOUNDS.minLng)) * width;
+// Canvas Coordinate Mapping: Converts real GPS (lat, lng) to SVG (x, y) coordinates based on dynamic bounds
+function projectGpsToSvg(lat, lng, bounds, width = 1000, height = 650) {
+  const x = ((lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * width;
   // Latitude is inverted on screen (higher lat = further north = smaller y)
-  const y = ((GEO_BOUNDS.maxLat - lat) / (GEO_BOUNDS.maxLat - GEO_BOUNDS.minLat)) * height;
+  const y = ((bounds.maxLat - lat) / (bounds.maxLat - bounds.minLat)) * height;
   return {
-    x: Math.max(30, Math.min(width - 30, x)),
-    y: Math.max(30, Math.min(height - 30, y))
+    x: Math.max(35, Math.min(width - 35, x)),
+    y: Math.max(35, Math.min(height - 35, y))
   };
 }
 
 // Convert SVG (x, y) back to GPS coordinate for HUD telemetry
-function projectSvgToGps(x, y, width = 1000, height = 650) {
-  const lng = GEO_BOUNDS.minLng + (x / width) * (GEO_BOUNDS.maxLng - GEO_BOUNDS.minLng);
-  const lat = GEO_BOUNDS.maxLat - (y / height) * (GEO_BOUNDS.maxLat - GEO_BOUNDS.minLat);
+function projectSvgToGps(x, y, bounds, width = 1000, height = 650) {
+  const lng = bounds.minLng + (x / width) * (bounds.maxLng - bounds.minLng);
+  const lat = bounds.maxLat - (y / height) * (bounds.maxLat - bounds.minLat);
   return { lat: Number(lat.toFixed(4)), lng: Number(lng.toFixed(4)) };
 }
 
 export function CustomTacticalMap({ layers = { incidents: true, shelters: true, ngo: true, responders: true } }) {
+  const { activeLocation } = useLocation();
   const svgRef = useRef(null);
+
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [activeSector, setActiveSector] = useState('all');
   const [cursorCoords, setCursorCoords] = useState('18.5204° N, 73.8567° E');
@@ -76,14 +70,56 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
     return () => { mounted = false; clearInterval(interval); };
   }, []);
 
-  // Locations to plot on our in-house map
+  // Compute active center and bounding box dynamically from activeLocation
+  const currentCenter = useMemo(() => {
+    if (activeLocation?.coordinates?.lat && activeLocation?.coordinates?.lng) {
+      return activeLocation.coordinates;
+    }
+    const fallback = getDistrictCenter(activeLocation.state, activeLocation.district);
+    return { lat: fallback.lat, lng: fallback.lng };
+  }, [activeLocation]);
+
+  const activeBounds = useMemo(() => {
+    if (activeLocation?.bounds) return activeLocation.bounds;
+    const fallback = getDistrictCenter(activeLocation.state, activeLocation.district);
+    return fallback.bounds || {
+      minLat: currentCenter.lat - 0.12,
+      maxLat: currentCenter.lat + 0.12,
+      minLng: currentCenter.lng - 0.14,
+      maxLng: currentCenter.lng + 0.14
+    };
+  }, [activeLocation, currentCenter]);
+
+  // Command EOC HQ for the active sector
+  const activeHq = useMemo(() => {
+    return {
+      lat: currentCenter.lat,
+      lng: currentCenter.lng,
+      title: `${activeLocation.district} Incident Command EOC (${activeLocation.taluka || 'Central'})`,
+      sector: activeLocation.taluka || activeLocation.district
+    };
+  }, [currentCenter, activeLocation]);
+
+  // When active location changes, reset pan and zoom smoothly
+  useEffect(() => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    setActiveSector('all');
+    setSelectedPoint(null);
+    setCursorCoords(`${currentCenter.lat.toFixed(4)}° N, ${currentCenter.lng.toFixed(4)}° E`);
+  }, [activeLocation, currentCenter]);
+
+  // Locations to plot: Prioritize locations in and around active district / taluka
   const allLocations = useMemo(() => {
     // 1. Incidents
     const incs = (incidentsList.length ? incidentsList : [
-      { id: 'INC-077', type: 'Flood', location: 'Mula-Mutha River Basin', coordinates: { lat: 18.5312, lng: 73.8553 }, severity: 'Critical', affected: '2,482', details: 'Water surge +3.8m above red warning mark. Evacuation active.' },
-      { id: 'INC-076', type: 'Landslide', location: 'Sinhagad Ghat Road', coordinates: { lat: 18.4286, lng: 73.7592 }, severity: 'High', affected: '218', details: 'Debris blocking transit corridor. NDRF excavator deployed.' },
-      { id: 'INC-075', type: 'Fire', location: 'MIDC Industrial Sector', coordinates: { lat: 18.4419, lng: 73.9180 }, severity: 'High', affected: '624', details: 'Chemical storage vapor flare containment in progress.' },
-      { id: 'INC-074', type: 'Substation Failure', location: 'Aundh Power Hub', coordinates: { lat: 18.5610, lng: 73.8050 }, severity: 'Medium', affected: '1,840', details: 'Grid shorting risk due to stormwater runoff.' }
+      { id: 'INC-077', type: 'Flood', district: 'Pune', taluka: 'Haveli', location: 'Pune • Mula-Mutha basin', coordinates: { lat: 18.5312, lng: 73.8553 }, severity: 'Critical', affected: '2,482', details: 'Water surge +3.8m above danger mark.' },
+      { id: 'INC-076', type: 'Landslide', district: 'Pune', taluka: 'Maval', location: 'Lonavala • Old Mumbai Rd', coordinates: { lat: 18.7546, lng: 73.4062 }, severity: 'High', affected: '218', details: 'Debris blocking transit corridor.' },
+      { id: 'INC-080', type: 'Coastal Surge', district: 'Mumbai City', taluka: 'Worli', location: 'Worli Seaface • Marine Inundation', coordinates: { lat: 19.0166, lng: 72.8169 }, severity: 'Critical', affected: '3,120', details: 'High tide seawater breach over embankment.' },
+      { id: 'INC-081', type: 'Waterlogging', district: 'Mumbai Suburban', taluka: 'Kurla', location: 'Kurla • Mithi River Overflow', coordinates: { lat: 19.0726, lng: 72.8845 }, severity: 'High', affected: '1,450', details: 'Rail subway flooding; rescue boats deployed.' },
+      { id: 'INC-075', type: 'Fire', district: 'Nashik', taluka: 'Nashik', location: 'Nashik • MIDC Industrial Zone', coordinates: { lat: 19.9975, lng: 73.7898 }, severity: 'High', affected: '624', details: 'Chemical storage vapor flare containment.' },
+      { id: 'INC-074', type: 'Heatwave', district: 'Nagpur', taluka: 'Nagpur Urban', location: 'Nagpur • Central zone', coordinates: { lat: 21.1458, lng: 79.0882 }, severity: 'Medium', affected: '5,870', details: 'Severe thermal warning.' },
+      { id: 'INC-079', type: 'Landslide', district: 'Satara', taluka: 'Wai', location: 'Wai-Pasarni Ghat Corridor', coordinates: { lat: 17.9480, lng: 73.8920 }, severity: 'Critical', affected: '340', details: 'Hillside rockfall blocking access.' }
     ]).map(i => ({
       id: i.id || `inc-${Math.random()}`,
       category: 'incident',
@@ -91,34 +127,45 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
       name: `${i.type} (${i.severity})`,
       title: `${i.type} at ${i.location}`,
       sub: i.details || `Impact zone: ${i.affected || 'Multiple'} citizens affected`,
-      lat: i.coordinates?.lat ?? 18.5312,
-      lng: i.coordinates?.lng ?? 73.8553,
+      district: i.district || 'Pune',
+      taluka: i.taluka || '',
+      lat: i.coordinates?.lat ?? currentCenter.lat,
+      lng: i.coordinates?.lng ?? currentCenter.lng,
       severity: i.severity || 'Critical',
       affected: i.affected || '200+',
-      team: 'NDRF Battalion 04 & Civil Defense'
+      team: 'NDRF Battalion & Civil Defense'
     }));
 
     // 2. Shelters
     const shels = (sheltersList.length ? sheltersList : [
-      { id: 1, name: 'Shivaji Sports Complex', city: 'Pune', coordinates: { lat: 18.5314, lng: 73.8446 }, capacity: 850, occupied: 642, services: ['Food', 'Medical', 'Childcare', 'Bedding'], eta: '4 min' },
-      { id: 2, name: 'Bharati Vidyapeeth Hall', city: 'Katraj, Pune', coordinates: { lat: 18.4575, lng: 73.8508 }, capacity: 520, occupied: 301, services: ['Food', 'Power', 'Wi-Fi', 'First Aid'], eta: '14 min' },
-      { id: 5, name: 'Aundh Community Hall', city: 'Aundh, Pune', coordinates: { lat: 18.5590, lng: 73.8070 }, capacity: 430, occupied: 176, services: ['Water', 'Childcare', 'Charging'], eta: '13 min' },
-      { id: 3, name: 'Hadapsar Relief Centre', city: 'Hadapsar, Pune', coordinates: { lat: 18.5089, lng: 73.9260 }, capacity: 620, occupied: 380, services: ['Food', 'Water', 'First Aid'], eta: '18 min' }
+      { id: 1, name: 'Shivaji Sports Complex', district: 'Pune', taluka: 'Haveli', city: 'Pune City', address: 'Shivaji Nagar, Pune', coordinates: { lat: 18.5314, lng: 73.8446 }, capacity: 850, occupied: 642, services: ['Food', 'Medical', 'Childcare', 'Bedding'], eta: '4 min' },
+      { id: 2, name: 'Bharati Vidyapeeth Hall', district: 'Pune', taluka: 'Haveli', city: 'Katraj', address: 'Katraj, Pune', coordinates: { lat: 18.4575, lng: 73.8508 }, capacity: 520, occupied: 301, services: ['Food', 'Power', 'Wi-Fi', 'First Aid'], eta: '14 min' },
+      { id: 5, name: 'Aundh Community Hall', district: 'Pune', taluka: 'Haveli', city: 'Aundh', address: 'Aundh, Pune', coordinates: { lat: 18.5590, lng: 73.8070 }, capacity: 430, occupied: 176, services: ['Water', 'Childcare', 'Charging'], eta: '13 min' },
+      { id: 8, name: 'Lonavala Municipal Camp', district: 'Pune', taluka: 'Maval', city: 'Lonavala', address: 'Lonavala', coordinates: { lat: 18.7546, lng: 73.4062 }, capacity: 450, occupied: 190, services: ['Food', 'Blankets'], eta: '28 min' },
+      { id: 10, name: 'NSCI Dome Evacuation Center', district: 'Mumbai City', taluka: 'Worli', city: 'Worli', address: 'Worli Seaface', coordinates: { lat: 19.0166, lng: 72.8169 }, capacity: 1200, occupied: 480, services: ['Food', 'Medical', 'ICU Beds'], eta: '8 min' },
+      { id: 11, name: 'Andheri Sports Complex Relief Hub', district: 'Mumbai Suburban', taluka: 'Andheri', city: 'Andheri West', address: 'Andheri W', coordinates: { lat: 19.1136, lng: 72.8697 }, capacity: 950, occupied: 510, services: ['Food', 'Charging', 'Childcare'], eta: '11 min' },
+      { id: 12, name: 'Dadar Swatantryaveer Hall', district: 'Mumbai City', taluka: 'Dadar', city: 'Dadar', address: 'Dadar West', coordinates: { lat: 19.0178, lng: 72.8478 }, capacity: 580, occupied: 320, services: ['Food', 'First Aid'], eta: '14 min' },
+      { id: 14, name: 'Dadoji Kondadev Relief Camp', district: 'Thane', taluka: 'Thane', city: 'Thane City', address: 'Thane West', coordinates: { lat: 19.2183, lng: 72.9781 }, capacity: 800, occupied: 410, services: ['Food', 'Water', 'Medical'], eta: '10 min' },
+      { id: 4, name: 'Nehru Stadium Transit Camp', district: 'Nagpur', taluka: 'Nagpur Urban', city: 'Nagpur', address: 'Civil Lines, Nagpur', coordinates: { lat: 21.1458, lng: 79.0882 }, capacity: 1100, occupied: 620, services: ['Food', 'Medical', 'Cooling Rooms'], eta: '12 min' },
+      { id: 17, name: 'Golf Club Ground Relief Camp', district: 'Nashik', taluka: 'Nashik', city: 'Nashik', address: 'Old Agra Rd, Nashik', coordinates: { lat: 19.9975, lng: 73.7898 }, capacity: 700, occupied: 310, services: ['Food', 'Water'], eta: '9 min' },
+      { id: 3, name: 'ZP School Relief Centre', district: 'Satara', taluka: 'Satara', city: 'Satara', address: 'Satara Main Rd', coordinates: { lat: 17.6805, lng: 74.0183 }, capacity: 340, occupied: 210, services: ['Food', 'Water', 'First Aid'], eta: '15 min' }
     ]).map(s => ({
       id: `she-${s.id}`,
       category: 'shelter',
       type: 'safe',
       name: s.name,
       title: s.name,
+      district: s.district || 'Pune',
+      taluka: s.taluka || '',
       sub: `${s.capacity - s.occupied} Available Beds · ${Math.round((s.occupied / s.capacity) * 100)}% Occupancy`,
-      lat: s.coordinates?.lat ?? 18.5314,
-      lng: s.coordinates?.lng ?? 73.8446,
+      lat: s.coordinates?.lat ?? currentCenter.lat,
+      lng: s.coordinates?.lng ?? currentCenter.lng,
       capacity: s.capacity,
       occupied: s.occupied,
       availableBeds: s.capacity - s.occupied,
       services: s.services || ['Food', 'Medical', 'Bedding'],
-      address: `${s.city || 'Pune'}, Maharashtra`,
-      eta: s.eta || '12 min',
+      address: `${s.city || activeLocation.district}, Maharashtra`,
+      eta: s.eta || '10 min',
       team: 'District Relief Logistics Taskforce'
     }));
 
@@ -128,8 +175,10 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
         id: 'ngo-seva-kitchen',
         category: 'ngo',
         type: 'info',
-        name: 'Seva Food Kitchen Hub',
+        name: 'Seva Food Kitchen Base',
         title: 'Seva Relief Mobile Kitchen 04',
+        district: 'Pune',
+        taluka: 'Haveli',
         sub: '1,200 survival rations/hr · 42 Active Volunteers',
         lat: 18.4900,
         lng: 73.8150,
@@ -140,20 +189,105 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
         id: 'ngo-boat-sar',
         category: 'ngo',
         type: 'info',
-        name: 'Kabir R. Watercraft SAR Squad',
-        title: 'NDRF Inflatable Zodiac Boat Base',
-        sub: '6 motorized rescue watercraft deployed for rooftop evacuations',
+        name: 'Kabir R. Watercraft Squad',
+        title: 'NDRF Inflatable Zodiac Boat Squad',
+        district: 'Pune',
+        taluka: 'Haveli',
+        sub: '6 motorized rescue watercraft deployed for evacuations',
         lat: 18.5074,
         lng: 73.8077,
         team: 'Volunteer Watercraft Brigade',
         services: ['Zodiac Boats', 'Life Vests', 'Diver Team']
+      },
+      {
+        id: 'ngo-mumbai-marine',
+        category: 'ngo',
+        type: 'info',
+        name: 'Coastal Lifeguard Volunteer Core',
+        title: 'Mumbai Coastal SAR Squad',
+        district: 'Mumbai City',
+        taluka: 'Worli',
+        sub: 'Jet-skis and flood rafts staged at Marine Lines',
+        lat: 18.9400,
+        lng: 72.8250,
+        team: 'Coast Guard Auxiliary',
+        services: ['Rescue Rafts', 'Paramedics']
+      },
+      {
+        id: 'ngo-nagpur-cooling',
+        category: 'ngo',
+        type: 'info',
+        name: 'Vidarbha Heat Relief Volunteers',
+        title: 'Vidarbha Cooling Taskforce',
+        district: 'Nagpur',
+        taluka: 'Nagpur Urban',
+        sub: 'Hydration and electrolyte distribution for field citizens',
+        lat: 21.1400,
+        lng: 79.0800,
+        team: 'Red Cross Nagpur',
+        services: ['Electrolyte Stations', 'Cooling Vans']
       }
     ];
 
-    return [...incs, ...shels, ...ngos];
-  }, [incidentsList, sheltersList]);
+    // Filter points to those matching the active district or nearby bounds
+    const activeDistrictLower = (activeLocation.district || '').toLowerCase();
+    const isMatchingOrNear = (pt) => {
+      const ptDistrict = (pt.district || '').toLowerCase();
+      if (ptDistrict === activeDistrictLower) return true;
+      // Also include if within the calculated bounds
+      return (
+        pt.lat >= activeBounds.minLat &&
+        pt.lat <= activeBounds.maxLat &&
+        pt.lng >= activeBounds.minLng &&
+        pt.lng <= activeBounds.maxLng
+      );
+    };
 
-  // Filter visible points
+    const localPoints = [...incs, ...shels, ...ngos].filter(isMatchingOrNear);
+
+    // If no specific points in this district yet, generate default local EOC pins so map is never blank
+    if (localPoints.length === 0) {
+      return [
+        {
+          id: `she-local-${activeLocation.district}`,
+          category: 'shelter',
+          type: 'safe',
+          name: `${activeLocation.district} Regional Relief Center`,
+          title: `${activeLocation.district} Central Transit Shelter`,
+          district: activeLocation.district,
+          taluka: activeLocation.taluka,
+          sub: '450 Available Beds · Verified Safe Facility',
+          lat: currentCenter.lat + 0.015,
+          lng: currentCenter.lng + 0.012,
+          capacity: 600,
+          occupied: 150,
+          availableBeds: 450,
+          services: ['Food', 'Water', 'Medical', 'Bedding'],
+          address: `${activeLocation.taluka || activeLocation.district}, ${activeLocation.state}`,
+          eta: '6 min',
+          team: `${activeLocation.district} Civil Defense`
+        },
+        {
+          id: `ngo-local-${activeLocation.district}`,
+          category: 'ngo',
+          type: 'info',
+          name: `${activeLocation.district} Volunteer Network Hub`,
+          title: `${activeLocation.district} Community Kitchen & First Aid`,
+          district: activeLocation.district,
+          taluka: activeLocation.taluka,
+          sub: '28 Active Volunteers · Relief Rations Active',
+          lat: currentCenter.lat - 0.012,
+          lng: currentCenter.lng - 0.015,
+          team: 'District Volunteer Taskforce',
+          services: ['Rations', 'First Aid', 'Family Help']
+        }
+      ];
+    }
+
+    return localPoints;
+  }, [incidentsList, sheltersList, activeLocation, activeBounds, currentCenter]);
+
+  // Filter visible points based on active layer chips
   const visiblePoints = useMemo(() => {
     return allLocations.filter(pt => {
       if (pt.category === 'incident' && !layers.incidents) return false;
@@ -169,27 +303,40 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
     });
   }, [allLocations, layers, activeLayerFilters]);
 
-  // Sector Quick-Jumps
-  const sectorPresets = {
-    all: { pan: { x: 0, y: 0 }, zoom: 1 },
-    kothrud: { pan: { x: 180, y: 40 }, zoom: 1.6 },
-    'mula-mutha': { pan: { x: -40, y: 130 }, zoom: 1.7 },
-    'shivaji-nagar': { pan: { x: -20, y: 70 }, zoom: 1.8 },
-    sinhagad: { pan: { x: 230, y: -190 }, zoom: 1.6 },
-    hadapsar: { pan: { x: -250, y: -20 }, zoom: 1.6 }
-  };
+  // Dynamic Sectors for the current district
+  const availableTalukas = useMemo(() => {
+    const list = getTalukasForDistrict(activeLocation.state, activeLocation.district);
+    return list.slice(0, 6); // Top 6 sectors for quick chips
+  }, [activeLocation]);
 
-  const jumpToSector = (sec) => {
-    setActiveSector(sec);
-    const target = sectorPresets[sec] || sectorPresets.all;
-    setPanOffset(target.pan);
-    setZoomLevel(target.zoom);
+  const jumpToSector = (talukaName) => {
+    setActiveSector(talukaName);
+    if (talukaName === 'all') {
+      setPanOffset({ x: 0, y: 0 });
+      setZoomLevel(1);
+      return;
+    }
+
+    // Find city/sector coordinates in that taluka
+    const cities = getCitiesForDistrict(activeLocation.state, activeLocation.district);
+    const matched = cities.find(c => c.taluka === talukaName && c.coordinates);
+    if (matched?.coordinates) {
+      const pos = projectGpsToSvg(matched.coordinates.lat, matched.coordinates.lng, activeBounds);
+      // Pan to center that position
+      setPanOffset({
+        x: (500 - pos.x) * 0.7,
+        y: (325 - pos.y) * 0.7
+      });
+      setZoomLevel(1.6);
+    } else {
+      setZoomLevel(1.4);
+    }
   };
 
   // Google Maps Deep-Link Redirection (No external API needed in-app!)
   const redirectToGoogleMaps = (lat, lng, title, fromHQ = false) => {
     const url = fromHQ
-      ? `https://www.google.com/maps/dir/?api=1&origin=${COMMAND_HQ.lat},${COMMAND_HQ.lng}&destination=${lat},${lng}&travelmode=driving`
+      ? `https://www.google.com/maps/dir/?api=1&origin=${activeHq.lat},${activeHq.lng}&destination=${lat},${lng}&travelmode=driving`
       : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
 
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -220,16 +367,21 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
       const rect = svgRef.current.getBoundingClientRect();
       const svgX = ((e.clientX - rect.left - panOffset.x) / (rect.width * zoomLevel)) * 1000;
       const svgY = ((e.clientY - rect.top - panOffset.y) / (rect.height * zoomLevel)) * 650;
-      const gps = projectSvgToGps(svgX, svgY);
+      const gps = projectSvgToGps(svgX, svgY, activeBounds);
       setCursorCoords(`${gps.lat}° N, ${gps.lng}° E`);
     }
   };
 
   const handleMouseUp = () => setIsDragging(false);
 
-  // Projected HQ point
-  const hqPos = projectGpsToSvg(COMMAND_HQ.lat, COMMAND_HQ.lng);
-  const selectedPos = selectedPoint ? projectGpsToSvg(selectedPoint.lat, selectedPoint.lng) : null;
+  // Projected HQ point on the canvas
+  const hqPos = projectGpsToSvg(activeHq.lat, activeHq.lng, activeBounds);
+  const selectedPos = selectedPoint ? projectGpsToSvg(selectedPoint.lat, selectedPoint.lng, activeBounds) : null;
+
+  // Determine regional terrain styling
+  const isCoastal = (activeLocation.district || '').toLowerCase().includes('mumbai') ||
+                    (activeLocation.district || '').toLowerCase().includes('thane') ||
+                    (activeLocation.district || '').toLowerCase().includes('raigad');
 
   return (
     <div
@@ -248,7 +400,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      {/* Tactical Top Toolbar */}
+      {/* Tactical Top Toolbar with Live Location Switcher */}
       <div
         className="map-toolbar tactical-map-toolbar"
         style={{
@@ -269,47 +421,59 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span className="live-dot pulse-green" />
           <div>
-            <b style={{ color: '#f8fafc', fontSize: '13px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              RESQ TACTICAL GIS · DISTRICT COMMAND
-            </b>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <b style={{ color: '#f8fafc', fontSize: '13px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                TACTICAL GIS · {activeLocation.district.toUpperCase()}
+              </b>
+              <LocationSwitcherBadge />
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
               <span style={{ fontSize: '10px', color: '#38bdf8', fontFamily: 'monospace' }}>
                 <Icons.Crosshair size={10} style={{ display: 'inline', marginRight: '3px' }} />
                 {cursorCoords}
               </span>
               <span style={{ fontSize: '9px', background: 'rgba(56,189,248,0.15)', color: '#7dd3fc', padding: '1px 6px', borderRadius: '4px', border: '1px solid rgba(56,189,248,0.3)' }}>
-                IN-HOUSE GIS ENGINE (ZERO EXTERNAL MAP API)
+                100% IN-HOUSE VECTOR ENGINE (NO THIRD-PARTY API)
               </span>
             </div>
           </div>
         </div>
 
-        {/* Sector Quick Jump Chips */}
+        {/* Sector / Taluka Quick Jump Chips */}
         <div className="sector-jump-chips" style={{ display: 'flex', gap: '6px' }}>
-          {[
-            { id: 'all', l: 'All Sectors' },
-            { id: 'kothrud', l: 'Kothrud Hub' },
-            { id: 'mula-mutha', l: 'Mula-Mutha Basin' },
-            { id: 'shivaji-nagar', l: 'Shivaji Nagar' },
-            { id: 'sinhagad', l: 'Sinhagad Pass' },
-            { id: 'hadapsar', l: 'Hadapsar EOC' }
-          ].map(s => (
+          <button
+            type="button"
+            className={`sector-chip interactive ${activeSector === 'all' ? 'active' : ''}`}
+            onClick={() => jumpToSector('all')}
+            style={{
+              fontSize: '11px',
+              padding: '4px 10px',
+              borderRadius: '8px',
+              background: activeSector === 'all' ? 'rgba(56,189,248,0.25)' : 'rgba(15,23,42,0.6)',
+              color: activeSector === 'all' ? '#38bdf8' : '#94a3b8',
+              border: `1px solid ${activeSector === 'all' ? '#38bdf8' : 'rgba(255,255,255,0.08)'}`,
+              cursor: 'pointer'
+            }}
+          >
+            All Sectors
+          </button>
+          {availableTalukas.map(taluka => (
             <button
               type="button"
-              key={s.id}
-              className={`sector-chip interactive ${activeSector === s.id ? 'active' : ''}`}
-              onClick={() => jumpToSector(s.id)}
+              key={taluka}
+              className={`sector-chip interactive ${activeSector === taluka ? 'active' : ''}`}
+              onClick={() => jumpToSector(taluka)}
               style={{
                 fontSize: '11px',
                 padding: '4px 10px',
                 borderRadius: '8px',
-                background: activeSector === s.id ? 'rgba(56,189,248,0.25)' : 'rgba(15,23,42,0.6)',
-                color: activeSector === s.id ? '#38bdf8' : '#94a3b8',
-                border: `1px solid ${activeSector === s.id ? '#38bdf8' : 'rgba(255,255,255,0.08)'}`,
+                background: activeSector === taluka ? 'rgba(56,189,248,0.25)' : 'rgba(15,23,42,0.6)',
+                color: activeSector === taluka ? '#38bdf8' : '#94a3b8',
+                border: `1px solid ${activeSector === taluka ? '#38bdf8' : 'rgba(255,255,255,0.08)'}`,
                 cursor: 'pointer'
               }}
             >
-              {s.l}
+              {taluka}
             </button>
           ))}
         </div>
@@ -466,7 +630,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
               <stop offset="100%" stopColor="transparent" />
             </radialGradient>
 
-            {/* Glowing river filter */}
+            {/* Glowing water / river filter */}
             <filter id="riverGlow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
@@ -499,65 +663,61 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
             <text x={hqPos.x + 284} y={hqPos.y - 6} fill="#38bdf8" fontSize="9" fontFamily="monospace">15 KM BUFFER</text>
           </g>
 
-          {/* 3. District Topography: Mula-Mutha River Basin (Real Path) */}
-          <g className="river-basin">
-            {/* River water halo */}
-            <path
-              d="M 50 180 Q 220 220, 360 270 T 580 280 T 780 320 T 960 300"
-              fill="none"
-              stroke="#0284c7"
-              strokeWidth="18"
-              opacity="0.22"
-              filter="url(#riverGlow)"
-            />
-            {/* Core river stream */}
-            <path
-              d="M 50 180 Q 220 220, 360 270 T 580 280 T 780 320 T 960 300"
-              fill="none"
-              stroke="#38bdf8"
-              strokeWidth="5"
-              opacity="0.65"
-            />
-            <text x="320" y="255" fill="#7dd3fc" fontSize="10" fontWeight="bold" letterSpacing="1.5" opacity="0.65">
-              ~ ~ ~ MULA-MUTHA RIVER BASIN (FLOOD CORRIDOR) ~ ~ ~
-            </text>
-          </g>
+          {/* 3. Regional Topography: Coastal or River/Inland Vector Maps */}
+          {isCoastal ? (
+            <g className="coastal-terrain">
+              {/* Arabian Sea coastline outline */}
+              <path
+                d="M 120 0 C 140 180, 80 340, 220 520 C 260 570, 200 650, 180 650"
+                fill="none"
+                stroke="#0284c7"
+                strokeWidth="24"
+                opacity="0.25"
+                filter="url(#riverGlow)"
+              />
+              <path
+                d="M 120 0 C 140 180, 80 340, 220 520 C 260 570, 200 650, 180 650"
+                fill="none"
+                stroke="#38bdf8"
+                strokeWidth="6"
+                opacity="0.7"
+              />
+              <text x="30" y="320" fill="#7dd3fc" fontSize="11" fontWeight="bold" letterSpacing="2" opacity="0.6" transform="rotate(-90 30 320)">
+                ~ ~ ARABIAN SEA COASTAL REACH ~ ~
+              </text>
+              {/* Western Express / Coastal Corridor */}
+              <path d="M 280 20 L 310 240 L 420 540 L 480 640" fill="none" stroke="#94a3b8" strokeWidth="4" strokeDasharray="8, 4" opacity="0.4" />
+              <text x="310" y="120" fill="#94a3b8" fontSize="9" opacity="0.5">WESTERN EXPRESS HIGHWAY</text>
+            </g>
+          ) : (
+            <g className="river-basin">
+              {/* River water halo */}
+              <path
+                d="M 50 180 Q 220 220, 360 270 T 580 280 T 780 320 T 960 300"
+                fill="none"
+                stroke="#0284c7"
+                strokeWidth="18"
+                opacity="0.22"
+                filter="url(#riverGlow)"
+              />
+              {/* Core river stream */}
+              <path
+                d="M 50 180 Q 220 220, 360 270 T 580 280 T 780 320 T 960 300"
+                fill="none"
+                stroke="#38bdf8"
+                strokeWidth="5"
+                opacity="0.65"
+              />
+              <text x="320" y="255" fill="#7dd3fc" fontSize="10" fontWeight="bold" letterSpacing="1.5" opacity="0.65">
+                ~ ~ ~ REGIONAL DRAINAGE & WATERWAY CORRIDOR ~ ~ ~
+              </text>
+              {/* National Arterial Highway */}
+              <path d="M 80 50 L 260 220 L 420 460 L 680 620" fill="none" stroke="#94a3b8" strokeWidth="4" strokeDasharray="8, 4" opacity="0.4" />
+              <text x="110" y="90" fill="#94a3b8" fontSize="9" opacity="0.5" transform="rotate(38 110 90)">PRIMARY DISASTER TRANSIT CORRIDOR</text>
+            </g>
+          )}
 
-          {/* 4. Major Evacuation Corridors & Road Arterials */}
-          <g className="evacuation-corridors" opacity="0.35">
-            {/* NH-48 Mumbai-Pune Bypass */}
-            <path d="M 80 50 L 260 220 L 420 460 L 680 620" fill="none" stroke="#94a3b8" strokeWidth="4" strokeDasharray="8, 4" />
-            <text x="110" y="90" fill="#94a3b8" fontSize="9" transform="rotate(38 110 90)">NH-48 EXPRESS CORRIDOR</text>
-
-            {/* Karve Road to Kothrud */}
-            <path d="M 520 290 L 320 380 L 160 410" fill="none" stroke="#94a3b8" strokeWidth="3" />
-            <text x="210" y="385" fill="#94a3b8" fontSize="9">KARVE RD</text>
-
-            {/* Sinhagad Road */}
-            <path d="M 480 340 L 340 520 L 220 620" fill="none" stroke="#94a3b8" strokeWidth="3" />
-            <text x="290" y="550" fill="#94a3b8" fontSize="9">SINHAGAD RD</text>
-
-            {/* Hadapsar Highway */}
-            <path d="M 580 310 L 760 360 L 940 380" fill="none" stroke="#94a3b8" strokeWidth="3" />
-            <text x="780" y="350" fill="#94a3b8" fontSize="9">HADAPSAR / SOLAPUR RD</text>
-          </g>
-
-          {/* 5. Sector Boundary Outlines & Labels */}
-          <g className="sectors" opacity="0.4">
-            <rect x="180" y="290" width="220" height="180" fill="none" stroke="rgba(56,189,248,0.3)" strokeDasharray="4, 4" rx="14" />
-            <text x="195" y="315" fill="#38bdf8" fontSize="11" fontWeight="bold">SECTOR 1: KOTHRUD</text>
-
-            <rect x="420" y="190" width="220" height="170" fill="none" stroke="rgba(56,189,248,0.3)" strokeDasharray="4, 4" rx="14" />
-            <text x="435" y="215" fill="#38bdf8" fontSize="11" fontWeight="bold">SECTOR 2: SHIVAJI NAGAR / EOC</text>
-
-            <rect x="180" y="490" width="240" height="140" fill="none" stroke="rgba(56,189,248,0.3)" strokeDasharray="4, 4" rx="14" />
-            <text x="195" y="515" fill="#38bdf8" fontSize="11" fontWeight="bold">SECTOR 3: SINHAGAD PASS</text>
-
-            <rect x="680" y="260" width="240" height="200" fill="none" stroke="rgba(56,189,248,0.3)" strokeDasharray="4, 4" rx="14" />
-            <text x="695" y="285" fill="#38bdf8" fontSize="11" fontWeight="bold">SECTOR 4: HADAPSAR EOC</text>
-          </g>
-
-          {/* 6. Active Rotating Radar Sweep Animation */}
+          {/* 4. Active Rotating Radar Sweep Animation */}
           {radarActive && (
             <g className="radar-sweep" style={{ transformOrigin: `${hqPos.x}px ${hqPos.y}px` }}>
               <circle cx={hqPos.x} cy={hqPos.y} r={320} fill="url(#radarSweepGrad)" opacity="0.4" />
@@ -582,7 +742,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
             </g>
           )}
 
-          {/* 7. Tactical Vector Line to Selected Target */}
+          {/* 5. Tactical Vector Line to Selected Target */}
           {selectedPos && (
             <g className="route-vector">
               <line
@@ -622,7 +782,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
             </g>
           )}
 
-          {/* 8. Command HQ Beacon (District EOC HQ) */}
+          {/* 6. Command HQ Beacon for Active Area */}
           <g className="command-hq" transform={`translate(${hqPos.x}, ${hqPos.y})`}>
             <circle r="22" fill="rgba(56, 189, 248, 0.2)">
               <animate attributeName="r" values="16;32;16" dur="2.4s" repeatCount="indefinite" />
@@ -630,15 +790,15 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
             </circle>
             <circle r="12" fill="#0284c7" stroke="#ffffff" strokeWidth="2.5" />
             <polygon points="0,-7 6,4 -6,4" fill="#ffffff" />
-            <rect x="-65" y="16" width="130" height="20" rx="6" fill="rgba(15,23,42,0.9)" stroke="#38bdf8" strokeWidth="1" />
+            <rect x="-85" y="16" width="170" height="20" rx="6" fill="rgba(15,23,42,0.9)" stroke="#38bdf8" strokeWidth="1" />
             <text x="0" y="30" fill="#38bdf8" fontSize="8.5" fontWeight="bold" textAnchor="middle">
-              DISTRICT COMMAND HQ
+              {activeLocation.district.toUpperCase()} COMMAND HQ
             </text>
           </g>
 
-          {/* 9. Live Disaster, Shelter & NGO Locations (Made by us!) */}
+          {/* 7. Live Disaster, Shelter & NGO Locations */}
           {visiblePoints.map(pt => {
-            const pos = projectGpsToSvg(pt.lat, pt.lng);
+            const pos = projectGpsToSvg(pt.lat, pt.lng, activeBounds);
             const isSelected = selectedPoint?.id === pt.id;
 
             let mainColor = '#38bdf8';
@@ -703,9 +863,9 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
                 {/* Name & Metric Label Pill */}
                 <g transform="translate(0, 20)">
                   <rect
-                    x="-65"
+                    x="-70"
                     y="0"
-                    width="130"
+                    width="140"
                     height={pt.category === 'shelter' ? 28 : 18}
                     rx="6"
                     fill="rgba(15,23,42,0.92)"
@@ -720,7 +880,7 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
                     fontWeight="bold"
                     textAnchor="middle"
                   >
-                    {pt.name.length > 20 ? pt.name.substring(0, 18) + '...' : pt.name}
+                    {pt.name.length > 22 ? pt.name.substring(0, 20) + '...' : pt.name}
                   </text>
                   {pt.category === 'shelter' && (
                     <text
@@ -866,9 +1026,9 @@ export function CustomTacticalMap({ layers = { incidents: true, shelters: true, 
                   gap: '6px',
                   cursor: 'pointer'
                 }}
-                title="Opens Google Maps route specifically originating from District Command HQ"
+                title="Opens Google Maps route originating from District Command EOC"
               >
-                <Icons.Compass size={15} /> Route from Command HQ
+                <Icons.Compass size={15} /> Route from {activeLocation.district} EOC
               </button>
 
               <button

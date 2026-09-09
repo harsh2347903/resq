@@ -58,8 +58,10 @@ export function createRoleEnvelope(role, profile = {}) {
     phone: profile.phone || '',
     state: profile.state || 'Maharashtra',
     district: profile.district || 'Pune',
-    city: profile.city || 'Pune City',
+    taluka: profile.taluka || 'Haveli',
+    city: profile.city || 'Pune City (Shivaji Nagar)',
     pincode: profile.pincode || '411005',
+    coordinates: profile.coordinates || { lat: 18.5314, lng: 73.8446 },
     permissions,
     issuedAt: Date.now(),
     version: 'v4'

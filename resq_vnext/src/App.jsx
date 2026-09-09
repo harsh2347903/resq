@@ -5,11 +5,14 @@ import * as Icons from 'lucide-react';
 import { useAuth, roles } from './context/AuthContext';
 import { alerts, campaigns, shelters, requests, incidents, activities, volunteers, audits } from './lib/mockData';
 import { playEmergencyTone, triggerHaptic, createSpeechRecognizer, isSoundMuted, setSoundMuted } from './lib/soundUtils';
-import { getAllStates, getDistrictsForState, getCitiesForDistrict } from './lib/indiaGeoData';
+import { getAllStates, getDistrictsForState, getTalukasForDistrict, getCitiesForDistrict, getCoordinatesForLocation, getDistrictCenter } from './lib/indiaGeoData';
+import { useSectorLocation } from './context/LocationContext';
+import { LocationSwitcherBadge } from './components/LocationSwitcherModal';
 import { CrisisEmergencyEngine, EmergencyCrisisButton, DashboardCrisisWidget } from './components/CrisisEmergencyEngine';
 import { isCrisisActive } from './lib/crisisManager';
 import { api } from './lib/apiClient';
 import { GoogleOperationsMap } from './components/GoogleOperationsMap';
+
 
 const ACTIVITY_KEY='resq_system_activity_v3';
 const PROFILE_KEY='resq_profile_v3';
@@ -184,6 +187,7 @@ function CursorFX(){
 
 function Shell({children}){
  const {session,logout}=useAuth(); const navigate=useNavigate(); const location=useLocation();
+ const { activeLocation, syncWithProfile } = useSectorLocation();
  const [notice,setNotice]=useState(false);
  const [themeTransition,setThemeTransition]=useState(null);
  const [profile,setProfile]=useState(false);
@@ -191,6 +195,13 @@ function Shell({children}){
  const [toastEvent,setToastEvent]=useState(null);
  const [flash,setFlash]=useState(false);
  const [feed,setFeed]=useState([]);
+
+ useEffect(() => {
+   if (session?.district || session?.state) {
+     syncWithProfile(session);
+   }
+ }, [session, syncWithProfile]);
+
 
  // Live Crisis Drill State
  const [drillActive, setDrillActive] = useState(false);
@@ -321,7 +332,9 @@ function Shell({children}){
       />
     )}
     <header className="topbar"><div><span className="eyebrow">National resilience network</span><h1>{pageMeta[location.pathname]?.[0]||'RESQ'}</h1></div><div className="top-actions">
+     <LocationSwitcherBadge />
      <EmergencyCrisisButton />
+
      {canRunDrill && (
        <button
          type="button"
@@ -518,6 +531,7 @@ function LiveThreatFeedWidget(){
 
 function GovernmentDashboard(){
   const {session}=useAuth();
+  const {activeLocation}=useSectorLocation();
   const navigate=useNavigate();
   const [history,setHistory]=useState(()=>readBroadcasts().filter(x=>x.role==='government'));
   const [layers,setLayers]=useState({incidents:true,shelters:true,ngo:true,responders:true});
@@ -541,8 +555,9 @@ function GovernmentDashboard(){
       <LiveThreatFeedWidget />
       <div className="command-hero glass-panel tactical-command-hero">
         <div className="command-hero-left">
-          <span className="eyebrow">DISTRICT COMMAND CENTER · PUNE SECTOR 4</span>
+          <span className="eyebrow">DISTRICT COMMAND CENTER · {activeLocation.district?.toUpperCase()} • {activeLocation.taluka?.toUpperCase() || 'SECTOR HQ'}</span>
           <h2>Operate the response network with confidence.</h2>
+
           <p>Verify critical incidents, broadcast emergency warnings, coordinate NGO partner capacity, and maintain district relief flow.</p>
         </div>
         <div className="command-status-card">
@@ -743,43 +758,186 @@ function SecurityPosture(){return <div className="security-list"><div><span>Role
 function Shortcut({name,path,Icon}){const navigate=useNavigate();return <button className="shortcut interactive" onClick={()=>navigate(path)}><Icon size={17}/><span>{name}</span><Icons.ArrowUpRight size={14}/></button>}
 
 function AlertsPage(){const [filter,setFilter]=useState('all');const [acked,setAcked]=useState(()=>readList('resq_alert_ack',[]));const [toast,setToast]=useState('');const dynamic=readBroadcasts().map(x=>({id:x.id,level:severityClass(x.severity),title:`${x.type} warning · ${x.area}`,region:x.area,time:x.time||'just now',body:x.message,broadcast:true}));const items=[...dynamic,...alerts];const list=filter==='all'?items:items.filter(a=>a.level===filter);const acknowledge=(a)=>{if(acked.includes(a.id))return;const n=[...acked,a.id];setAcked(n);writeList('resq_alert_ack',n);recordActivity({kind:'alert',severity:a.level,message:`Alert acknowledged: ${a.title}`,actor:'User',time:nowLabel(),createdAt:Date.now()});setToast('Alert acknowledged');setTimeout(()=>setToast(''),1800)};return <div className="content-stack"><PageIntro kicker="Verified advisories" title="Alerts & advisories" sub="Broadcasts and verified alerts are severity-coded so critical instructions are impossible to miss."/><div className="filter-row">{['all','critical','high','medium','warning','info'].map(f=><button key={f} className={`filter-chip interactive ${filter===f?'active':''}`} onClick={()=>setFilter(f)}>{f}</button>)}</div><div className="alert-page-grid">{list.map(a=><GlassCard key={a.id} className={`big-alert ${a.level}`}><div className="big-alert-top"><span className={`severity-dot ${a.level}`}/><span>{a.level}</span><small>{a.time}</small></div><h3>{a.title}</h3><p>{a.body}</p><div className="alert-meta"><span><Icons.MapPin size={14}/>{a.region}</span><button className="secondary-button interactive" onClick={()=>acknowledge(a)}>{acked.includes(a.id)?'Acknowledged ✓':'Acknowledge'}</button></div></GlassCard>)}</div>{toast&&<div className="toast glass-panel"><Icons.CheckCircle2 size={16}/>{toast}</div>}</div>}
-function Campaigns(){const {session}=useAuth();const volunteer=session.role==='ngo';const [joined,setJoined]=useState([]);return <div className="content-stack"><PageIntro kicker="Community action" title="Campaigns near your network" sub={volunteer?'See campaigns where volunteers can contribute.':'Explore verified government and NGO programs available to you.'}/><div className="campaign-grid">{campaigns.map(c=><GlassCard key={c.id} className="campaign-card"><div className="campaign-top"><span className="tag">{c.tag}</span><span className="status-pill">{c.status}</span></div><h3>{c.name}</h3><p>{c.copy}</p><div className="campaign-details"><span><Icons.Building2 size={13}/>{c.org}</span><span><Icons.MapPin size={13}/>{c.location}</span><span><Icons.Users size={13}/>{c.reach} reached</span></div><button className={`primary-button full interactive ${joined.includes(c.id)?'joined':''}`} onClick={()=>{if(!joined.includes(c.id)){setJoined(v=>v.concat(c.id));recordActivity({kind:'campaign',message:`Campaign joined: ${c.name}`,actor:volunteer?'Volunteer':'Citizen',time:'just now'})}}}>{joined.includes(c.id)?'Joined ✓':volunteer?'Volunteer for campaign':'Join campaign'}</button></GlassCard>)}</div></div>}
-function Shelters(){
-  const [saved,setSaved]=useState(()=>readList('resq_saved_shelters',[]));
-  const [toast,setToast]=useState('');
-  const [shelterList,setShelterList]=useState(shelters);
-  const [proximityActive,setProximityActive]=useState(true);
-  const [loading,setLoading]=useState(false);
+function computeDistanceKm(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round((R * c) * 10) / 10;
+}
 
-  useEffect(()=>{
+function Campaigns(){
+  const { session } = useAuth();
+  const { activeLocation } = useSectorLocation();
+  const volunteer = session?.role === 'ngo';
+  const [joined, setJoined] = useState([]);
+  const [showAllRegions, setShowAllRegions] = useState(false);
+
+  const activeDistrict = activeLocation?.district || 'Pune';
+
+  const filteredCampaigns = useMemo(() => {
+    if (showAllRegions) return campaigns;
+    return campaigns.filter(c => 
+      !c.district || c.district === 'All' || c.district.toLowerCase() === activeDistrict.toLowerCase()
+    );
+  }, [showAllRegions, activeDistrict]);
+
+  return (
+    <div className="content-stack">
+      <PageIntro
+        kicker="Community action"
+        title="Disaster response campaigns"
+        sub={volunteer ? 'Active community and relief campaigns where volunteers can assist immediately.' : 'Explore verified government and NGO programs active in your response zone.'}
+        actions={
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button
+              type="button"
+              className={`filter-chip interactive ${!showAllRegions ? 'active' : ''}`}
+              onClick={() => setShowAllRegions(false)}
+            >
+              <Icons.MapPin size={12} style={{ marginRight: 4 }} />
+              Sector: {activeDistrict} ({campaigns.filter(c => !c.district || c.district === 'All' || c.district.toLowerCase() === activeDistrict.toLowerCase()).length})
+            </button>
+            <button
+              type="button"
+              className={`filter-chip interactive ${showAllRegions ? 'active' : ''}`}
+              onClick={() => setShowAllRegions(true)}
+            >
+              All Regions ({campaigns.length})
+            </button>
+          </div>
+        }
+      />
+      <div className="campaign-grid">
+        {filteredCampaigns.map(c => {
+          const isCurrentSector = c.district && c.district.toLowerCase() === activeDistrict.toLowerCase();
+          return (
+            <GlassCard key={c.id} className="campaign-card">
+              <div className="campaign-top">
+                <span className="tag">{c.tag}</span>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  {isCurrentSector && (
+                    <span className="status-pill" style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', borderColor: 'rgba(16,185,129,0.3)' }}>
+                      Local Sector
+                    </span>
+                  )}
+                  <span className="status-pill">{c.status}</span>
+                </div>
+              </div>
+              <h3>{c.name}</h3>
+              <p>{c.copy}</p>
+              <div className="campaign-details">
+                <span><Icons.Building2 size={13} />{c.org}</span>
+                <span><Icons.MapPin size={13} />{c.location || `${c.district} • ${c.taluka || ''}`}</span>
+                <span><Icons.Users size={13} />{c.reach} reached</span>
+              </div>
+              <button
+                className={`primary-button full interactive ${joined.includes(c.id) ? 'joined' : ''}`}
+                onClick={() => {
+                  if (!joined.includes(c.id)) {
+                    setJoined(v => v.concat(c.id));
+                    recordActivity({
+                      kind: 'campaign',
+                      message: `Campaign joined: ${c.name}`,
+                      actor: volunteer ? 'Volunteer' : 'Citizen',
+                      time: 'just now'
+                    });
+                  }
+                }}
+              >
+                {joined.includes(c.id) ? 'Joined ✓' : volunteer ? 'Volunteer for campaign' : 'Join campaign'}
+              </button>
+            </GlassCard>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Shelters(){
+  const { activeLocation } = useSectorLocation();
+  const [saved, setSaved] = useState(() => readList('resq_saved_shelters', []));
+  const [toast, setToast] = useState('');
+  const [shelterList, setShelterList] = useState(shelters);
+  const [filterMode, setFilterMode] = useState('sector'); // 'sector' | 'all'
+
+  const activeDistrict = activeLocation?.district || 'Pune';
+  const activeTaluka = activeLocation?.taluka || '';
+  const userLat = activeLocation?.coordinates?.lat || 18.5204;
+  const userLng = activeLocation?.coordinates?.lng || 73.8567;
+
+  useEffect(() => {
     let mounted = true;
-    api.shelters.getNearby(18.5204, 73.8567, 35)
+    api.shelters.getAll({ district: activeDistrict, taluka: activeTaluka })
       .then(res => {
         if (mounted && res?.shelters?.length > 0) {
           setShelterList(res.shelters);
         }
       })
-      .catch(() => {
-        // Fallback to seed
-      });
+      .catch(() => {});
     return () => { mounted = false; };
-  },[]);
+  }, [activeDistrict, activeTaluka]);
 
-  const toggleSave=id=>{
-    const next=saved.includes(id)?saved.filter(x=>x!==id):[...saved,id];
+  const processedShelters = useMemo(() => {
+    return shelterList.map(s => {
+      const lat = s.coordinates?.lat || 18.5204;
+      const lng = s.coordinates?.lng || 73.8567;
+      const dist = computeDistanceKm(userLat, userLng, lat, lng);
+      const isLocal = (s.district?.toLowerCase() === activeDistrict.toLowerCase());
+      const estMin = dist !== null ? Math.max(3, Math.round(dist * 2.2)) : null;
+      const dynamicEta = estMin !== null ? (estMin > 60 ? `${Math.floor(estMin / 60)}h ${estMin % 60}m drive` : `${estMin} min drive`) : (s.eta || '10 min');
+      return {
+        ...s,
+        dynamicDistanceKm: dist,
+        dynamicEta,
+        isLocal
+      };
+    }).sort((a, b) => {
+      if (a.isLocal && !b.isLocal) return -1;
+      if (!a.isLocal && b.isLocal) return 1;
+      return (a.dynamicDistanceKm ?? 999) - (b.dynamicDistanceKm ?? 999);
+    });
+  }, [shelterList, userLat, userLng, activeDistrict]);
+
+  const displayedShelters = useMemo(() => {
+    if (filterMode === 'all') return processedShelters;
+    const local = processedShelters.filter(s => s.isLocal);
+    return local.length > 0 ? local : processedShelters;
+  }, [processedShelters, filterMode]);
+
+  const toggleSave = id => {
+    const next = saved.includes(id) ? saved.filter(x => x !== id) : [...saved, id];
     setSaved(next);
-    writeList('resq_saved_shelters',next);
-    recordActivity({kind:'shelter',message:`${saved.includes(id)?'Removed':'Saved'} shelter ${id}`,actor:'User',time:nowLabel(),createdAt:Date.now()});
+    writeList('resq_saved_shelters', next);
+    recordActivity({
+      kind: 'shelter',
+      message: `${saved.includes(id) ? 'Removed' : 'Saved'} shelter ${id}`,
+      actor: 'User',
+      time: nowLabel(),
+      createdAt: Date.now()
+    });
   };
 
-  const directions=s=>{
+  const directions = s => {
     const lat = s.coordinates?.lat || (s.id === 1 ? 18.5314 : s.id === 2 ? 18.4575 : s.id === 3 ? 17.6805 : s.id === 4 ? 21.1458 : 18.5590);
     const lng = s.coordinates?.lng || (s.id === 1 ? 73.8446 : s.id === 2 ? 73.8508 : s.id === 3 ? 74.0183 : s.id === 4 ? 79.0882 : 73.8070);
     const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
     window.open(navUrl, '_blank', 'noopener,noreferrer');
     setToast(`🚀 Redirecting to Google Maps: Destination set to "${s.name}"`);
-    recordActivity({kind:'shelter',message:`Google Maps navigation started for ${s.name}`,actor:'User',time:nowLabel(),createdAt:Date.now()});
-    setTimeout(()=>setToast(''),3000);
+    recordActivity({
+      kind: 'shelter',
+      message: `Google Maps navigation started for ${s.name}`,
+      actor: 'User',
+      time: nowLabel(),
+      createdAt: Date.now()
+    });
+    setTimeout(() => setToast(''), 3000);
   };
 
   return (
@@ -787,60 +945,82 @@ function Shelters(){
       <PageIntro
         kicker="Geospatial Proximity Network"
         title="Safe shelters & relief centres"
-        sub="Shelters are dynamically ranked by GPS distance, occupancy headroom and available bed capacity."
+        sub={`Real-time safe zones projected for ${activeLocation.district} · ${activeLocation.taluka || 'All Sectors'}. Ranked dynamically by GPS distance and bed occupancy.`}
         actions={
-          <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
-            <span className="live-chip" style={{background:'rgba(16,185,129,0.15)',borderColor:'#10b981',color:'#10b981'}}>
-              <Icons.Compass size={13} style={{marginRight:4}}/> GPS RADAR: PUNE COMMAND
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span className="live-chip" style={{ background: 'rgba(16,185,129,0.15)', borderColor: '#10b981', color: '#10b981' }}>
+              <Icons.Compass size={13} style={{ marginRight: 4 }} /> GPS RADAR: {activeDistrict.toUpperCase()} • {activeTaluka ? activeTaluka.toUpperCase() : 'ACTIVE'}
             </span>
+            <button
+              type="button"
+              className={`filter-chip interactive ${filterMode === 'sector' ? 'active' : ''}`}
+              onClick={() => setFilterMode('sector')}
+            >
+              Local Sector ({processedShelters.filter(s => s.isLocal).length})
+            </button>
+            <button
+              type="button"
+              className={`filter-chip interactive ${filterMode === 'all' ? 'active' : ''}`}
+              onClick={() => setFilterMode('all')}
+            >
+              All Regions ({processedShelters.length})
+            </button>
           </div>
         }
       />
       <div className="shelter-grid">
-        {shelterList.map(s=>{
+        {displayedShelters.map(s => {
           const available = s.availableBeds ?? Math.max(0, s.capacity - s.occupied);
-          const pct = Math.round(s.occupied/s.capacity*100);
+          const pct = Math.round(s.occupied / s.capacity * 100);
           return (
             <GlassCard key={s.id} className="shelter-card">
               <div className="shelter-head">
                 <div>
-                  <span className="live-status">● OPEN</span>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
+                    <span className="live-status">● OPEN</span>
+                    {s.isLocal && (
+                      <span className="status-pill" style={{ background: 'rgba(56,189,248,0.12)', color: '#38bdf8', borderColor: 'rgba(56,189,248,0.25)', fontSize: '10px', padding: '1px 6px' }}>
+                        {s.district} Sector
+                      </span>
+                    )}
+                  </div>
                   <h3>{s.name}</h3>
                   <p>
-                    {s.city} {s.distanceKm !== undefined ? `· ${s.distanceKm} km away` : ''} · {s.eta}
+                    {s.city || s.district} {s.dynamicDistanceKm !== null ? `· ${s.dynamicDistanceKm} km away` : ''} · {s.dynamicEta}
                   </p>
                 </div>
-                <div style={{textAlign:'right'}}>
+                <div style={{ textAlign: 'right' }}>
                   <span className="capacity-badge">{pct}%</span>
-                  <small style={{display:'block',fontSize:'10px',color:'#38bdf8',marginTop:'2px'}}>
+                  <small style={{ display: 'block', fontSize: '10px', color: '#38bdf8', marginTop: '2px' }}>
                     {available} beds open
                   </small>
                 </div>
               </div>
-              <div className="capacity-bar"><i style={{width:`${pct}%`}}/></div>
+              <div className="capacity-bar"><i style={{ width: `${pct}%` }} /></div>
               <div className="capacity-line">
                 <span>{s.occupied} / {s.capacity} occupied</span>
                 <span>{available} Available Beds</span>
               </div>
               <div className="service-list">
-                {s.services.map(x=><span key={x}>✓ {x}</span>)}
+                {s.services.map(x => <span key={x}>✓ {x}</span>)}
               </div>
               <div className="card-actions">
-                <button className="secondary-button interactive" onClick={()=>directions(s)}>
-                  <Icons.Navigation size={13} style={{marginRight:4}}/> Directions ({s.eta})
+                <button className="secondary-button interactive" onClick={() => directions(s)}>
+                  <Icons.Navigation size={13} style={{ marginRight: 4 }} /> Directions ({s.dynamicEta})
                 </button>
-                <button className="icon-button interactive" title="Save shelter" onClick={()=>toggleSave(s.id)}>
-                  {saved.includes(s.id)?<Icons.BookmarkCheck size={16}/>:<Icons.Bookmark size={16}/>}
+                <button className="icon-button interactive" title="Save shelter" onClick={() => toggleSave(s.id)}>
+                  {saved.includes(s.id) ? <Icons.BookmarkCheck size={16} /> : <Icons.Bookmark size={16} />}
                 </button>
               </div>
             </GlassCard>
           );
         })}
       </div>
-      {toast&&<div className="toast glass-panel"><Icons.Navigation size={16}/>{toast}</div>}
+      {toast && <div className="toast glass-panel"><Icons.Navigation size={16} />{toast}</div>}
     </div>
   );
 }
+
 function HelpDesk(){
   const [step,setStep]=useState(1);
   const [sent,setSent]=useState(false);
@@ -1258,8 +1438,9 @@ function CustomSelect({label, options, value, onChange, placeholder}){
                 className={`select-option interactive ${value===o?'selected':''}`}
                 initial={{opacity:0,x:-6}}
                 animate={{opacity:1,x:0}}
-                transition={{delay:i*0.02,duration:0.15}}
+                transition={{delay:Math.min(i*0.008, 0.08),duration:0.12}}
                 onClick={()=>{onChange?.(o);setOpen(false)}}
+
                 role="option"
                 aria-selected={value===o}
               >
@@ -2799,6 +2980,7 @@ function Login(){
     phone:'',
     state:'Maharashtra',
     district:'Pune',
+    taluka:'Haveli',
     city:'Pune City (Shivaji Nagar)',
     pincode:'411005'
   });
@@ -2809,27 +2991,62 @@ function Login(){
   const restricted=role==='government'||role==='admin';
 
   const districts=getDistrictsForState(form.state);
+  const talukas=getTalukasForDistrict(form.state, form.district);
   const cities=getCitiesForDistrict(form.state, form.district);
 
   const handleStateChange=(selectedState)=>{
     const newDistricts=getDistrictsForState(selectedState);
     const firstDistrict=newDistricts[0]||'';
+    const newTalukas=getTalukasForDistrict(selectedState, firstDistrict);
+    const firstTaluka=newTalukas[0]||'';
     const newCities=getCitiesForDistrict(selectedState, firstDistrict);
     const firstCityObj=newCities[0]||{city:'',pincode:''};
-    setForm(f=>({...f,state:selectedState,district:firstDistrict,city:firstCityObj.city,pincode:firstCityObj.pincode}));
+    setForm(f=>({
+      ...f,
+      state:selectedState,
+      district:firstDistrict,
+      taluka:firstTaluka,
+      city:firstCityObj.city||firstTaluka,
+      pincode:firstCityObj.pincode||''
+    }));
     setError('');
   };
 
   const handleDistrictChange=(selectedDistrict)=>{
+    const newTalukas=getTalukasForDistrict(form.state, selectedDistrict);
+    const firstTaluka=newTalukas[0]||'';
     const newCities=getCitiesForDistrict(form.state, selectedDistrict);
     const firstCityObj=newCities[0]||{city:'',pincode:''};
-    setForm(f=>({...f,district:selectedDistrict,city:firstCityObj.city,pincode:firstCityObj.pincode}));
+    setForm(f=>({
+      ...f,
+      district:selectedDistrict,
+      taluka:firstTaluka,
+      city:firstCityObj.city||firstTaluka,
+      pincode:firstCityObj.pincode||''
+    }));
+    setError('');
+  };
+
+  const handleTalukaChange=(selectedTaluka)=>{
+    const matchingCities=cities.filter(c=>c.taluka===selectedTaluka);
+    const chosenCity=matchingCities[0]||cities[0]||{city:selectedTaluka,pincode:''};
+    setForm(f=>({
+      ...f,
+      taluka:selectedTaluka,
+      city:chosenCity.city||selectedTaluka,
+      pincode:chosenCity.pincode||f.pincode
+    }));
     setError('');
   };
 
   const handleCityChange=(selectedCity)=>{
     const matched=cities.find(c=>c.city===selectedCity);
-    setForm(f=>({...f,city:selectedCity,pincode:matched?matched.pincode:f.pincode}));
+    setForm(f=>({
+      ...f,
+      city:selectedCity,
+      taluka:matched?.taluka||f.taluka,
+      pincode:matched?matched.pincode:f.pincode
+    }));
     setError('');
   };
 
@@ -2841,10 +3058,11 @@ function Login(){
     if(!form.name.trim())return setError('Enter your full name.');
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))return setError('Enter a valid Gmail or email address.');
     if(!/^[+0-9 ()-]{8,}$/.test(form.phone))return setError('Enter a valid phone number.');
-    if(!form.state||!form.district||!form.city||!form.pincode)return setError('Select your State, District and City so your local emergency PIN is locked.');
+    if(!form.state||!form.district||!form.city||!form.pincode)return setError('Select your State, District, Taluka and Area so your local emergency PIN is locked.');
     if(restricted&&code!=='RESQ07')return setError('Official access code is incorrect.');
     setError('');
-    login(role,{...form,email});
+    const coordinates=getCoordinatesForLocation(form.state, form.district, form.taluka, form.city);
+    login(role,{...form,taluka:form.taluka||form.city,coordinates,email});
     navigate('/dashboard');
   };
 
@@ -2857,7 +3075,7 @@ function Login(){
      <span className="eyebrow">Role-based disaster management</span><h2>One network.<br/><em>Right access, right response.</em></h2>
      <p>Create a response-ready profile with verified contact and location details. Citizen and volunteer access stays focused; official roles unlock restricted operational controls.</p>
      <div className="login-proof"><span>⌁</span><b>Role-aware access layer</b><small>Government & admin verification is hidden from public roles.</small></div>
-     <div className="login-side-status"><span className="live-dot"/><div><b>National coverage enabled</b><small>Select any State, District, and City across India for instant auto PIN mapping.</small></div></div>
+     <div className="login-side-status"><span className="live-dot"/><div><b>National coverage enabled</b><small>Select any State, District, and Taluka/Sub-district across India for instant auto PIN mapping.</small></div></div>
     </div>
     <GlassCard className="login-card premium-login">
      <div className="login-card-head"><span className="eyebrow">Secure sign in</span><span className="secure-chip"><Icons.LockKeyhole size={12}/> Protected</span></div>
@@ -2870,8 +3088,9 @@ function Login(){
          <div className="form-row"><label>Phone number</label><div className="input-shell"><Icons.Phone size={15}/><input type="tel" value={form.phone} onChange={e=>{update('phone',e.target.value);setError('')}} placeholder="+91 98765 43210"/></div></div>
          <CustomSelect label="State / UT (All India)" options={allStates} value={form.state} onChange={handleStateChange} placeholder="Select State / UT"/>
          <CustomSelect label="District" options={districts} value={form.district} onChange={handleDistrictChange} placeholder="Select District"/>
-         <CustomSelect label="City / Taluka" options={cities.map(c=>c.city)} value={form.city} onChange={handleCityChange} placeholder="Select City / Taluka"/>
-         <div className="form-row"><label>PIN / Postal code</label><div className="input-shell auto-field"><Icons.MapPin size={15}/><input value={form.pincode} readOnly placeholder="Auto-filled from city"/><span className="auto-chip">AUTO</span></div></div>
+         <CustomSelect label="Taluka / Sub-district" options={talukas} value={form.taluka} onChange={handleTalukaChange} placeholder="Select Taluka / Tehsil"/>
+         <CustomSelect label="Locality / Area" options={cities.map(c=>c.city)} value={form.city} onChange={handleCityChange} placeholder="Select Locality / Area"/>
+         <div className="form-row"><label>PIN / Postal code</label><div className="input-shell auto-field"><Icons.MapPin size={15}/><input value={form.pincode} readOnly placeholder="Auto-filled from locality"/><span className="auto-chip">AUTO</span></div></div>
        </div>
        <AnimatePresence initial={false}>{restricted&&<motion.div className="official-code-card" initial={{opacity:0,height:0,y:-7}} animate={{opacity:1,height:'auto',y:0}} exit={{opacity:0,height:0,y:-7}}><div className="official-code-head"><div><span className="eyebrow">Official verification</span><b>Restricted clearance code</b></div><span className="mini-lock"><Icons.ShieldAlert size={15}/></span></div><div className="secret-input"><Icons.KeyRound size={15}/><input type={showCode?'text':'password'} value={code} onChange={e=>{setCode(e.target.value);setError('')}} placeholder="Enter restricted clearance code" autoComplete="off"/><button type="button" className="secret-eye interactive" onClick={()=>setShowCode(v=>!v)}>{showCode?<Icons.EyeOff size={15}/>:<Icons.Eye size={15}/>}</button></div><small>Restricted clearance required for Government Incident Command and Platform Admin roles. Unauthorized access attempts are recorded in system audit logs.</small></motion.div>}</AnimatePresence>
        {error&&<motion.div className="login-error" initial={{opacity:0,y:-4}} animate={{opacity:1,y:0}}><Icons.TriangleAlert size={14}/>{error}</motion.div>}

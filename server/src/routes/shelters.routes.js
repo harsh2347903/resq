@@ -33,11 +33,34 @@ router.get('/nearby', (req, res) => {
 
 // GET /api/shelters
 router.get('/', (req, res) => {
-  const shelters = db.getCollection('shelters');
+  let shelters = db.getCollection('shelters');
+  const { district, taluka } = req.query;
+
+  if (district && district !== 'all' && district !== 'All') {
+    const dLower = district.toLowerCase();
+    const filtered = shelters.filter(s => s.district && s.district.toLowerCase() === dLower);
+    if (filtered.length > 0) {
+      shelters = filtered;
+    }
+  }
+  if (taluka && taluka !== 'all' && taluka !== 'All') {
+    const tLower = taluka.toLowerCase();
+    const filtered = shelters.filter(s => s.taluka && s.taluka.toLowerCase() === tLower);
+    if (filtered.length > 0) {
+      shelters = filtered;
+    }
+  }
+
+  const enriched = shelters.map(s => ({
+    ...s,
+    availableBeds: s.availableBeds ?? Math.max(0, s.capacity - s.occupied),
+    occupancyPercent: Math.round((s.occupied / s.capacity) * 100)
+  }));
+
   res.json({
     success: true,
-    count: shelters.length,
-    shelters
+    count: enriched.length,
+    shelters: enriched
   });
 });
 
