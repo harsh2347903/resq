@@ -1,4 +1,4 @@
-import { playEmergencyTone, triggerHaptic } from './soundUtils';
+import { playEmergencyTone, playCrisisSiren, stopContinuousSiren, triggerHaptic } from './soundUtils';
 
 export const CRISIS_STORAGE_KEY = 'resq_emergency_crisis_active';
 export const CRISIS_META_KEY = 'resq_emergency_crisis_meta';
@@ -179,8 +179,8 @@ export function activateCrisisMode(commanderName = 'Authorized Incident Commande
     
     applyCrisisTheme(true);
     
-    // Play alert sound & trigger haptic
-    playEmergencyTone('alarm');
+    // Play authentic disaster siren & trigger emergency haptic
+    playCrisisSiren(3.2);
     triggerHaptic([400, 200, 400, 200, 600]);
 
     // Dispatch global sync events
@@ -220,6 +220,7 @@ export function deactivateCrisisMode(commanderName = 'Incident Commander', role 
     
     applyCrisisTheme(false);
     
+    stopContinuousSiren();
     playEmergencyTone('chime');
     triggerHaptic([200, 100, 200]);
 

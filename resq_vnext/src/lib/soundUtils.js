@@ -20,15 +20,175 @@ function getAudioContext() {
   return audioCtx;
 }
 
+let activeSirenNodes = null;
+
 export function isSoundMuted() {
   return soundMuted;
 }
 
 export function setSoundMuted(muted) {
   soundMuted = muted;
+  if (muted) {
+    stopContinuousSiren();
+  }
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('resq:sound-toggle', { detail: { muted } }));
   }
+}
+
+/**
+ * Plays an authentic, high-urgency Emergency Disaster Siren
+ * Dual oscillator with frequency sweep and harmonic distortion
+ * Simulates real-world outdoor warning / air-raid sirens
+ */
+export function playCrisisSiren(duration = 2.4) {
+  if (soundMuted || typeof window === 'undefined') return;
+
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+
+    const now = ctx.currentTime;
+    
+    // Primary siren oscillator (sweep)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sawtooth';
+
+    // Harmonic richness oscillator
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'triangle';
+
+    // Sub-rumble oscillator for deep presence
+    const subOsc = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    subOsc.type = 'sine';
+    subOsc.frequency.setValueAtTime(110, now);
+
+    // Master gain
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.24, now);
+
+    // Dynamic siren pitch envelope:
+    // Cycle 1: rise from 520Hz to 940Hz, fall to 620Hz
+    // Cycle 2: rise to 980Hz, fall to 540Hz
+    const half = duration / 2;
+    const q1 = duration * 0.25;
+    const q3 = duration * 0.75;
+
+    osc1.frequency.setValueAtTime(520, now);
+    osc1.frequency.exponentialRampToValueAtTime(940, now + q1);
+    osc1.frequency.exponentialRampToValueAtTime(600, now + half);
+    osc1.frequency.exponentialRampToValueAtTime(980, now + q3);
+    osc1.frequency.exponentialRampToValueAtTime(480, now + duration);
+
+    // Second oscillator slightly detuned for chorus thickness
+    osc2.frequency.setValueAtTime(523, now);
+    osc2.frequency.exponentialRampToValueAtTime(945, now + q1);
+    osc2.frequency.exponentialRampToValueAtTime(604, now + half);
+    osc2.frequency.exponentialRampToValueAtTime(985, now + q3);
+    osc2.frequency.exponentialRampToValueAtTime(483, now + duration);
+
+    // Envelope for gains
+    gain1.gain.setValueAtTime(0.20, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    gain2.gain.setValueAtTime(0.24, now);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    subGain.gain.setValueAtTime(0.09, now);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    // Connect nodes
+    osc1.connect(gain1);
+    osc2.connect(gain2);
+    subOsc.connect(subGain);
+
+    gain1.connect(masterGain);
+    gain2.connect(masterGain);
+    subGain.connect(masterGain);
+
+    masterGain.connect(ctx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    subOsc.start(now);
+
+    osc1.stop(now + duration + 0.05);
+    osc2.stop(now + duration + 0.05);
+    subOsc.stop(now + duration + 0.05);
+  } catch (err) {
+    console.warn('Web Audio crisis siren failed:', err);
+  }
+}
+
+/**
+ * Continuous looping siren wail
+ */
+export function startContinuousSiren() {
+  if (soundMuted || typeof window === 'undefined') return;
+  stopContinuousSiren();
+
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    const masterGain = ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(740, now); // Center pitch
+
+    // LFO sweeps frequency between ~550Hz and 930Hz at 0.45 Hz (every ~2.2s)
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(0.45, now);
+    lfoGain.gain.setValueAtTime(200, now);
+
+    lfo.connect(osc.frequency);
+
+    masterGain.gain.setValueAtTime(0.20, now);
+
+    osc.connect(masterGain);
+    masterGain.connect(ctx.destination);
+
+    lfo.start(now);
+    osc.start(now);
+
+    activeSirenNodes = { osc, lfo, masterGain, ctx };
+    window.dispatchEvent(new CustomEvent('resq:siren-state', { detail: { running: true } }));
+  } catch (err) {
+    console.warn('Continuous siren error:', err);
+  }
+}
+
+export function stopContinuousSiren() {
+  if (activeSirenNodes) {
+    try {
+      const { osc, lfo, masterGain, ctx } = activeSirenNodes;
+      masterGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      setTimeout(() => {
+        try {
+          osc.stop();
+          lfo.stop();
+        } catch {}
+      }, 350);
+    } catch {}
+    activeSirenNodes = null;
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('resq:siren-state', { detail: { running: false } }));
+    }
+  }
+}
+
+export function isSirenRunning() {
+  return !!activeSirenNodes;
 }
 
 /**

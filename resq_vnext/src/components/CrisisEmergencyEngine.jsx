@@ -10,7 +10,16 @@ import {
   deactivateCrisisMode,
   CRISIS_SCENARIOS
 } from '../lib/crisisManager';
-import { playEmergencyTone, triggerHaptic, isSoundMuted, setSoundMuted } from '../lib/soundUtils';
+import {
+  playEmergencyTone,
+  playCrisisSiren,
+  startContinuousSiren,
+  stopContinuousSiren,
+  isSirenRunning,
+  triggerHaptic,
+  isSoundMuted,
+  setSoundMuted
+} from '../lib/soundUtils';
 
 export function CrisisEmergencyEngine() {
   const { session } = useAuth();
@@ -24,14 +33,20 @@ export function CrisisEmergencyEngine() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState('activate'); // 'activate' | 'standdown'
   const [muted, setMuted] = useState(() => isSoundMuted());
+  const [sirenPlaying, setSirenPlaying] = useState(() => isSirenRunning());
 
   const canControl = session && (session.role === 'government' || session.role === 'admin');
 
-  // Listen for global sound toggle
+  // Listen for global sound and siren toggle
   useEffect(() => {
     const onSound = (e) => setMuted(e.detail?.muted);
+    const onSiren = (e) => setSirenPlaying(e.detail?.running);
     window.addEventListener('resq:sound-toggle', onSound);
-    return () => window.removeEventListener('resq:sound-toggle', onSound);
+    window.addEventListener('resq:siren-state', onSiren);
+    return () => {
+      window.removeEventListener('resq:sound-toggle', onSound);
+      window.removeEventListener('resq:siren-state', onSiren);
+    };
   }, []);
 
   // Listen for crisis mode state changes across tabs / components
@@ -41,8 +56,10 @@ export function CrisisEmergencyEngine() {
       setCrisisActive(active);
       setCrisisMeta(getCrisisMeta());
       if (!active) {
+        stopContinuousSiren();
         setToasts([]);
         setElapsed(0);
+        setSirenPlaying(false);
       }
     };
     window.addEventListener('resq:crisis-mode', onCrisisChange);
@@ -85,9 +102,9 @@ export function CrisisEmergencyEngine() {
       counter: index + 1
     };
 
-    // Play audible siren beep and vibrate device
-    playEmergencyTone('warning');
-    triggerHaptic([250, 100, 250]);
+    // Play authentic disaster emergency crisis siren & trigger haptic
+    playCrisisSiren(2.5);
+    triggerHaptic([350, 150, 350, 150, 500]);
 
     // Add to toast stack (keep last 2 visible to keep viewport tidy)
     setToasts((prev) => [newToast, ...prev].slice(0, 2));
@@ -201,6 +218,32 @@ export function CrisisEmergencyEngine() {
           <div className="crisis-banner-right">
             <button
               type="button"
+              className={`crisis-siren-test-btn interactive ${sirenPlaying ? 'active' : ''}`}
+              onClick={() => {
+                if (sirenPlaying) {
+                  stopContinuousSiren();
+                  setSirenPlaying(false);
+                } else {
+                  startContinuousSiren();
+                  setSirenPlaying(true);
+                  triggerHaptic([400, 200, 400]);
+                }
+              }}
+              title={sirenPlaying ? 'Stop Emergency Siren' : 'Trigger Continuous Emergency Siren'}
+            >
+              <Icons.Siren size={14} className={sirenPlaying ? 'siren-pulse' : ''} />
+              <span>{sirenPlaying ? 'STOP SIREN' : 'SOUND SIREN'}</span>
+              {sirenPlaying && (
+                <div className="siren-wave-anim">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              )}
+            </button>
+
+            <button
+              type="button"
               className="crisis-audio-btn interactive"
               onClick={() => {
                 const next = !muted;
@@ -270,6 +313,25 @@ export function CrisisEmergencyEngine() {
                 <p className="crisis-toast-body">{toast.scen.message}</p>
 
                 <div className="crisis-toast-actions">
+                  <button
+                    type="button"
+                    className="crisis-toast-siren-btn interactive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      playCrisisSiren(2.8);
+                      triggerHaptic([300, 150, 300]);
+                    }}
+                    title="Sound Emergency Siren for this incident"
+                  >
+                    <Icons.Volume2 size={13} />
+                    <span>SIREN</span>
+                    <div className="siren-wave-anim">
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                  </button>
+
                   <button
                     type="button"
                     className="crisis-toast-link-btn interactive"
