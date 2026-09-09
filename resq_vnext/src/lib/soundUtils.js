@@ -37,11 +37,10 @@ export function setSoundMuted(muted) {
 }
 
 /**
- * Plays an authentic, high-urgency Emergency Disaster Siren
- * Dual oscillator with frequency sweep and harmonic distortion
- * Simulates real-world outdoor warning / air-raid sirens
+ * Plays an authentic, high-urgency Emergency Disaster Siren burst
+ * Multi-layer oscillator with compressor and piercing harmonics
  */
-export function playCrisisSiren(duration = 2.4) {
+export function playCrisisSiren(duration = 3.0) {
   if (soundMuted || typeof window === 'undefined') return;
 
   try {
@@ -50,58 +49,70 @@ export function playCrisisSiren(duration = 2.4) {
     if (ctx.state === 'suspended') ctx.resume();
 
     const now = ctx.currentTime;
-    
-    // Primary siren oscillator (sweep)
+
+    // Studio Dynamics Compressor for maximum loud, punchy presence without clipping
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-8, now);
+    compressor.knee.setValueAtTime(10, now);
+    compressor.ratio.setValueAtTime(12, now);
+    compressor.attack.setValueAtTime(0.002, now);
+    compressor.release.setValueAtTime(0.12, now);
+    compressor.connect(ctx.destination);
+
+    // Master Gain (LOUD & HARD)
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.75, now);
+    masterGain.connect(compressor);
+
+    // Layer 1: Aggressive Sawtooth Screamer
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
     osc1.type = 'sawtooth';
 
-    // Harmonic richness oscillator
+    // Layer 2: Piercing Square Wave (cuts through speakers)
     const osc2 = ctx.createOscillator();
     const gain2 = ctx.createGain();
-    osc2.type = 'triangle';
+    osc2.type = 'square';
 
-    // Sub-rumble oscillator for deep presence
+    // Layer 3: Heavy Sub-Octave Triangle Body
     const subOsc = ctx.createOscillator();
     const subGain = ctx.createGain();
-    subOsc.type = 'sine';
-    subOsc.frequency.setValueAtTime(110, now);
+    subOsc.type = 'triangle';
 
-    // Master gain
-    const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(0.24, now);
+    const q1 = duration * 0.3;
+    const half = duration * 0.55;
+    const q3 = duration * 0.8;
 
-    // Dynamic siren pitch envelope:
-    // Cycle 1: rise from 520Hz to 940Hz, fall to 620Hz
-    // Cycle 2: rise to 980Hz, fall to 540Hz
-    const half = duration / 2;
-    const q1 = duration * 0.25;
-    const q3 = duration * 0.75;
+    // Pitch sweep: 600Hz -> 1180Hz -> 720Hz -> 1220Hz -> 540Hz
+    osc1.frequency.setValueAtTime(600, now);
+    osc1.frequency.exponentialRampToValueAtTime(1180, now + q1);
+    osc1.frequency.exponentialRampToValueAtTime(720, now + half);
+    osc1.frequency.exponentialRampToValueAtTime(1220, now + q3);
+    osc1.frequency.exponentialRampToValueAtTime(540, now + duration);
 
-    osc1.frequency.setValueAtTime(520, now);
-    osc1.frequency.exponentialRampToValueAtTime(940, now + q1);
-    osc1.frequency.exponentialRampToValueAtTime(600, now + half);
-    osc1.frequency.exponentialRampToValueAtTime(980, now + q3);
-    osc1.frequency.exponentialRampToValueAtTime(480, now + duration);
+    // Square wave detuned by +7Hz for mechanical siren acoustic warble
+    osc2.frequency.setValueAtTime(607, now);
+    osc2.frequency.exponentialRampToValueAtTime(1187, now + q1);
+    osc2.frequency.exponentialRampToValueAtTime(727, now + half);
+    osc2.frequency.exponentialRampToValueAtTime(1227, now + q3);
+    osc2.frequency.exponentialRampToValueAtTime(547, now + duration);
 
-    // Second oscillator slightly detuned for chorus thickness
-    osc2.frequency.setValueAtTime(523, now);
-    osc2.frequency.exponentialRampToValueAtTime(945, now + q1);
-    osc2.frequency.exponentialRampToValueAtTime(604, now + half);
-    osc2.frequency.exponentialRampToValueAtTime(985, now + q3);
-    osc2.frequency.exponentialRampToValueAtTime(483, now + duration);
+    // Sub-octave (300Hz -> 590Hz)
+    subOsc.frequency.setValueAtTime(300, now);
+    subOsc.frequency.exponentialRampToValueAtTime(590, now + q1);
+    subOsc.frequency.exponentialRampToValueAtTime(360, now + half);
+    subOsc.frequency.exponentialRampToValueAtTime(610, now + q3);
+    subOsc.frequency.exponentialRampToValueAtTime(270, now + duration);
 
-    // Envelope for gains
-    gain1.gain.setValueAtTime(0.20, now);
+    gain1.gain.setValueAtTime(0.55, now);
     gain1.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-    gain2.gain.setValueAtTime(0.24, now);
+    gain2.gain.setValueAtTime(0.35, now);
     gain2.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-    subGain.gain.setValueAtTime(0.09, now);
+    subGain.gain.setValueAtTime(0.40, now);
     subGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-    // Connect nodes
     osc1.connect(gain1);
     osc2.connect(gain2);
     subOsc.connect(subGain);
@@ -109,8 +120,6 @@ export function playCrisisSiren(duration = 2.4) {
     gain1.connect(masterGain);
     gain2.connect(masterGain);
     subGain.connect(masterGain);
-
-    masterGain.connect(ctx.destination);
 
     osc1.start(now);
     osc2.start(now);
@@ -125,7 +134,8 @@ export function playCrisisSiren(duration = 2.4) {
 }
 
 /**
- * Continuous looping siren wail
+ * Continuous LOUD & HARD Looping Emergency Air-Raid / Disaster Siren
+ * Loops continuously until stopped or muted
  */
 export function startContinuousSiren() {
   if (soundMuted || typeof window === 'undefined') return;
@@ -138,31 +148,94 @@ export function startContinuousSiren() {
 
     const now = ctx.currentTime;
 
-    const osc = ctx.createOscillator();
-    const lfo = ctx.createOscillator();
-    const lfoGain = ctx.createGain();
+    // Compressor for maximum loud volume without distortion
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-8, now);
+    compressor.knee.setValueAtTime(12, now);
+    compressor.ratio.setValueAtTime(14, now);
+    compressor.attack.setValueAtTime(0.002, now);
+    compressor.release.setValueAtTime(0.1, now);
+    compressor.connect(ctx.destination);
+
+    // Master Gain for continuous siren (LOUD: 0.72)
     const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.72, now);
+    masterGain.connect(compressor);
 
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(740, now); // Center pitch
+    // Primary screaming saw oscillator (center: 840Hz)
+    const osc1 = ctx.createOscillator();
+    osc1.type = 'sawtooth';
+    osc1.frequency.setValueAtTime(840, now);
 
-    // LFO sweeps frequency between ~550Hz and 930Hz at 0.45 Hz (every ~2.2s)
+    // Piercing square oscillator (center: 848Hz)
+    const osc2 = ctx.createOscillator();
+    osc2.type = 'square';
+    osc2.frequency.setValueAtTime(848, now);
+
+    // Deep sub-octave triangle (center: 420Hz)
+    const subOsc = ctx.createOscillator();
+    subOsc.type = 'triangle';
+    subOsc.frequency.setValueAtTime(420, now);
+
+    // Main Siren Wail LFO: Sweeps frequency up and down every ~2.4s (0.42 Hz)
+    // Range: 840Hz ± 280Hz = 560Hz to 1120Hz!
+    const lfo = ctx.createOscillator();
     lfo.type = 'sine';
-    lfo.frequency.setValueAtTime(0.45, now);
-    lfoGain.gain.setValueAtTime(200, now);
+    lfo.frequency.setValueAtTime(0.42, now);
 
-    lfo.connect(osc.frequency);
+    const lfoGain1 = ctx.createGain();
+    lfoGain1.gain.setValueAtTime(280, now);
+    lfo.connect(lfoGain1);
+    lfoGain1.connect(osc1.frequency);
 
-    masterGain.gain.setValueAtTime(0.20, now);
+    const lfoGain2 = ctx.createGain();
+    lfoGain2.gain.setValueAtTime(285, now);
+    lfo.connect(lfoGain2);
+    lfoGain2.connect(osc2.frequency);
 
-    osc.connect(masterGain);
-    masterGain.connect(ctx.destination);
+    const lfoGainSub = ctx.createGain();
+    lfoGainSub.gain.setValueAtTime(140, now);
+    lfo.connect(lfoGainSub);
+    lfoGainSub.connect(subOsc.frequency);
+
+    // Secondary Rotor Warble LFO: adds mechanical siren flutter (5.5 Hz)
+    const warbleLfo = ctx.createOscillator();
+    warbleLfo.type = 'sine';
+    warbleLfo.frequency.setValueAtTime(5.5, now);
+    const warbleGain = ctx.createGain();
+    warbleGain.gain.setValueAtTime(18, now);
+    warbleLfo.connect(warbleGain);
+    warbleGain.connect(osc1.frequency);
+    warbleGain.connect(osc2.frequency);
+
+    // Layer gains
+    const gain1 = ctx.createGain();
+    gain1.gain.setValueAtTime(0.50, now);
+
+    const gain2 = ctx.createGain();
+    gain2.gain.setValueAtTime(0.35, now);
+
+    const subGain = ctx.createGain();
+    subGain.gain.setValueAtTime(0.38, now);
+
+    osc1.connect(gain1);
+    osc2.connect(gain2);
+    subOsc.connect(subGain);
+
+    gain1.connect(masterGain);
+    gain2.connect(masterGain);
+    subGain.connect(masterGain);
 
     lfo.start(now);
-    osc.start(now);
+    warbleLfo.start(now);
+    osc1.start(now);
+    osc2.start(now);
+    subOsc.start(now);
 
-    activeSirenNodes = { osc, lfo, masterGain, ctx };
-    window.dispatchEvent(new CustomEvent('resq:siren-state', { detail: { running: true } }));
+    activeSirenNodes = { osc1, osc2, subOsc, lfo, warbleLfo, masterGain, ctx };
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('resq:siren-state', { detail: { running: true } }));
+    }
   } catch (err) {
     console.warn('Continuous siren error:', err);
   }
@@ -171,14 +244,17 @@ export function startContinuousSiren() {
 export function stopContinuousSiren() {
   if (activeSirenNodes) {
     try {
-      const { osc, lfo, masterGain, ctx } = activeSirenNodes;
-      masterGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      const { osc1, osc2, subOsc, lfo, warbleLfo, masterGain, ctx } = activeSirenNodes;
+      masterGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
       setTimeout(() => {
         try {
-          osc.stop();
-          lfo.stop();
+          osc1?.stop();
+          osc2?.stop();
+          subOsc?.stop();
+          lfo?.stop();
+          warbleLfo?.stop();
         } catch {}
-      }, 350);
+      }, 300);
     } catch {}
     activeSirenNodes = null;
     if (typeof window !== 'undefined') {

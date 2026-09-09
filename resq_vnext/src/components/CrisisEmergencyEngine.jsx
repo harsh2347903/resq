@@ -72,6 +72,34 @@ export function CrisisEmergencyEngine() {
     };
   }, []);
 
+  // Continuous LOUD & HARD Looping Emergency Siren during Crisis
+  useEffect(() => {
+    if (crisisActive && !muted) {
+      startContinuousSiren();
+      setSirenPlaying(true);
+
+      // Handle browser autoplay policy: unlock audio on first interaction if needed
+      const handleUserGesture = () => {
+        if (isCrisisActive() && !isSoundMuted()) {
+          startContinuousSiren();
+          setSirenPlaying(true);
+        }
+      };
+      window.addEventListener('click', handleUserGesture, { once: true });
+      window.addEventListener('keydown', handleUserGesture, { once: true });
+      return () => {
+        window.removeEventListener('click', handleUserGesture);
+        window.removeEventListener('keydown', handleUserGesture);
+      };
+    } else {
+      stopContinuousSiren();
+      setSirenPlaying(false);
+    }
+    return () => {
+      stopContinuousSiren();
+    };
+  }, [crisisActive, muted]);
+
   // Elapsed timer when crisis is active
   useEffect(() => {
     let timer = null;
