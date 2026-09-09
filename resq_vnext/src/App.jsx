@@ -13,6 +13,7 @@ import { isCrisisActive } from './lib/crisisManager';
 import { GoogleOperationsMap } from './components/GoogleOperationsMap';
 import { DigitalTemperatureReader, LiveTemperatureNavPill } from './components/DigitalTemperatureReader';
 import { CitizenAiTriageAssistant } from './components/CitizenAiTriageAssistant';
+import { TriageEscalationDesk } from './components/TriageEscalationDesk';
 import { api } from './lib/apiClient';
 
 const ACTIVITY_KEY='resq_system_activity_v3';
@@ -61,7 +62,7 @@ function saveProfile(next){ try { localStorage.setItem(PROFILE_KEY,JSON.stringif
 
 const iconMap = { home:Icons.LayoutDashboard, bot:Icons.Bot, sos:Icons.Siren, flag:Icons.Flag, bell:Icons.Bell, megaphone:Icons.Megaphone, shelter:Icons.House, family:Icons.Users, tasks:Icons.ListChecks, mission:Icons.Route, impact:Icons.BadgeCheck, incident:Icons.TriangleAlert, campaign:Icons.Megaphone, ngo:Icons.Handshake, chart:Icons.ChartNoAxesCombined, users:Icons.UsersRound, shield:Icons.ShieldCheck, audit:Icons.ScrollText, settings:Icons.Settings };
 const pageMeta = {
-  '/dashboard':['Command center','Response network overview'], '/triage':['AI Disaster Triage & First-Aid Assistant','24/7 automated disaster caution, safety protocols, and emergency guidance'], '/help':['Emergency response','Request immediate assistance'], '/incident':['Incident report','Help responders understand what is happening'],
+  '/dashboard':['Command center','Response network overview'], '/triage':['Triage Operations','Emergency triage and NGO dispatch'], '/help':['Emergency response','Request immediate assistance'], '/incident':['Incident report','Help responders understand what is happening'],
   '/alerts':['Safety intelligence','Verified public advisories'], '/campaigns':['Community action','Government and NGO programs'], '/shelters':['Relief network','Open shelters and essential services'], '/family':['Family safety','Reunification and missing-person support'],
   '/requests':['Assistance queue','Requests visible to your role'], '/missions':['Mission control','Your assigned response tasks'], '/impact':['Volunteer impact','Your contribution to relief'], '/incidents':['Live incidents','Verified disaster events'],
   '/broadcast':['Public warning system','Create and publish official advisories'], '/broadcast-history':['Broadcast history','Track official alerts issued by your role'], '/ngo-coordination':['NGO coordination','Dispatch and partner capacity'], '/analytics':['Response analytics','District-level operational metrics'], '/users':['Identity control','Manage platform accounts'], '/permissions':['Role permissions','Manage access policy'], '/audit':['Audit trail','Trace critical actions'], '/settings':['System settings','Platform configuration'], '/profile':['Profile & preferences','Personal identity, contact and safety preferences']
@@ -335,15 +336,17 @@ function Shell({children}){
     <header className="topbar"><div><span className="eyebrow">National resilience network</span><h1>{pageMeta[location.pathname]?.[0]||'Rakshak'}</h1></div><div className="top-actions">
      <LocationSwitcherBadge />
      <LiveTemperatureNavPill onClick={() => window.dispatchEvent(new CustomEvent('resq:open-temp-reader'))} />
-     <button
-       type="button"
-       className="topbar-triage-btn interactive"
-       onClick={() => navigate('/triage')}
-       title="24/7 AI Disaster Triage & First-Aid Assistant"
-     >
-       <Icons.Bot size={15}/>
-       <span>AI Triage</span>
-     </button>
+     {session?.role !== 'ngo' && (
+        <button
+          type="button"
+          className="topbar-triage-btn interactive"
+          onClick={() => navigate('/triage')}
+          title={session?.role === 'citizen' ? "24/7 AI Disaster Triage & First-Aid Assistant" : "Citizen AI Triage Command & NGO Dispatch Desk"}
+        >
+          {session?.role === 'citizen' ? <Icons.Bot size={15}/> : <Icons.Inbox size={15}/>}
+          <span>{session?.role === 'citizen' ? 'AI Triage' : 'Triage Desk'}</span>
+        </button>
+      )}
      <EmergencyCrisisButton />
 
      {canRunDrill && (
@@ -450,24 +453,24 @@ function Metric({label,value,sub,Icon,accent='aqua'}){return <motion.div classNa
 function GlassCard({children,className='',...props}){return <motion.div className={`glass-panel glass-card ${className}`} whileHover={{y:-3}} {...props}>{children}</motion.div>}
 
 function AiTriagePage() {
-  const navigate = useNavigate();
+  const { session } = useAuth();
+  const isAuthority = session?.role === 'government' || session?.role === 'admin';
+  const isNgo = session?.role === 'ngo';
+
+  if (isNgo) {
+    return <Navigate to="/requests" replace />;
+  }
+
+  if (isAuthority) {
+    return (
+      <div className="content-stack">
+        <TriageEscalationDesk />
+      </div>
+    );
+  }
+
   return (
     <div className="content-stack">
-      <PageIntro
-        kicker="24/7 Automated Emergency Guidance"
-        title="AI Disaster Triage & First-Aid Assistant"
-        sub="Instant disaster caution protocols, triage checklists, and first-aid recommendations when administrative or emergency personnel are delayed or unavailable."
-        actions={
-          <div className="page-actions">
-            <button className="secondary-button interactive" onClick={() => navigate('/dashboard')}>
-              <Icons.LayoutDashboard size={15}/> Dashboard
-            </button>
-            <button className="primary-button interactive" onClick={() => navigate('/help')}>
-              <Icons.Siren size={15}/> Emergency SOS
-            </button>
-          </div>
-        }
-      />
       <CitizenAiTriageAssistant />
     </div>
   );
@@ -488,8 +491,23 @@ function CitizenDashboard(){
       <div className="status-item"><Icons.Phone size={16}/><span>Emergency line<b>112</b></span></div>
     </div>
 
-    {/* 24/7 AI Citizen Triage & Caution Assistant */}
-    <CitizenAiTriageAssistant />
+    {/* 24/7 AI Citizen Triage & Caution Launcher */}
+    <GlassCard style={{background:'linear-gradient(135deg, rgba(2, 132, 199, 0.14), rgba(15, 23, 42, 0.85))', borderColor:'rgba(2, 132, 199, 0.32)', padding:'18px 22px'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'14px'}}>
+        <div>
+          <div style={{display:'inline-flex',alignItems:'center',gap:'6px',color:'#38bdf8',fontSize:'11px',fontWeight:'700',letterSpacing:'0.04em',marginBottom:'4px'}}>
+            <Icons.Bot size={14}/> 24/7 AUTOMATED AI DISASTER TRIAGE & FIRST AID
+          </div>
+          <h3 style={{fontSize:'18px',fontWeight:'800',color:'#f8fafc',margin:'0 0 4px 0'}}>Need Immediate Safety Advice or Crisis Triage?</h3>
+          <p style={{fontSize:'13px',color:'#94a3b8',margin:0,maxWidth:'680px'}}>
+            Chat 24/7 with Rakshak AI in English, हिंदी, or मराठी. Get instant life-saving cautions for floods, fires, or injuries, and transmit priority reports to District Command for NGO rescue mobilization.
+          </p>
+        </div>
+        <button className="primary-button interactive" onClick={()=>navigate('/triage')} style={{display:'inline-flex',alignItems:'center',gap:'8px',padding:'10px 18px',fontSize:'13px'}}>
+          <Icons.MessageSquare size={15}/> Open AI Triage Chat <Icons.ArrowRight size={14}/>
+        </button>
+      </div>
+    </GlassCard>
 
     <div className="stats-grid four">
       <Metric label="Active alerts" value="03" sub="2 near you" Icon={Icons.Bell} accent="aqua"/>
@@ -656,6 +674,9 @@ function GovernmentDashboard(){
         sub="Command-level information is separated from citizen and volunteer experiences."
         actions={
           <div className="button-row">
+            <button className="secondary-button interactive" onClick={()=>navigate('/triage')} style={{display:'inline-flex',alignItems:'center',gap:'6px',borderColor:'rgba(56,189,248,0.4)',color:'#38bdf8'}}>
+              <Icons.Inbox size={16}/> Citizen Triage Desk
+            </button>
             <button className="primary-button interactive" onClick={()=>navigate('/broadcast')}>
               <Icons.Megaphone size={16}/> Broadcast Alert
             </button>
@@ -796,7 +817,7 @@ function MapPinPoint({x,y,type,label,title,onSelect,selected}){
     </button>
   );
 }
-function AdminDashboard(){const {session}=useAuth();const navigate=useNavigate();const [broadcasts,setBroadcasts]=useState(()=>readBroadcasts().filter(x=>x.role==='admin'));const [security,setSecurity]=useState('Healthy');useEffect(()=>{const refresh=()=>setBroadcasts(readBroadcasts().filter(x=>x.role==='admin'));window.addEventListener('resq:broadcasts',refresh);window.addEventListener('storage',refresh);return()=>{window.removeEventListener('resq:broadcasts',refresh);window.removeEventListener('storage',refresh)}},[]);return <div className="content-stack admin-dashboard"><DashboardCrisisWidget /><div className="admin-hero glass-panel"><div><span className="eyebrow">Privileged control plane</span><h2>Secure the platform behind the response.</h2><p>Identity, permissions, auditability and broadcast governance are separated from field operations.</p></div><div className="admin-posture-card glass-panel"><div className="posture-card-top"><div className="posture-status-indicator"><span className={`posture-lamp ${security==='Healthy'?'lamp-healthy':'lamp-review'}`}/><span className="posture-sub-tag">SYSTEM POSTURE</span></div><span className={`posture-badge ${security==='Healthy'?'badge-healthy':'badge-review'}`}>{security==='Healthy'?'● OPERATIONAL':'▲ AUDIT REQUIRED'}</span></div><div className="posture-card-body"><div className="posture-title-wrap"><Icons.ShieldCheck size={22} className={`posture-shield-ico ${security==='Healthy'?'ico-healthy':'ico-review'}`}/><div className="posture-text"><strong className="posture-state-text">{security}</strong><small className="posture-hint-text">{security==='Healthy'?'ICS-200 Cryptographic Security Verified':'Policy Discrepancy Flagged For Review'}</small></div></div><button type="button" className="admin-check-btn interactive" onClick={()=>setSecurity(security==='Healthy'?'Review':'Healthy')}><Icons.RotateCw size={13}/> Run Diagnostic Check</button></div></div></div><PageIntro kicker="System administration" title="Platform control center" sub="Manage policy and trace every high-impact action across the network." actions={<div className="button-row"><button className="primary-button interactive" onClick={()=>navigate('/broadcast')}><Icons.Megaphone size={16}/> Broadcast alert</button><button className="secondary-button interactive" onClick={()=>navigate('/permissions')}><Icons.ShieldCheck size={16}/> Access policy</button></div>}/><div className="stats-grid four"><Metric label="Active users" value="8,420" sub="+182 this week" Icon={Icons.Users} accent="rose"/><Metric label="Signed sessions" value="2,148" sub="99.8% valid envelopes" Icon={Icons.LockKeyhole} accent="aqua"/><Metric label="Audit events" value="12.4K" sub="Last 24 hours" Icon={Icons.ScrollText} accent="violet"/><Metric label="Policy health" value="98%" sub="2 warnings" Icon={Icons.ShieldCheck} accent="amber"/></div><div className="admin-grid"><GlassCard className="security-panel"><CardHeader title="Security posture"/><SecurityPosture/><div className="security-meter"><span>Authentication integrity</span><b>98%</b><i style={{width:'98%'}}/></div><div className="security-meter"><span>Permission integrity</span><b>100%</b><i style={{width:'100%'}}/></div><div className="security-meter"><span>Audit coverage</span><b>96%</b><i style={{width:'96%'}}/></div></GlassCard><GlassCard><CardHeader title="Privileged actions"/><div className="privileged-action-grid"><Shortcut name="Users" path="/users" Icon={Icons.Users}/><Shortcut name="Roles" path="/permissions" Icon={Icons.ShieldCheck}/><Shortcut name="Audit" path="/audit" Icon={Icons.ScrollText}/><Shortcut name="Broadcasts" path="/broadcast" Icon={Icons.Megaphone}/><Shortcut name="Shelters" path="/shelters" Icon={Icons.House}/><Shortcut name="Campaigns" path="/campaigns" Icon={Icons.Flag}/></div></GlassCard></div><div className="dashboard-columns"><GlassCard><CardHeader title="Admin broadcast activity" action="Open history" onClick={()=>navigate('/broadcast-history')}/>{broadcasts.length?broadcasts.slice(0,6).map(x=><motion.div className={`history-row history-rich severity-${severityClass(x.severity)}`} key={x.id} onClick={()=>navigate('/broadcast-history')}><span className={`severity-dot ${severityClass(x.severity)}`}/><div><b>{x.severity} · {x.type} · {x.area}</b><small>{x.message}</small><em>{x.actor||session?.name||'System Admin'} · {(x.channels||[]).join(' · ')||'App notification'} · {x.time}</em></div><span>OPEN</span></motion.div>):<div className="empty-state"><Icons.Megaphone size={20}/><b>No admin broadcasts</b><p>Admin advisories will appear here after publication.</p><button className="primary-button interactive" onClick={()=>navigate('/broadcast')}>Create broadcast</button></div>}</GlassCard><GlassCard><CardHeader title="Latest audit signals"/>{audits.slice(0,5).map((a,i)=><div className="audit-mini" key={i}><span>{a.time}</span><b>{a.actor}</b><p>{a.action}</p><span className={`priority ${a.severity}`}>{a.severity}</span></div>)}</GlassCard></div></div>}
+function AdminDashboard(){const {session}=useAuth();const navigate=useNavigate();const [broadcasts,setBroadcasts]=useState(()=>readBroadcasts().filter(x=>x.role==='admin'));const [security,setSecurity]=useState('Healthy');useEffect(()=>{const refresh=()=>setBroadcasts(readBroadcasts().filter(x=>x.role==='admin'));window.addEventListener('resq:broadcasts',refresh);window.addEventListener('storage',refresh);return()=>{window.removeEventListener('resq:broadcasts',refresh);window.removeEventListener('storage',refresh)}},[]);return <div className="content-stack admin-dashboard"><DashboardCrisisWidget /><div className="admin-hero glass-panel"><div><span className="eyebrow">Privileged control plane</span><h2>Secure the platform behind the response.</h2><p>Identity, permissions, auditability and broadcast governance are separated from field operations.</p></div><div className="admin-posture-card glass-panel"><div className="posture-card-top"><div className="posture-status-indicator"><span className={`posture-lamp ${security==='Healthy'?'lamp-healthy':'lamp-review'}`}/><span className="posture-sub-tag">SYSTEM POSTURE</span></div><span className={`posture-badge ${security==='Healthy'?'badge-healthy':'badge-review'}`}>{security==='Healthy'?'● OPERATIONAL':'▲ AUDIT REQUIRED'}</span></div><div className="posture-card-body"><div className="posture-title-wrap"><Icons.ShieldCheck size={22} className={`posture-shield-ico ${security==='Healthy'?'ico-healthy':'ico-review'}`}/><div className="posture-text"><strong className="posture-state-text">{security}</strong><small className="posture-hint-text">{security==='Healthy'?'ICS-200 Cryptographic Security Verified':'Policy Discrepancy Flagged For Review'}</small></div></div><button type="button" className="admin-check-btn interactive" onClick={()=>setSecurity(security==='Healthy'?'Review':'Healthy')}><Icons.RotateCw size={13}/> Run Diagnostic Check</button></div></div></div><PageIntro kicker="System administration" title="Platform control center" sub="Manage policy and trace every high-impact action across the network." actions={<div className="button-row"><button className="primary-button interactive" onClick={()=>navigate('/broadcast')}><Icons.Megaphone size={16}/> Broadcast alert</button><button className="secondary-button interactive" onClick={()=>navigate('/permissions')}><Icons.ShieldCheck size={16}/> Access policy</button></div>}/><div className="stats-grid four"><Metric label="Active users" value="8,420" sub="+182 this week" Icon={Icons.Users} accent="rose"/><Metric label="Signed sessions" value="2,148" sub="99.8% valid envelopes" Icon={Icons.LockKeyhole} accent="aqua"/><Metric label="Audit events" value="12.4K" sub="Last 24 hours" Icon={Icons.ScrollText} accent="violet"/><Metric label="Policy health" value="98%" sub="2 warnings" Icon={Icons.ShieldCheck} accent="amber"/></div><div className="admin-grid"><GlassCard className="security-panel"><CardHeader title="Security posture"/><SecurityPosture/><div className="security-meter"><span>Authentication integrity</span><b>98%</b><i style={{width:'98%'}}/></div><div className="security-meter"><span>Permission integrity</span><b>100%</b><i style={{width:'100%'}}/></div><div className="security-meter"><span>Audit coverage</span><b>96%</b><i style={{width:'96%'}}/></div></GlassCard><GlassCard><CardHeader title="Privileged actions"/><div className="privileged-action-grid"><Shortcut name="Triage Desk" path="/triage" Icon={Icons.Inbox}/><Shortcut name="Users" path="/users" Icon={Icons.Users}/><Shortcut name="Roles" path="/permissions" Icon={Icons.ShieldCheck}/><Shortcut name="Audit" path="/audit" Icon={Icons.ScrollText}/><Shortcut name="Broadcasts" path="/broadcast" Icon={Icons.Megaphone}/><Shortcut name="Shelters" path="/shelters" Icon={Icons.House}/></div></GlassCard></div><div className="dashboard-columns"><GlassCard><CardHeader title="Admin broadcast activity" action="Open history" onClick={()=>navigate('/broadcast-history')}/>{broadcasts.length?broadcasts.slice(0,6).map(x=><motion.div className={`history-row history-rich severity-${severityClass(x.severity)}`} key={x.id} onClick={()=>navigate('/broadcast-history')}><span className={`severity-dot ${severityClass(x.severity)}`}/><div><b>{x.severity} · {x.type} · {x.area}</b><small>{x.message}</small><em>{x.actor||session?.name||'System Admin'} · {(x.channels||[]).join(' · ')||'App notification'} · {x.time}</em></div><span>OPEN</span></motion.div>):<div className="empty-state"><Icons.Megaphone size={20}/><b>No admin broadcasts</b><p>Admin advisories will appear here after publication.</p><button className="primary-button interactive" onClick={()=>navigate('/broadcast')}>Create broadcast</button></div>}</GlassCard><GlassCard><CardHeader title="Latest audit signals"/>{audits.slice(0,5).map((a,i)=><div className="audit-mini" key={i}><span>{a.time}</span><b>{a.actor}</b><p>{a.action}</p><span className={`priority ${a.severity}`}>{a.severity}</span></div>)}</GlassCard></div></div>}
 function AlertRow({item}){return <div className="alert-row"><span className={`severity-dot ${item.level}`}/><div><b>{item.title}</b><small>{item.region}</small></div><span>{item.time}</span></div>}
 function CampaignMini({c,volunteer}){const navigate=useNavigate();return <div className="campaign-mini interactive-row" onClick={()=>navigate('/campaigns')}><div><span className="tag">{c.tag}</span><b>{c.name}</b><small>{c.org} · {c.location}</small></div><button className="tiny-button interactive" onClick={(e)=>{e.stopPropagation();navigate('/campaigns')}}>{volunteer?'HELP':'VIEW'}</button></div>}
 function TaskRow({r}){return <div className="task-row"><div><span className={`priority ${r.priority.toLowerCase()}`}>{r.priority}</span><b>{r.id} · {r.type}</b><small>{r.location} · {r.time}</small></div><button className="tiny-button interactive">TAKE</button></div>}

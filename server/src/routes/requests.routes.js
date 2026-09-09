@@ -2,7 +2,7 @@ import express from 'express';
 import { db } from '../config/db.js';
 import { optionalAuth } from '../middleware/auth.js';
 import { broadcastNewRequest, getIO } from '../socket/socketHandler.js';
-import { triageDistressMessage } from '../services/triageService.js';
+import { triageDistressMessage, conversationalTriage } from '../services/triageService.js';
 import { matchVolunteersToRequest } from '../services/dispatchService.js';
 import { findNearby } from '../services/geoService.js';
 
@@ -69,6 +69,19 @@ router.post('/triage', (req, res) => {
   });
 });
 
+// POST /api/requests/triage/chat - Conversational AI Triage interaction
+router.post('/triage/chat', (req, res) => {
+  const { message, lang = 'en', location = 'Pune' } = req.body;
+  if (!message) {
+    return res.status(400).json({ error: 'Message required for conversational triage.' });
+  }
+  const result = conversationalTriage(message, lang, location);
+  res.json({
+    success: true,
+    result
+  });
+});
+
 // POST /api/requests (SOS Help Submission with Idempotency & AI Triage)
 router.post('/', optionalAuth, (req, res) => {
   const idempotencyKey = req.headers['x-idempotency-key'] || req.body.idempotencyKey;
@@ -82,7 +95,7 @@ router.post('/', optionalAuth, (req, res) => {
     }
   }
 
-  const { type, location, priority = 'High', details, phone, citizen, coordinates } = req.body;
+  const { type, location, priority = 'High', details, phone, citizen, coordinates, source = 'web', triage: clientTriage, rawQuery } = req.body;
 
   if (!type || !location) {
     return res.status(400).json({ error: 'Assistance type and location are required' });
@@ -92,8 +105,8 @@ router.post('/', optionalAuth, (req, res) => {
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-  // Run AI & NLP Triage Engine
-  const triage = triageDistressMessage(`${type} assistance needed: ${details || ''}`, priority);
+  // Run AI & NLP Triage Engine if not provided by client
+  const triage = clientTriage || triageDistressMessage(`${type} assistance needed: ${details || ''}`, priority);
   const coords = coordinates || inferCoordinates(location);
 
   const newRequest = db.insert('requests', {
@@ -106,18 +119,24 @@ router.post('/', optionalAuth, (req, res) => {
     team: '—',
     time: timeStr,
     phone: phone || req.user?.phone || '',
-    details: details || '',
+    details: details || rawQuery || '',
+    source,
     triage,
     createdAt: now.toISOString()
   });
 
   db.addAudit(
-    `🚨 SOS Request created: ${type} at ${location} by ${requester} [Triage: ${triage.urgency}, Units: ${triage.requiredEquipment?.[0] || 'Standard'}]`,
+    `🚨 ${source === 'ai_triage' ? 'AI Triage Escalation' : 'SOS Request'}: ${type} at ${location} by ${requester} [Triage: ${triage.urgency}, Units: ${triage.requiredEquipment?.[0] || 'Standard'}]`,
     requester,
     triage.urgency === 'Critical' ? 'critical' : 'high'
   );
 
   broadcastNewRequest(newRequest);
+
+  const io = getIO();
+  if (io) {
+    io.emit('triage:escalation', newRequest);
+  }
 
   const responsePayload = {
     success: true,
@@ -198,17 +217,19 @@ router.get('/:id/matches', optionalAuth, (req, res) => {
 
 // POST /api/requests/:id/dispatch - Automatic or Manual Dispatch Assignment
 router.post('/:id/dispatch', optionalAuth, (req, res) => {
-  const { volunteerId, team } = req.body;
+  const { volunteerId, team, ngoOrg, instructions } = req.body;
   const request = db.findById('requests', req.params.id);
   if (!request) {
     return res.status(404).json({ error: 'Request not found' });
   }
 
   let assignedUnit = team;
+  let volunteerName = null;
   if (volunteerId) {
     const vol = db.findById('volunteers', volunteerId);
     if (vol) {
-      assignedUnit = `${vol.name} (${vol.skill})`;
+      volunteerName = vol.name;
+      assignedUnit = ngoOrg ? `${ngoOrg} · ${vol.name} (${vol.skill})` : `${vol.name} (${vol.skill})`;
       db.update('volunteers', volunteerId, { status: 'On mission', missions: (vol.missions || 0) + 1 });
     }
   }
@@ -218,24 +239,37 @@ router.post('/:id/dispatch', optionalAuth, (req, res) => {
     const volunteers = db.getCollection('volunteers');
     const matches = matchVolunteersToRequest(request, volunteers);
     if (matches.length > 0 && matches[0].isOptimal) {
-      assignedUnit = `${matches[0].name} (${matches[0].skill})`;
+      volunteerName = matches[0].name;
+      assignedUnit = ngoOrg ? `${ngoOrg} · ${matches[0].name} (${matches[0].skill})` : `${matches[0].name} (${matches[0].skill})`;
       db.update('volunteers', matches[0].volunteerId, { status: 'On mission' });
     } else {
-      assignedUnit = 'Rapid Response Team 01';
+      assignedUnit = ngoOrg ? `${ngoOrg} · Rapid Response Team 01` : 'Rapid Response Team 01';
     }
   }
 
+  const actor = req.user?.name || 'District Incident Commander';
   const updated = db.update('requests', req.params.id, {
     team: assignedUnit,
-    status: 'Assigned'
+    ngoOrg: ngoOrg || 'Disaster Response Partner',
+    appointedVolunteer: volunteerName,
+    dispatchNotes: instructions || 'Immediate rescue and citizen relief deployment.',
+    status: 'Assigned',
+    assignedAt: new Date().toISOString(),
+    assignedBy: actor
   });
 
-  const actor = req.user?.name || 'Dispatcher';
-  db.addAudit(`🎯 Dispatched ${assignedUnit} to Request #${request.id} (${request.location})`, actor, 'high');
+  db.addAudit(`🎯 Dispatched ${assignedUnit} to Request #${request.id} (${request.location}) [Assigned by ${actor}]`, actor, 'high');
 
   const io = getIO();
   if (io) {
     io.emit('request:updated', updated);
+    io.emit('triage:assigned', {
+      requestId: request.id,
+      team: assignedUnit,
+      ngoOrg: ngoOrg || 'Disaster Response Partner',
+      appointedVolunteer: volunteerName,
+      status: 'Assigned'
+    });
   }
 
   res.json({

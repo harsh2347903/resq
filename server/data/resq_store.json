@@ -234,6 +234,99 @@
   ],
   "requests": [
     {
+      "citizen": "Citizen Member",
+      "type": "AI Triage: Flood",
+      "location": "Pune City (Shivaji Nagar) (Pune)",
+      "coordinates": {
+        "lat": 18.5314,
+        "lng": 73.8446
+      },
+      "priority": "High",
+      "status": "Open",
+      "team": "—",
+      "time": "15:47",
+      "phone": "+91 98765 43210",
+      "details": "water is rising fast into our living room, we need rescue boat",
+      "source": "ai_triage",
+      "triage": {
+        "category": "Flood",
+        "urgency": "High",
+        "estimatedPersons": 1,
+        "requiredEquipment": [
+          "Inflatable Zodiac Boat",
+          "High-Buoyancy Life Vests"
+        ],
+        "summary": "Triage (High): Flood assistance requested. Estimated 1 person(s). Units needed: Inflatable Zodiac Boat.",
+        "rawQuery": "water is rising fast into our living room, we need rescue boat"
+      },
+      "createdAt": "2026-09-09T10:17:42.550Z",
+      "id": "REQ-2551"
+    },
+    {
+      "citizen": "Citizen Member",
+      "type": "AI Triage: Flood",
+      "location": "Pune City (Shivaji Nagar) (Pune)",
+      "coordinates": {
+        "lat": 18.5314,
+        "lng": 73.8446
+      },
+      "priority": "High",
+      "status": "Open",
+      "team": "—",
+      "time": "15:45",
+      "phone": "+91 98765 43210",
+      "details": "flood water is entering our ground floor, need rescue team",
+      "source": "ai_triage",
+      "triage": {
+        "category": "Flood",
+        "urgency": "High",
+        "estimatedPersons": 1,
+        "requiredEquipment": [
+          "Inflatable Zodiac Boat",
+          "High-Buoyancy Life Vests"
+        ],
+        "summary": "Triage (High): Flood assistance requested. Estimated 1 person(s). Units needed: Inflatable Zodiac Boat.",
+        "rawQuery": "flood water is entering our ground floor, need rescue team"
+      },
+      "createdAt": "2026-09-09T10:15:35.012Z",
+      "id": "REQ-5012"
+    },
+    {
+      "citizen": "Citizen Member",
+      "type": "AI Triage: Flood",
+      "location": "Pune City (Shivaji Nagar) (Pune)",
+      "coordinates": {
+        "lat": 18.5314,
+        "lng": 73.8446
+      },
+      "priority": "High",
+      "status": "Assigned",
+      "team": "Seva Sahayog Disaster Relief · Kabir R. (Boat / Driving)",
+      "time": "15:42",
+      "phone": "+91 98765 43210",
+      "details": "water is rising into our ground floor room quickly",
+      "source": "ai_triage",
+      "triage": {
+        "category": "Flood",
+        "urgency": "High",
+        "estimatedPersons": 1,
+        "requiredEquipment": [
+          "Inflatable Zodiac Boat",
+          "High-Buoyancy Life Vests"
+        ],
+        "summary": "Triage (High): Flood assistance requested. Estimated 1 person(s). Units needed: Inflatable Zodiac Boat.",
+        "rawQuery": "water is rising into our ground floor room quickly"
+      },
+      "createdAt": "2026-09-09T10:12:31.278Z",
+      "id": "REQ-1278",
+      "ngoOrg": "Seva Sahayog Disaster Relief",
+      "appointedVolunteer": "Kabir R.",
+      "dispatchNotes": "Immediate response for AI Triage: Flood at Pune City (Shivaji Nagar) (Pune). Assist citizen Citizen Member.",
+      "assignedAt": "2026-09-09T10:14:37.861Z",
+      "assignedBy": "Government Officer Member",
+      "updatedAt": "2026-09-09T10:14:37.861Z"
+    },
+    {
       "citizen": "SMS Requester (9999)",
       "type": "Flood",
       "location": "DHAYARI",
@@ -635,11 +728,201 @@
         "lng": 73.8077
       },
       "status": "On mission",
-      "missions": 24,
-      "updatedAt": "2026-09-09T09:01:43.012Z"
+      "missions": 26,
+      "updatedAt": "2026-09-09T10:14:37.861Z"
     }
   ],
   "audits": [
+    {
+      "id": "aud-1788949062551-r0we",
+      "time": "15:47",
+      "actor": "Citizen Member",
+      "action": "🚨 AI Triage Escalation: AI Triage: Flood at Pune City (Shivaji Nagar) (Pune) by Citizen Member [Triage: High, Units: Inflatable Zodiac Boat]",
+      "severity": "high",
+      "timestamp": "2026-09-09T10:17:42.551Z",
+      "previousHash": "d8b26d456aba8fe650b3c83696f583d132c02418ed66407226f576d268ef681a",
+      "hash": "d71a37333041824a400df7a8f5a4fb5ef28b144b67f8d25b5693cda29f2b5800"
+    },
+    {
+      "id": "aud-1788949052998-x1hh",
+      "time": "15:47",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:17:32.998Z",
+      "previousHash": "17adb917dec19b358d1270654768c06beec8895e790e55efc68cc7dd16ba0a6f",
+      "hash": "d8b26d456aba8fe650b3c83696f583d132c02418ed66407226f576d268ef681a"
+    },
+    {
+      "id": "aud-1788949003771-eyl8",
+      "time": "15:46",
+      "actor": "Government Officer Member",
+      "action": "Government Officer Member signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:16:43.770Z",
+      "previousHash": "afa32a62628bd7f3fed2ea6941f0bb2784a1164587747b79ea1c1fb99b9079c3",
+      "hash": "17adb917dec19b358d1270654768c06beec8895e790e55efc68cc7dd16ba0a6f"
+    },
+    {
+      "id": "aud-1788948996267-l0fn",
+      "time": "15:46",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:16:36.267Z",
+      "previousHash": "995213157e4104539edd116260e7a169113dbd7f228845957035e510be427281",
+      "hash": "afa32a62628bd7f3fed2ea6941f0bb2784a1164587747b79ea1c1fb99b9079c3"
+    },
+    {
+      "id": "aud-1788948992463-fmzt",
+      "time": "15:46",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:16:32.463Z",
+      "previousHash": "1f8f3c168f7a00e3f5a65e396753008bd73bc5be851533c821d28fce5c552d0b",
+      "hash": "995213157e4104539edd116260e7a169113dbd7f228845957035e510be427281"
+    },
+    {
+      "id": "aud-1788948937690-q2ov",
+      "time": "15:45",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:15:37.690Z",
+      "previousHash": "5838652d6b20df61763590f165fe0e8f58fab34ad33693943160e3a1e9c08785",
+      "hash": "1f8f3c168f7a00e3f5a65e396753008bd73bc5be851533c821d28fce5c552d0b"
+    },
+    {
+      "id": "aud-1788948935012-wtmf",
+      "time": "15:45",
+      "actor": "Citizen Member",
+      "action": "🚨 AI Triage Escalation: AI Triage: Flood at Pune City (Shivaji Nagar) (Pune) by Citizen Member [Triage: High, Units: Inflatable Zodiac Boat]",
+      "severity": "high",
+      "timestamp": "2026-09-09T10:15:35.012Z",
+      "previousHash": "4f925da8144985856a2b3aa26744101f2da11ecc61d249e10d56376619665784",
+      "hash": "5838652d6b20df61763590f165fe0e8f58fab34ad33693943160e3a1e9c08785"
+    },
+    {
+      "id": "aud-1788948931487-tbl0",
+      "time": "15:45",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:15:31.487Z",
+      "previousHash": "b0f2f2c2ad15ef438849e7c15970fa721ab75d3c3ae26f28dceeac8ea5f79054",
+      "hash": "4f925da8144985856a2b3aa26744101f2da11ecc61d249e10d56376619665784"
+    },
+    {
+      "id": "aud-1788948927372-36u2",
+      "time": "15:45",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:15:27.372Z",
+      "previousHash": "9b212c7c97d688c8d25e9745aba5b202859c3c69b46227d8a8143e779b5120f9",
+      "hash": "b0f2f2c2ad15ef438849e7c15970fa721ab75d3c3ae26f28dceeac8ea5f79054"
+    },
+    {
+      "id": "aud-1788948877861-tmqv",
+      "time": "15:44",
+      "actor": "Government Officer Member",
+      "action": "🎯 Dispatched Seva Sahayog Disaster Relief · Kabir R. (Boat / Driving) to Request #REQ-1278 (Pune City (Shivaji Nagar) (Pune)) [Assigned by Government Officer Member]",
+      "severity": "high",
+      "timestamp": "2026-09-09T10:14:37.861Z",
+      "previousHash": "bf523f76fe82eee8f9b4613b9d0237d62ea10a55c995ec626ee32e82275a4513",
+      "hash": "9b212c7c97d688c8d25e9745aba5b202859c3c69b46227d8a8143e779b5120f9"
+    },
+    {
+      "id": "aud-1788948871509-446k",
+      "time": "15:44",
+      "actor": "Government Officer Member",
+      "action": "Government Officer Member signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:14:31.509Z",
+      "previousHash": "37f87e2f22a25b2518a3c0fcb1e4d84e8b7cd486df62338403073f0a41057ea1",
+      "hash": "bf523f76fe82eee8f9b4613b9d0237d62ea10a55c995ec626ee32e82275a4513"
+    },
+    {
+      "id": "aud-1788948818573-3sns",
+      "time": "15:43",
+      "actor": "Government Officer Member",
+      "action": "🎯 Dispatched Seva Sahayog Disaster Relief · Kabir R. (Boat / Driving) to Request #REQ-1278 (Pune City (Shivaji Nagar) (Pune)) [Assigned by Government Officer Member]",
+      "severity": "high",
+      "timestamp": "2026-09-09T10:13:38.573Z",
+      "previousHash": "3e1a535998cee8d8fe67d3bed24a077d3766aee057e6fe230080685239f146d7",
+      "hash": "37f87e2f22a25b2518a3c0fcb1e4d84e8b7cd486df62338403073f0a41057ea1"
+    },
+    {
+      "id": "aud-1788948812206-2qwl",
+      "time": "15:43",
+      "actor": "Government Officer Member",
+      "action": "Government Officer Member signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:13:32.206Z",
+      "previousHash": "1d5dfe8ada78532dd1e7730202daccb7223984e9a7f479404a9791ef666697e6",
+      "hash": "3e1a535998cee8d8fe67d3bed24a077d3766aee057e6fe230080685239f146d7"
+    },
+    {
+      "id": "aud-1788948755729-60un",
+      "time": "15:42",
+      "actor": "Government Officer Member",
+      "action": "Government Officer Member signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:12:35.729Z",
+      "previousHash": "8e720ea7cb06843e96633d3ccfd0444d9a53a9938230c1e9b414cbfa70c6703b",
+      "hash": "1d5dfe8ada78532dd1e7730202daccb7223984e9a7f479404a9791ef666697e6"
+    },
+    {
+      "id": "aud-1788948751278-wis4",
+      "time": "15:42",
+      "actor": "Citizen Member",
+      "action": "🚨 AI Triage Escalation: AI Triage: Flood at Pune City (Shivaji Nagar) (Pune) by Citizen Member [Triage: High, Units: Inflatable Zodiac Boat]",
+      "severity": "high",
+      "timestamp": "2026-09-09T10:12:31.278Z",
+      "previousHash": "cb0e2000b546d92d678b066bd0d9189812850ae9f391b6c57f4ac98e3bd17253",
+      "hash": "8e720ea7cb06843e96633d3ccfd0444d9a53a9938230c1e9b414cbfa70c6703b"
+    },
+    {
+      "id": "aud-1788948746743-zn0m",
+      "time": "15:42",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:12:26.742Z",
+      "previousHash": "28fbffb08743e23a0e5f79741a3610446bd86ee31365fd3b2ed06e43a81459f9",
+      "hash": "cb0e2000b546d92d678b066bd0d9189812850ae9f391b6c57f4ac98e3bd17253"
+    },
+    {
+      "id": "aud-1788948741761-ot0z",
+      "time": "15:42",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:12:21.747Z",
+      "previousHash": "15c85447b3001513805d881905c2c76a38fbea4ec3c66ff0ea76853017506a37",
+      "hash": "28fbffb08743e23a0e5f79741a3610446bd86ee31365fd3b2ed06e43a81459f9"
+    },
+    {
+      "id": "aud-1788948034888-wcx5",
+      "time": "15:30",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Citizen (Sitabuldi / Dharampeth, Nagpur)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:00:34.887Z",
+      "previousHash": "fc20de61213d6e9aac6a674f51c8d0b460b66b4f8746e7c96cf8244581c8ef49",
+      "hash": "15c85447b3001513805d881905c2c76a38fbea4ec3c66ff0ea76853017506a37"
+    },
+    {
+      "id": "aud-1788948001733-gf29",
+      "time": "15:30",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Sitabuldi / Dharampeth, Nagpur)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:00:01.733Z",
+      "previousHash": "75c4852b6d9c5666130083f1d09d99ed1cf17e61e136d18fae8d155de4e378bf",
+      "hash": "fc20de61213d6e9aac6a674f51c8d0b460b66b4f8746e7c96cf8244581c8ef49"
+    },
     {
       "id": "aud-1788947849196-8c7b",
       "time": "15:27",

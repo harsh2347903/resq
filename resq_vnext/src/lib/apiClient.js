@@ -241,6 +241,12 @@ export const api = {
         body: JSON.stringify({ text, priority })
       });
     },
+    triageChat: async (message, lang = 'en', location = 'Pune') => {
+      return await request('/requests/triage/chat', {
+        method: 'POST',
+        body: JSON.stringify({ message, lang, location })
+      });
+    },
     smsWebhook: async (sender, body) => {
       return await request('/requests/sms-webhook', {
         method: 'POST',
