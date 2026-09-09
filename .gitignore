@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 resq_vnext/node_modules/
+server/node_modules/
 /.pnp
 .pnp.js
 
@@ -16,10 +17,15 @@ yarn-error.log*
 pnpm-debug.log*
 *.log
 
+# Temporary data files
+*.tmp
+server/data/*.tmp
+
 # Environment variables
 .env
 .env.local
 .env.*.local
+server/.env
 
 # Editor / OS files
 .vscode/

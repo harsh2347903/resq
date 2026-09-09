@@ -2,14 +2,21 @@
   "name": "resq-disaster-management-root",
   "version": "1.0.0",
   "private": true,
-  "description": "Root runner for ResQ Disaster Management System",
+  "description": "National Disaster Coordination & Crisis Management Platform",
   "scripts": {
     "dev": "npm --prefix resq_vnext run dev",
+    "client": "npm --prefix resq_vnext run dev",
+    "server": "node server/src/server.js",
+    "server:dev": "npm --prefix server run dev",
     "build": "npm --prefix resq_vnext run build",
-    "preview": "npm --prefix resq_vnext run preview",
-    "start": "npm --prefix resq_vnext run dev"
+    "preview": "npm --prefix resq_vnext run preview"
   },
-  "keywords": [],
+  "keywords": [
+    "disaster-management",
+    "emergency",
+    "resq",
+    "crisis-coordination"
+  ],
   "author": "",
   "license": "ISC"
 }

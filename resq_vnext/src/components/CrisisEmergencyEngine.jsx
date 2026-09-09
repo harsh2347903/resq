@@ -158,16 +158,39 @@ export function CrisisEmergencyEngine() {
     } catch {}
   }, []);
 
-  // 10 PER MINUTE AUTOMATED POPUP ENGINE (1 every 6000ms = 6s)
+  // 10 PER MINUTE AUTOMATED POPUP ENGINE (Synchronized via WebSocket + Offline Fallback)
   useEffect(() => {
     let popupInterval = null;
 
     if (crisisActive) {
-      // Immediately fire first alert upon activation
-      fireCrisisNotification(0);
-      setScenarioIndex(1);
+      // Fire initial alert upon activation if stack is empty
+      if (toasts.length === 0) {
+        fireCrisisNotification(0);
+        setScenarioIndex(1);
+      }
 
-      // Interval runs every 6 seconds (60 seconds / 10 = 6 seconds!)
+      // Handler for server-synchronized alert ticks
+      const handleServerAlertTick = (e) => {
+        const payload = e.detail;
+        if (!payload) return;
+        setScenarioIndex((current) => {
+          const next = current + 1;
+          const newToast = {
+            id: 'toast-server-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+            scen: payload,
+            timestamp: payload.timestamp || Date.now(),
+            counter: next
+          };
+          playCrisisSiren(2.5);
+          triggerHaptic([350, 150, 350, 150, 500]);
+          setToasts((prev) => [newToast, ...prev].slice(0, 2));
+          return next;
+        });
+      };
+
+      window.addEventListener('resq:socket-alert-tick', handleServerAlertTick);
+
+      // Fallback interval runs every 6 seconds (10 per minute) if server tick not received
       popupInterval = setInterval(() => {
         setScenarioIndex((current) => {
           const next = current + 1;
@@ -175,13 +198,14 @@ export function CrisisEmergencyEngine() {
           return next;
         });
       }, 6000);
+
+      return () => {
+        window.removeEventListener('resq:socket-alert-tick', handleServerAlertTick);
+        if (popupInterval) clearInterval(popupInterval);
+      };
     } else {
       setToasts([]);
     }
-
-    return () => {
-      if (popupInterval) clearInterval(popupInterval);
-    };
   }, [crisisActive, fireCrisisNotification]);
 
   // Handle manual dismiss

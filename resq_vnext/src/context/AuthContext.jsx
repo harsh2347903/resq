@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
+import { api, getSocket } from '../lib/apiClient';
 
 export const roles = {
   citizen: {
@@ -69,24 +70,45 @@ export function AuthProvider({ children }) {
       email: profileData.email?.trim() || '',
       phone: profileData.phone?.trim() || '',
       country: profileData.country?.trim() || '',
-      city: profileData.city?.trim() || '',
-      pincode: profileData.pincode?.trim() || ''
+      state: profileData.state || 'Maharashtra',
+      district: profileData.district || 'Pune',
+      city: profileData.city?.trim() || 'Pune City',
+      pincode: profileData.pincode?.trim() || '411005'
     };
     const profile = createEnvelope(role, safeProfile);
     localStorage.setItem(PERMISSION_KEY, JSON.stringify(profile));
+
+    // Authenticate with backend and register session in background
+    api.auth.login({ role, ...safeProfile, code: profileData.code || 'RESQ07' })
+      .then((res) => {
+        if (res?.token) {
+          profile.token = res.token;
+          localStorage.setItem(PERMISSION_KEY, JSON.stringify(profile));
+          setSession({ ...profile });
+        }
+      })
+      .catch(() => {});
+
     try {
-      const key='resq_system_activity_v3';
-      const existing=JSON.parse(localStorage.getItem(key)||'[]');
-      const seed=existing.length?existing:[
-        {id:'seed-4',kind:'broadcast',message:'Flood warning broadcast for Pune District',actor:'Government Officer',time:'2 min ago'},
-        {id:'seed-3',kind:'accepted',message:'Request RQ-1048 accepted for medical response',actor:'NGO / Volunteer',time:'6 min ago'},
-        {id:'seed-2',kind:'request',message:'Emergency food request submitted from Warje',actor:'Citizen',time:'12 min ago'},
-        {id:'seed-1',kind:'accepted',message:'Request RQ-1046 verified by response control',actor:'System Admin',time:'18 min ago'}
+      const socket = getSocket();
+      if (socket && socket.connected) {
+        socket.emit('resq:join', { role, ...safeProfile });
+      }
+    } catch {}
+
+    try {
+      const key = 'resq_system_activity_v3';
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      const seed = existing.length ? existing : [
+        { id: 'seed-4', kind: 'broadcast', message: 'Flood warning broadcast for Pune District', actor: 'Government Officer', time: '2 min ago' },
+        { id: 'seed-3', kind: 'accepted', message: 'Request RQ-1048 accepted for medical response', actor: 'NGO / Volunteer', time: '6 min ago' },
+        { id: 'seed-2', kind: 'request', message: 'Emergency food request submitted from Warje', actor: 'Citizen', time: '12 min ago' },
+        { id: 'seed-1', kind: 'accepted', message: 'Request RQ-1046 verified by response control', actor: 'System Admin', time: '18 min ago' }
       ];
-      const event={id:String(Date.now()),kind:'login',message:`${roles[role].label} signed in`,actor:safeProfile.name,time:'just now',createdAt:Date.now()};
+      const event = { id: String(Date.now()), kind: 'login', message: `${roles[role].label} signed in`, actor: safeProfile.name, time: 'just now', createdAt: Date.now() };
       seed.unshift(event);
-      localStorage.setItem(key,JSON.stringify(seed.slice(0,80)));
-      window.dispatchEvent(new CustomEvent('resq:activity',{detail:event}));
+      localStorage.setItem(key, JSON.stringify(seed.slice(0, 80)));
+      window.dispatchEvent(new CustomEvent('resq:activity', { detail: event }));
     } catch {}
     setSession(profile);
   };

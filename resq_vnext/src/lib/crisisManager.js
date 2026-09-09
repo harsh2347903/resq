@@ -1,4 +1,5 @@
 import { playEmergencyTone, playCrisisSiren, stopContinuousSiren, triggerHaptic } from './soundUtils';
+import { getSocket, api } from './apiClient';
 
 export const CRISIS_STORAGE_KEY = 'resq_emergency_crisis_active';
 export const CRISIS_META_KEY = 'resq_emergency_crisis_meta';
@@ -162,8 +163,8 @@ export function applyCrisisTheme(active) {
   }
 }
 
-export function activateCrisisMode(commanderName = 'Authorized Incident Commander', role = 'government') {
-  if (typeof window === 'undefined') return;
+export function activateCrisisMode(commanderName = 'Authorized Incident Commander', role = 'government', skipServer = false) {
+  if (typeof window === 'undefined') return null;
   try {
     const meta = {
       active: true,
@@ -202,8 +203,21 @@ export function activateCrisisMode(commanderName = 'Authorized Incident Commande
       };
       existing.unshift(event);
       localStorage.setItem(actKey, JSON.stringify(existing.slice(0, 80)));
-      window.dispatchEvent(new CustomEvent('resq:activity', { detail: event }));
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('resq:activity', { detail: event }));
+      }, 0);
     } catch {}
+
+    // Dispatch to backend API and Socket.IO for cross-device broadcast
+    if (!skipServer) {
+      api.crisis.activate({ commanderName, role, reason: meta.reason }).catch(() => {});
+      try {
+        const socket = getSocket();
+        if (socket && socket.connected) {
+          socket.emit('crisis:activate', { activatedBy: commanderName, role, reason: meta.reason });
+        }
+      } catch {}
+    }
 
     return meta;
   } catch (err) {
@@ -212,8 +226,8 @@ export function activateCrisisMode(commanderName = 'Authorized Incident Commande
   }
 }
 
-export function deactivateCrisisMode(commanderName = 'Incident Commander', role = 'government') {
-  if (typeof window === 'undefined') return;
+export function deactivateCrisisMode(commanderName = 'Incident Commander', role = 'government', skipServer = false) {
+  if (typeof window === 'undefined') return false;
   try {
     localStorage.removeItem(CRISIS_STORAGE_KEY);
     localStorage.removeItem(CRISIS_META_KEY);
@@ -241,12 +255,66 @@ export function deactivateCrisisMode(commanderName = 'Incident Commander', role 
       };
       existing.unshift(event);
       localStorage.setItem(actKey, JSON.stringify(existing.slice(0, 80)));
-      window.dispatchEvent(new CustomEvent('resq:activity', { detail: event }));
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('resq:activity', { detail: event }));
+      }, 0);
     } catch {}
+
+    // Dispatch to backend API and Socket.IO
+    if (!skipServer) {
+      api.crisis.deactivate({ commanderName, role }).catch(() => {});
+      try {
+        const socket = getSocket();
+        if (socket && socket.connected) {
+          socket.emit('crisis:standdown', { stoodDownBy: commanderName, role });
+        }
+      } catch {}
+    }
 
     return true;
   } catch (err) {
     console.error('Failed to deactivate crisis mode:', err);
     return false;
   }
+}
+
+// Automatically bind global real-time synchronization between browser tabs and backend
+if (typeof window !== 'undefined') {
+  // Ensure socket connection
+  getSocket();
+
+  // Handle remote crisis activation from server
+  window.addEventListener('resq:socket-crisis-activated', (e) => {
+    const remoteMeta = e.detail;
+    console.log('⚡ Processing remote crisis activation:', remoteMeta);
+    if (!isCrisisActive()) {
+      activateCrisisMode(remoteMeta?.activatedBy || 'Authorized Incident Commander', remoteMeta?.role || 'government', true);
+    }
+  });
+
+  // Handle remote crisis standdown from server
+  window.addEventListener('resq:socket-crisis-standdown', (e) => {
+    const remoteMeta = e.detail;
+    console.log('⚡ Processing remote crisis standdown:', remoteMeta);
+    if (isCrisisActive()) {
+      deactivateCrisisMode(remoteMeta?.stoodDownBy || 'Incident Commander', remoteMeta?.role || 'government', true);
+    }
+  });
+
+  // Fetch initial server crisis state on app load
+  api.crisis.getStatus()
+    .then((res) => {
+      if (res?.crisis?.active) {
+        if (!isCrisisActive()) {
+          console.log('🚨 Synchronizing with active server crisis:', res.crisis);
+          activateCrisisMode(res.crisis.activatedBy, res.crisis.role, true);
+        }
+      } else if (!res?.crisis?.active && isCrisisActive()) {
+        // Server stands down, clear stale local crisis
+        deactivateCrisisMode('Incident Command', 'government', true);
+      }
+    })
+    .catch(() => {
+      // Backend not yet reachable, keep local preference
+    });
 }

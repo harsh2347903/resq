@@ -1,0 +1,505 @@
+{
+  "crisisState": {
+    "active": false,
+    "defcon": "DEFCON 5 · NORMAL MONITORING",
+    "activatedAt": 1788933780908,
+    "activatedBy": "Officer Deshmukh",
+    "role": "government",
+    "reason": "Catastrophic Mula-Mutha flood wave",
+    "currentScenario": {
+      "id": "scen-1",
+      "code": "EVAC-01",
+      "category": "MANDATORY EVACUATION",
+      "title": "Zone 4 Flash Flood Surge Breach",
+      "severity": "critical",
+      "area": "Mula-Mutha River Basin · Sector 4",
+      "message": "Water levels crossed critical danger threshold (+4.2m). Severe flooding inundating ground floors. Immediate evacuation ordered to Kothrud Central Relief Hub.",
+      "actionLabel": "View Safe Shelters",
+      "actionRoute": "/shelters"
+    },
+    "updatedAt": "2026-09-09T06:03:00.922Z",
+    "stoodDownAt": 1788933780922,
+    "stoodDownBy": "Officer Deshmukh"
+  },
+  "incidents": [
+    {
+      "type": "Flash Flood",
+      "location": "Mutha Right Bank Km 12",
+      "severity": "Critical",
+      "affected": "1+",
+      "reports": 1,
+      "status": "Active",
+      "details": "",
+      "reporter": "Commander Kulkarni",
+      "reportedAt": "2026-09-09T06:07:13.944Z",
+      "id": "INC-3944",
+      "createdAt": "2026-09-09T06:07:13.944Z"
+    },
+    {
+      "id": "INC-077",
+      "type": "Flood",
+      "location": "Pune • Mula-Mutha basin",
+      "severity": "Critical",
+      "affected": "2,482",
+      "reports": 46,
+      "status": "Active",
+      "reportedAt": "2026-09-09T05:02:07.192Z"
+    },
+    {
+      "id": "INC-076",
+      "type": "Landslide",
+      "location": "Lonavala • Old Mumbai Rd",
+      "severity": "High",
+      "affected": "218",
+      "reports": 18,
+      "status": "Response",
+      "reportedAt": "2026-09-09T04:02:07.193Z"
+    },
+    {
+      "id": "INC-075",
+      "type": "Fire",
+      "location": "Nashik • MIDC",
+      "severity": "High",
+      "affected": "624",
+      "reports": 11,
+      "status": "Containment",
+      "reportedAt": "2026-09-09T02:02:07.193Z"
+    },
+    {
+      "id": "INC-074",
+      "type": "Heatwave",
+      "location": "Nagpur • Central zone",
+      "severity": "Medium",
+      "affected": "5,870",
+      "reports": 92,
+      "status": "Monitoring",
+      "reportedAt": "2026-09-08T22:02:07.193Z"
+    }
+  ],
+  "requests": [
+    {
+      "citizen": "Ramesh K",
+      "type": "Evacuation",
+      "location": "Katraj Ghat Tunnel",
+      "priority": "Critical",
+      "status": "Assigned",
+      "team": "NDRF Unit 09",
+      "time": "11:37",
+      "phone": "",
+      "details": "",
+      "createdAt": "2026-09-09T06:07:13.957Z",
+      "id": "REQ-3957",
+      "updatedAt": "2026-09-09T06:07:13.966Z"
+    },
+    {
+      "id": "RQ-1048",
+      "citizen": "Asha K.",
+      "type": "Medical",
+      "location": "Kothrud",
+      "priority": "Critical",
+      "status": "Assigned",
+      "team": "Red Cross Unit 03",
+      "time": "09:41",
+      "phone": "+91 98220 11223",
+      "createdAt": "2026-09-09T05:32:07.193Z"
+    },
+    {
+      "id": "RQ-1047",
+      "citizen": "Rohit M.",
+      "type": "Food",
+      "location": "Warje",
+      "priority": "High",
+      "status": "In transit",
+      "team": "Seva Volunteers",
+      "time": "09:36",
+      "phone": "+91 98220 44556",
+      "createdAt": "2026-09-09T05:22:07.193Z"
+    },
+    {
+      "id": "RQ-1046",
+      "citizen": "Nikita P.",
+      "type": "Evacuation",
+      "location": "Dhayari",
+      "priority": "High",
+      "status": "Verified",
+      "team": "Fire Response 2",
+      "time": "09:29",
+      "phone": "+91 98220 77889",
+      "createdAt": "2026-09-09T05:02:07.193Z"
+    },
+    {
+      "id": "RQ-1045",
+      "citizen": "Aman S.",
+      "type": "Missing family",
+      "location": "Sinhagad Rd",
+      "priority": "Medium",
+      "status": "Open",
+      "team": "—",
+      "time": "09:23",
+      "phone": "+91 98220 99001",
+      "createdAt": "2026-09-09T04:42:07.193Z"
+    },
+    {
+      "id": "RQ-1044",
+      "citizen": "Rhea T.",
+      "type": "Water",
+      "location": "Pashan",
+      "priority": "Medium",
+      "status": "Open",
+      "team": "—",
+      "time": "09:16",
+      "phone": "+91 98220 33445",
+      "createdAt": "2026-09-09T04:22:07.193Z"
+    }
+  ],
+  "alerts": [
+    {
+      "id": 1,
+      "level": "critical",
+      "title": "Flash Flood Warning",
+      "region": "Pune • Mula-Mutha basin",
+      "time": "2 min ago",
+      "body": "Move to elevated ground and avoid river crossings. Emergency teams are on standby.",
+      "timestamp": "2026-09-09T06:00:07.193Z"
+    },
+    {
+      "id": 2,
+      "level": "warning",
+      "title": "Heatwave Advisory",
+      "region": "Vidarbha • Nagpur",
+      "time": "16 min ago",
+      "body": "Stay hydrated and use designated cooling centres between 11:00 and 16:00.",
+      "timestamp": "2026-09-09T05:46:07.193Z"
+    },
+    {
+      "id": 3,
+      "level": "info",
+      "title": "Community Kitchen Active",
+      "region": "Satara • Camp 04",
+      "time": "28 min ago",
+      "body": "Free meals available for displaced families. Bring your household token.",
+      "timestamp": "2026-09-09T05:34:07.193Z"
+    },
+    {
+      "id": 4,
+      "level": "warning",
+      "title": "Road Diversion",
+      "region": "Kothrud • Karve Road",
+      "time": "42 min ago",
+      "body": "Emergency lane reserved. Use alternate routes to keep rescue traffic moving.",
+      "timestamp": "2026-09-09T05:20:07.193Z"
+    }
+  ],
+  "shelters": [
+    {
+      "id": 1,
+      "name": "Shivaji Sports Complex",
+      "city": "Pune",
+      "address": "Pune, Maharashtra",
+      "capacity": 850,
+      "occupied": 642,
+      "services": [
+        "Food",
+        "Medical",
+        "Childcare"
+      ],
+      "eta": "12 min",
+      "open": true
+    },
+    {
+      "id": 2,
+      "name": "Bharati Vidyapeeth Hall",
+      "city": "Pune",
+      "address": "Katraj, Pune",
+      "capacity": 520,
+      "occupied": 301,
+      "services": [
+        "Food",
+        "Power",
+        "Wi-Fi"
+      ],
+      "eta": "19 min",
+      "open": true
+    },
+    {
+      "id": 3,
+      "name": "ZP School Relief Centre",
+      "city": "Satara",
+      "address": "Satara, Maharashtra",
+      "capacity": 340,
+      "occupied": 238,
+      "services": [
+        "Food",
+        "Water",
+        "First Aid"
+      ],
+      "eta": "31 min",
+      "open": true
+    },
+    {
+      "id": 4,
+      "name": "Nehru Stadium Transit Camp",
+      "city": "Nagpur",
+      "address": "Nagpur, Maharashtra",
+      "capacity": 1100,
+      "occupied": 924,
+      "services": [
+        "Food",
+        "Medical",
+        "Charging"
+      ],
+      "eta": "44 min",
+      "open": true
+    },
+    {
+      "id": 5,
+      "name": "Aundh Community Hall",
+      "city": "Pune",
+      "address": "Aundh, Pune",
+      "capacity": 430,
+      "occupied": 176,
+      "services": [
+        "Water",
+        "Childcare",
+        "Charging"
+      ],
+      "eta": "23 min",
+      "open": true
+    }
+  ],
+  "campaigns": [
+    {
+      "id": 1,
+      "name": "Monsoon Ready Maharashtra",
+      "org": "State Disaster Management Authority",
+      "tag": "Preparedness",
+      "reach": "2.4M",
+      "status": "Live",
+      "location": "Pune District",
+      "copy": "Know your nearest shelter, pack a go-bag, save 112."
+    },
+    {
+      "id": 2,
+      "name": "Safe Roads, Safe Rescue",
+      "org": "Pune Municipal Response Cell",
+      "tag": "Traffic",
+      "reach": "760K",
+      "status": "Live",
+      "location": "Pune City",
+      "copy": "Leave rescue lanes clear for ambulances and fire response."
+    },
+    {
+      "id": 3,
+      "name": "Every Hand Helps",
+      "org": "Seva Collective NGO Network",
+      "tag": "Volunteering",
+      "reach": "390K",
+      "status": "Recruiting",
+      "location": "Pune • Satara",
+      "copy": "Register skills for logistics, first aid, food distribution and translation."
+    },
+    {
+      "id": 4,
+      "name": "Family Reunification Drive",
+      "org": "District Relief Office",
+      "tag": "Relief",
+      "reach": "120K",
+      "status": "Live",
+      "location": "Maharashtra",
+      "copy": "Use verified helplines and shelter desks to reconnect separated families."
+    },
+    {
+      "id": 5,
+      "name": "First Aid Fast Track",
+      "org": "Red Cross Unit",
+      "tag": "Medical",
+      "reach": "210K",
+      "status": "Recruiting",
+      "location": "Pune • Pimpri-Chinchwad",
+      "copy": "Learn bleeding control, CPR basics and emergency triage."
+    },
+    {
+      "id": 6,
+      "name": "Heatwave Community Cooling",
+      "org": "Nagpur Smart Response",
+      "tag": "Health",
+      "reach": "580K",
+      "status": "Live",
+      "location": "Nagpur",
+      "copy": "Open cooling rooms and hydration points for at-risk residents."
+    }
+  ],
+  "volunteers": [
+    {
+      "id": "VOL-331",
+      "name": "Meera P.",
+      "skill": "First Aid",
+      "area": "Pune",
+      "status": "Available",
+      "missions": 18
+    },
+    {
+      "id": "VOL-284",
+      "name": "Arjun S.",
+      "skill": "Logistics",
+      "area": "Satara",
+      "status": "On mission",
+      "missions": 31
+    },
+    {
+      "id": "VOL-198",
+      "name": "Sara K.",
+      "skill": "Translation",
+      "area": "Pune",
+      "status": "Available",
+      "missions": 11
+    },
+    {
+      "id": "VOL-412",
+      "name": "Kabir R.",
+      "skill": "Driving",
+      "area": "Pune",
+      "status": "On mission",
+      "missions": 24
+    }
+  ],
+  "audits": [
+    {
+      "id": "aud-1788934033967",
+      "time": "11:37",
+      "actor": "NDRF Unit 09",
+      "action": "Request REQ-3957 assigned to NDRF Unit 09",
+      "severity": "info",
+      "timestamp": "2026-09-09T06:07:13.968Z"
+    },
+    {
+      "id": "aud-1788934033958",
+      "time": "11:37",
+      "actor": "Ramesh K",
+      "action": "🚨 SOS Request created: Evacuation assistance needed at Katraj Ghat Tunnel by Ramesh K",
+      "severity": "high",
+      "timestamp": "2026-09-09T06:07:13.959Z"
+    },
+    {
+      "id": "aud-1788934033946",
+      "time": "11:37",
+      "actor": "Commander Kulkarni",
+      "action": "New incident reported: Flash Flood at Mutha Right Bank Km 12",
+      "severity": "high",
+      "timestamp": "2026-09-09T06:07:13.946Z"
+    },
+    {
+      "id": "aud-1788934033931",
+      "time": "11:37",
+      "actor": "Commander Kulkarni",
+      "action": "Commander Kulkarni signed in as Government Officer (Pune City, Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T06:07:13.931Z"
+    },
+    {
+      "id": "aud-1788934033921",
+      "time": "11:37",
+      "actor": "Suresh Patil",
+      "action": "Suresh Patil signed in as Citizen (Pune City, Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T06:07:13.921Z"
+    },
+    {
+      "id": "aud-1788933780924",
+      "time": "11:33",
+      "actor": "Officer Deshmukh",
+      "action": "🟢 EMERGENCY CRISIS STOOD DOWN by Officer Deshmukh (GOVERNMENT)",
+      "severity": "info",
+      "timestamp": "2026-09-09T06:03:00.924Z"
+    },
+    {
+      "id": "aud-1788933780909",
+      "time": "11:33",
+      "actor": "Officer Deshmukh",
+      "action": "🚨 CODE RED CRISIS TRIGGERED by Officer Deshmukh (GOVERNMENT)",
+      "severity": "critical",
+      "timestamp": "2026-09-09T06:03:00.909Z"
+    },
+    {
+      "id": "aud-1788933780871",
+      "time": "11:33",
+      "actor": "Officer Deshmukh",
+      "action": "Officer Deshmukh signed in as Government Officer (Pune City, Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T06:03:00.871Z"
+    },
+    {
+      "id": "aud-1788933767958",
+      "time": "11:32",
+      "actor": "Officer Deshmukh",
+      "action": "Unauthorized attempt to activate CRISIS MODE by Officer Deshmukh",
+      "severity": "critical",
+      "timestamp": "2026-09-09T06:02:47.958Z"
+    },
+    {
+      "id": "aud-1788933758369",
+      "time": "11:32",
+      "actor": "Officer Deshmukh",
+      "action": "Officer Deshmukh signed in as Government Officer (Pune City, Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T06:02:38.370Z"
+    },
+    {
+      "id": "aud-1788933758341",
+      "time": "11:32",
+      "actor": "Officer Deshmukh",
+      "action": "Unauthorized login attempt to GOVERNMENT role",
+      "severity": "warning",
+      "timestamp": "2026-09-09T06:02:38.341Z"
+    },
+    {
+      "id": "aud-1788933758316",
+      "time": "11:32",
+      "actor": "Asha Sharma",
+      "action": "Asha Sharma signed in as Citizen (Pune City, Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T06:02:38.329Z"
+    },
+    {
+      "id": "aud-1",
+      "time": "12:42",
+      "actor": "Officer #024",
+      "action": "broadcast Flood Alert",
+      "severity": "high",
+      "timestamp": "2026-09-09T05:02:07.193Z"
+    },
+    {
+      "id": "aud-2",
+      "time": "12:35",
+      "actor": "NGO #018",
+      "action": "accepted Request #RQ-1048",
+      "severity": "info",
+      "timestamp": "2026-09-09T04:52:07.193Z"
+    },
+    {
+      "id": "aud-3",
+      "time": "12:31",
+      "actor": "Admin #001",
+      "action": "updated shelter capacity",
+      "severity": "info",
+      "timestamp": "2026-09-09T04:42:07.193Z"
+    },
+    {
+      "id": "aud-4",
+      "time": "12:20",
+      "actor": "Citizen #781",
+      "action": "reported flood incident",
+      "severity": "medium",
+      "timestamp": "2026-09-09T04:32:07.193Z"
+    },
+    {
+      "id": "aud-5",
+      "time": "12:11",
+      "actor": "Officer #024",
+      "action": "verified Request #RQ-1046",
+      "severity": "info",
+      "timestamp": "2026-09-09T04:22:07.193Z"
+    }
+  ],
+  "users": []
+}
