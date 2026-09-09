@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+resq_vnext/node_modules/
+/.pnp
+.pnp.js
+
+# Production build
+dist/
+resq_vnext/dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Editor / OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
