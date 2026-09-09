@@ -244,6 +244,121 @@
       "priority": "High",
       "status": "Open",
       "team": "—",
+      "time": "16:04",
+      "phone": "+91 98765 43210",
+      "details": "Water is entering our ground floor house and rising fast. What should we do?",
+      "source": "ai_triage",
+      "triage": {
+        "category": "Flood",
+        "urgency": "High",
+        "estimatedPersons": 1,
+        "requiredEquipment": [
+          "Inflatable Zodiac Boat",
+          "High-Buoyancy Life Vests"
+        ],
+        "summary": "Triage (High): Flood assistance requested. Estimated 1 person(s). Units needed: Inflatable Zodiac Boat.",
+        "rawQuery": "Water is entering our ground floor house and rising fast. What should we do?"
+      },
+      "createdAt": "2026-09-09T10:34:25.192Z",
+      "id": "REQ-5192"
+    },
+    {
+      "citizen": "Citizen Member",
+      "type": "AI Triage: Flood",
+      "location": "Pune City (Shivaji Nagar) (Pune)",
+      "coordinates": {
+        "lat": 18.5314,
+        "lng": 73.8446
+      },
+      "priority": "High",
+      "status": "Open",
+      "team": "—",
+      "time": "16:02",
+      "phone": "+91 98765 43210",
+      "details": "Water is entering our ground floor house and rising fast. What should we do?",
+      "source": "ai_triage",
+      "triage": {
+        "category": "Flood",
+        "urgency": "High",
+        "estimatedPersons": 1,
+        "requiredEquipment": [
+          "Inflatable Zodiac Boat",
+          "High-Buoyancy Life Vests"
+        ],
+        "summary": "Triage (High): Flood assistance requested. Estimated 1 person(s). Units needed: Inflatable Zodiac Boat.",
+        "rawQuery": "Water is entering our ground floor house and rising fast. What should we do?"
+      },
+      "createdAt": "2026-09-09T10:32:09.460Z",
+      "id": "REQ-9461"
+    },
+    {
+      "citizen": "Citizen Member",
+      "type": "AI Triage: Flood",
+      "location": "Pune City (Shivaji Nagar) (Pune)",
+      "coordinates": {
+        "lat": 18.5314,
+        "lng": 73.8446
+      },
+      "priority": "High",
+      "status": "Open",
+      "team": "—",
+      "time": "15:59",
+      "phone": "+91 98765 43210",
+      "details": "Water is entering our ground floor house and rising fast. What should we do?",
+      "source": "ai_triage",
+      "triage": {
+        "category": "Flood",
+        "urgency": "High",
+        "estimatedPersons": 1,
+        "requiredEquipment": [
+          "Inflatable Zodiac Boat",
+          "High-Buoyancy Life Vests"
+        ],
+        "summary": "Triage (High): Flood assistance requested. Estimated 1 person(s). Units needed: Inflatable Zodiac Boat.",
+        "rawQuery": "Water is entering our ground floor house and rising fast. What should we do?"
+      },
+      "createdAt": "2026-09-09T10:29:20.617Z",
+      "id": "REQ-0617"
+    },
+    {
+      "citizen": "Harshal",
+      "type": "AI Triage: General",
+      "location": "Thane City (Naupada) (Thane)",
+      "coordinates": {
+        "lat": 19.1983,
+        "lng": 72.975
+      },
+      "priority": "High",
+      "status": "Open",
+      "team": "—",
+      "time": "15:52",
+      "phone": "8669209412",
+      "details": "how are you",
+      "source": "ai_triage",
+      "triage": {
+        "category": "General",
+        "urgency": "High",
+        "estimatedPersons": 1,
+        "requiredEquipment": [
+          "Standard First-Responder Relief Kit"
+        ],
+        "summary": "Triage (High): General assistance requested. Estimated 1 person(s). Units needed: Standard First-Responder Relief Kit.",
+        "rawQuery": "how are you"
+      },
+      "createdAt": "2026-09-09T10:22:02.063Z",
+      "id": "REQ-2063"
+    },
+    {
+      "citizen": "Citizen Member",
+      "type": "AI Triage: Flood",
+      "location": "Pune City (Shivaji Nagar) (Pune)",
+      "coordinates": {
+        "lat": 18.5314,
+        "lng": 73.8446
+      },
+      "priority": "High",
+      "status": "Assigned",
+      "team": "Seva Sahayog Disaster Relief · Kabir R. (Boat / Driving)",
       "time": "15:47",
       "phone": "+91 98765 43210",
       "details": "water is rising fast into our living room, we need rescue boat",
@@ -260,7 +375,13 @@
         "rawQuery": "water is rising fast into our living room, we need rescue boat"
       },
       "createdAt": "2026-09-09T10:17:42.550Z",
-      "id": "REQ-2551"
+      "id": "REQ-2551",
+      "ngoOrg": "Seva Sahayog Disaster Relief",
+      "appointedVolunteer": "Kabir R.",
+      "dispatchNotes": "Immediate response for AI Triage: Flood at Pune City (Shivaji Nagar) (Pune). Assist citizen Citizen Member.",
+      "assignedAt": "2026-09-09T10:20:38.762Z",
+      "assignedBy": "Harshal",
+      "updatedAt": "2026-09-09T10:20:38.762Z"
     },
     {
       "citizen": "Citizen Member",
@@ -728,11 +849,171 @@
         "lng": 73.8077
       },
       "status": "On mission",
-      "missions": 26,
-      "updatedAt": "2026-09-09T10:14:37.861Z"
+      "missions": 27,
+      "updatedAt": "2026-09-09T10:20:38.762Z"
     }
   ],
   "audits": [
+    {
+      "id": "aud-1788950065193-g13y",
+      "time": "16:04",
+      "actor": "Citizen Member",
+      "action": "🚨 AI Triage Escalation: AI Triage: Flood at Pune City (Shivaji Nagar) (Pune) by Citizen Member [Triage: High, Units: Inflatable Zodiac Boat]",
+      "severity": "high",
+      "timestamp": "2026-09-09T10:34:25.192Z",
+      "previousHash": "4ad161514186dab0681f3c943118e9d5dd23d3b98bb1e458ba494d6d5f781f8e",
+      "hash": "1411b8d84649cab8899157bdd0baea79b649178bc79fab05e00e80a4c0b2394c"
+    },
+    {
+      "id": "aud-1788950054901-6c3h",
+      "time": "16:04",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:34:14.901Z",
+      "previousHash": "86a631b0a82c21a852ad04836a8623d6197cfccb8e3a1867ead4d2738cca36ac",
+      "hash": "4ad161514186dab0681f3c943118e9d5dd23d3b98bb1e458ba494d6d5f781f8e"
+    },
+    {
+      "id": "aud-1788950007877-de8l",
+      "time": "16:03",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:33:27.877Z",
+      "previousHash": "c2f0b1dde37aa6f402246268a99b2a958a411db485ad285e03a208d993795aa3",
+      "hash": "86a631b0a82c21a852ad04836a8623d6197cfccb8e3a1867ead4d2738cca36ac"
+    },
+    {
+      "id": "aud-1788949991120-cta1",
+      "time": "16:03",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:33:11.120Z",
+      "previousHash": "5fa6f6c47a1f9511bd33f75f055579728146eb0a717bb8ef2a15d631be97364a",
+      "hash": "c2f0b1dde37aa6f402246268a99b2a958a411db485ad285e03a208d993795aa3"
+    },
+    {
+      "id": "aud-1788949974102-o1cq",
+      "time": "16:02",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:32:54.101Z",
+      "previousHash": "7ee022dc7e0560f2e8478b010b5f38426104ea93a3a8be9252b16e16a8827348",
+      "hash": "5fa6f6c47a1f9511bd33f75f055579728146eb0a717bb8ef2a15d631be97364a"
+    },
+    {
+      "id": "aud-1788949958819-d2py",
+      "time": "16:02",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:32:38.819Z",
+      "previousHash": "35a77c6ec79ae85c6481aefceb2756a0435239925315c8cb33572cd1e11f5efa",
+      "hash": "7ee022dc7e0560f2e8478b010b5f38426104ea93a3a8be9252b16e16a8827348"
+    },
+    {
+      "id": "aud-1788949929461-nnfz",
+      "time": "16:02",
+      "actor": "Citizen Member",
+      "action": "🚨 AI Triage Escalation: AI Triage: Flood at Pune City (Shivaji Nagar) (Pune) by Citizen Member [Triage: High, Units: Inflatable Zodiac Boat]",
+      "severity": "high",
+      "timestamp": "2026-09-09T10:32:09.461Z",
+      "previousHash": "a57acf2837da4102f044daec4bd73f1e39dc7c315153c9423861d1e5f581171f",
+      "hash": "35a77c6ec79ae85c6481aefceb2756a0435239925315c8cb33572cd1e11f5efa"
+    },
+    {
+      "id": "aud-1788949919127-izyk",
+      "time": "16:01",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:31:59.127Z",
+      "previousHash": "0036a7156e7bb8c8c52b884a8d0228dc55ef9893a9c2c751d4ef44eaf1d61d8c",
+      "hash": "a57acf2837da4102f044daec4bd73f1e39dc7c315153c9423861d1e5f581171f"
+    },
+    {
+      "id": "aud-1788949760617-sjq3",
+      "time": "15:59",
+      "actor": "Citizen Member",
+      "action": "🚨 AI Triage Escalation: AI Triage: Flood at Pune City (Shivaji Nagar) (Pune) by Citizen Member [Triage: High, Units: Inflatable Zodiac Boat]",
+      "severity": "high",
+      "timestamp": "2026-09-09T10:29:20.617Z",
+      "previousHash": "37296da4cdb6feaeb8142c17eace6abbe64118e4d0cd60dc62253a7a1501eb22",
+      "hash": "0036a7156e7bb8c8c52b884a8d0228dc55ef9893a9c2c751d4ef44eaf1d61d8c"
+    },
+    {
+      "id": "aud-1788949750367-152z",
+      "time": "15:59",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:29:10.367Z",
+      "previousHash": "7ed3ecc5d2d860d83fc5bdb85d607e1af70d203e470246f1cd82aae1fbe9c83d",
+      "hash": "37296da4cdb6feaeb8142c17eace6abbe64118e4d0cd60dc62253a7a1501eb22"
+    },
+    {
+      "id": "aud-1788949707097-3xfp",
+      "time": "15:58",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:28:27.096Z",
+      "previousHash": "03d1ae62b802e6b28a6c99c332522c82f2ebb43b7973610ca6bcb9004874faf2",
+      "hash": "7ed3ecc5d2d860d83fc5bdb85d607e1af70d203e470246f1cd82aae1fbe9c83d"
+    },
+    {
+      "id": "aud-1788949659747-nw01",
+      "time": "15:57",
+      "actor": "Citizen Member",
+      "action": "Citizen Member signed in as Citizen (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:27:39.747Z",
+      "previousHash": "bc6be9d9dd8202229264da3802a7ea843a56b770a20ce62af0d753186bd485cf",
+      "hash": "03d1ae62b802e6b28a6c99c332522c82f2ebb43b7973610ca6bcb9004874faf2"
+    },
+    {
+      "id": "aud-1788949322063-s26a",
+      "time": "15:52",
+      "actor": "Harshal",
+      "action": "🚨 AI Triage Escalation: AI Triage: General at Thane City (Naupada) (Thane) by Harshal [Triage: High, Units: Standard First-Responder Relief Kit]",
+      "severity": "high",
+      "timestamp": "2026-09-09T10:22:02.063Z",
+      "previousHash": "f832edeb1b926a99b9ceaa1a1caa709a2999e5b01face9296fc9e3d877a60c23",
+      "hash": "bc6be9d9dd8202229264da3802a7ea843a56b770a20ce62af0d753186bd485cf"
+    },
+    {
+      "id": "aud-1788949278041-8ra2",
+      "time": "15:51",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Citizen (Thane City (Naupada), Thane)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:21:18.041Z",
+      "previousHash": "4267eea7515295e5e570467874f717bb47892348fd58664c4b1df89aafa53b5b",
+      "hash": "f832edeb1b926a99b9ceaa1a1caa709a2999e5b01face9296fc9e3d877a60c23"
+    },
+    {
+      "id": "aud-1788949238763-yocb",
+      "time": "15:50",
+      "actor": "Harshal",
+      "action": "🎯 Dispatched Seva Sahayog Disaster Relief · Kabir R. (Boat / Driving) to Request #REQ-2551 (Pune City (Shivaji Nagar) (Pune)) [Assigned by Harshal]",
+      "severity": "high",
+      "timestamp": "2026-09-09T10:20:38.762Z",
+      "previousHash": "6d90b9b15f16f3f219cd2adbadef50a24c132a29e777ae1c2c85f3137a19b0a7",
+      "hash": "4267eea7515295e5e570467874f717bb47892348fd58664c4b1df89aafa53b5b"
+    },
+    {
+      "id": "aud-1788949199557-2l67",
+      "time": "15:49",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Nagpur City (Civil Lines), Nagpur)",
+      "severity": "info",
+      "timestamp": "2026-09-09T10:19:59.556Z",
+      "previousHash": "d71a37333041824a400df7a8f5a4fb5ef28b144b67f8d25b5693cda29f2b5800",
+      "hash": "6d90b9b15f16f3f219cd2adbadef50a24c132a29e777ae1c2c85f3137a19b0a7"
+    },
     {
       "id": "aud-1788949062551-r0we",
       "time": "15:47",

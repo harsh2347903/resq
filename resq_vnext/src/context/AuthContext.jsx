@@ -41,15 +41,16 @@ const PERMISSION_KEY = 'resq_permission_envelope_v2';
 
 const createEnvelope = (role, profile = {}, issuedAt = Date.now()) => {
   const permissions = roles[role]?.permissions || [];
-  const payload = { role, ...profile, permissions, issuedAt, version: 'v4' };
+  const { token, checksum: _c, ...cleanProfile } = profile;
+  const payload = { role, ...cleanProfile, permissions, issuedAt, version: 'v4' };
   let checksum = 2166136261;
   for (const ch of JSON.stringify(payload)) checksum = Math.imul(checksum ^ ch.charCodeAt(0), 16777619);
-  return { ...payload, checksum: (checksum >>> 0).toString(16) };
+  return { ...payload, ...(token ? { token } : {}), checksum: (checksum >>> 0).toString(16) };
 };
 
 const validateEnvelope = (envelope) => {
   if (!envelope?.role || !roles[envelope.role] || !envelope.issuedAt) return null;
-  const { checksum, issuedAt, version, permissions, ...profile } = envelope;
+  const { checksum, issuedAt, version, permissions, token, ...profile } = envelope;
   const fresh = createEnvelope(envelope.role, profile, issuedAt);
   if (fresh.checksum !== checksum) return null;
   if (!Array.isArray(permissions) || permissions.join('|') !== fresh.permissions.join('|')) return null;

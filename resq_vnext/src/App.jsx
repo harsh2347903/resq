@@ -333,7 +333,7 @@ function Shell({children}){
         }}
       />
     )}
-    <header className="topbar"><div><span className="eyebrow">National resilience network</span><h1>{pageMeta[location.pathname]?.[0]||'Rakshak'}</h1></div><div className="top-actions">
+    <header className="topbar"><div><span className="eyebrow">National resilience network</span><h1>{location.pathname === '/triage' ? (session?.role === 'citizen' ? 'AI Triage' : 'Citizen Triage Desk') : (pageMeta[location.pathname]?.[0]||'Rakshak')}</h1></div><div className="top-actions">
      <LocationSwitcherBadge />
      <LiveTemperatureNavPill onClick={() => window.dispatchEvent(new CustomEvent('resq:open-temp-reader'))} />
      {session?.role !== 'ngo' && (
