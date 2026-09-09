@@ -12,6 +12,7 @@ import { CrisisEmergencyEngine, EmergencyCrisisButton, DashboardCrisisWidget } f
 import { isCrisisActive } from './lib/crisisManager';
 import { GoogleOperationsMap } from './components/GoogleOperationsMap';
 import { DigitalTemperatureReader, LiveTemperatureNavPill } from './components/DigitalTemperatureReader';
+import { CitizenAiTriageAssistant } from './components/CitizenAiTriageAssistant';
 
 
 const ACTIVITY_KEY='resq_system_activity_v3';
@@ -312,7 +313,7 @@ function Shell({children}){
   if(!session)return children; const role=roles[session.role];
   return <div className={`app-shell role-${session.role}`}><CursorFX/>
    <aside className="sidebar glass-panel">
-    <button className="brand interactive" onClick={()=>navigate('/dashboard')}><span className="brand-mark"><Icons.ShieldCheck size={19}/></span><span><b>RESQ</b><small>Disaster Response</small></span></button>
+    <button className="brand interactive" onClick={()=>navigate('/dashboard')}><span className="brand-mark"><Icons.ShieldCheck size={19}/></span><span><b>Rakshak</b><small>Disaster Response · रक्षक</small></span></button>
     <div className="role-pill"><span className="live-dot"/>{role.label}<span className="encrypted-badge"><Icons.LockKeyhole size={11}/>SIGNED</span></div>
     <nav className="side-nav">{role.nav.map(([label,path,ico])=><NavItem key={path} label={label} path={path} ico={ico} active={location.pathname===path}/>)}</nav>
     <div className="sidebar-bottom"><div className="safe-card"><span className="safe-icon"><Icons.Waves size={16}/></span><span><b>Network live</b><small>24/7 response layer</small></span></div><button className="soft-button interactive" onClick={()=>{recordActivity({kind:'signout',message:`${role.label} signed out safely`,actor:session.name,time:'just now'});setToast('Signed out safely');setTimeout(()=>{logout();navigate('/')},900)}}><Icons.LogOut size={15}/> Sign out</button></div>
@@ -331,7 +332,7 @@ function Shell({children}){
         }}
       />
     )}
-    <header className="topbar"><div><span className="eyebrow">National resilience network</span><h1>{pageMeta[location.pathname]?.[0]||'RESQ'}</h1></div><div className="top-actions">
+    <header className="topbar"><div><span className="eyebrow">National resilience network</span><h1>{pageMeta[location.pathname]?.[0]||'Rakshak'}</h1></div><div className="top-actions">
      <LocationSwitcherBadge />
      <LiveTemperatureNavPill onClick={() => window.dispatchEvent(new CustomEvent('resq:open-temp-reader'))} />
      <EmergencyCrisisButton />
@@ -440,7 +441,43 @@ function Metric({label,value,sub,Icon,accent='aqua'}){return <motion.div classNa
 function GlassCard({children,className='',...props}){return <motion.div className={`glass-panel glass-card ${className}`} whileHover={{y:-3}} {...props}>{children}</motion.div>}
 
 function Dashboard(){const {session}=useAuth(); if(session.role==='citizen')return <CitizenDashboard/>; if(session.role==='ngo')return <VolunteerDashboard/>; if(session.role==='government')return <GovernmentDashboard/>; return <AdminDashboard/>;}
-function CitizenDashboard(){const navigate=useNavigate();return <div className="content-stack"><PageIntro kicker="Personal safety overview" title="Your safety dashboard" sub="A calm, limited-access view built around what you need during an emergency." actions={<button className="primary-button interactive" onClick={()=>navigate('/help')}><Icons.Siren size={16}/> Get emergency help</button>}/><div className="status-strip glass-panel"><div><span className="status-label">YOUR CURRENT STATUS</span><strong>🟢 SAFE</strong><small>No evacuation order in your registered zone.</small></div><div className="status-item"><Icons.MapPin size={16}/><span>Nearest shelter<b>1.8 km</b></span></div><div className="status-item"><Icons.Phone size={16}/><span>Emergency line<b>112</b></span></div></div><div className="stats-grid four"><Metric label="Active alerts" value="03" sub="2 near you" Icon={Icons.Bell} accent="aqua"/><Metric label="Help request" value="No active" sub="One tap to create" Icon={Icons.HeartHandshake} accent="violet"/><Metric label="Closest shelter" value="12 min" sub="642 / 850 occupied" Icon={Icons.House} accent="amber"/><Metric label="Campaigns nearby" value="04" sub="2 recruiting" Icon={Icons.Megaphone} accent="rose"/></div><div className="dashboard-columns"><GlassCard><CardHeader title="What is happening" action="View all" onClick={()=>navigate('/alerts')}/>{alerts.slice(0,3).map(a=><AlertRow key={a.id} item={a}/>)}</GlassCard><GlassCard><CardHeader title="Quick help"/><div className="quick-grid">{[['Medical',Icons.Stethoscope],['Food',Icons.Utensils],['Water',Icons.Droplets],['Shelter',Icons.House],['Family',Icons.Users],['Rescue',Icons.Siren]].map(([n,I])=><button key={n} className="quick-action interactive" onClick={()=>navigate(n==='Shelter'?'/shelters':n==='Family'?'/family':'/help')}><I size={18}/><span>{n}</span></button>)}</div></GlassCard></div><div className="dashboard-columns"><GlassCard><CardHeader title="Nearby campaigns" action="Explore" onClick={()=>navigate('/campaigns')}/>{campaigns.slice(0,2).map(c=><CampaignMini key={c.id} c={c}/>)}</GlassCard><GlassCard><CardHeader title="Limited access"/><div className="access-note"><Icons.ShieldCheck size={18}/><div><b>Citizen permissions</b><p>You can view alerts, request help, report incidents, find shelters, join public campaigns and manage family safety. Operational controls, responder queues and user administration stay hidden.</p></div></div></GlassCard></div><div className="network-shortcuts"><button className="network-shortcut interactive" onClick={()=>navigate('/campaigns')}><Icons.Megaphone size={17}/><span><b>Campaign Network</b><small>Join nearby public programs</small></span><Icons.ArrowUpRight size={14}/></button><button className="network-shortcut interactive" onClick={()=>navigate('/shelters')}><Icons.House size={17}/><span><b>Shelter Network</b><small>Find a verified safe place</small></span><Icons.ArrowUpRight size={14}/></button></div></div>}
+function CitizenDashboard(){
+  const navigate=useNavigate();
+  return <div className="content-stack">
+    <PageIntro kicker="Personal safety overview" title="Your safety dashboard" sub="A calm, limited-access view built around what you need during an emergency." actions={<button className="primary-button interactive" onClick={()=>navigate('/help')}><Icons.Siren size={16}/> Get emergency help</button>}/>
+    <div className="status-strip glass-panel">
+      <div>
+        <span className="status-label">YOUR CURRENT STATUS</span>
+        <strong>🟢 SAFE</strong>
+        <small>No evacuation order in your registered zone.</small>
+      </div>
+      <div className="status-item"><Icons.MapPin size={16}/><span>Nearest shelter<b>1.8 km</b></span></div>
+      <div className="status-item"><Icons.Phone size={16}/><span>Emergency line<b>112</b></span></div>
+    </div>
+
+    {/* 24/7 AI Citizen Triage & Caution Assistant */}
+    <CitizenAiTriageAssistant />
+
+    <div className="stats-grid four">
+      <Metric label="Active alerts" value="03" sub="2 near you" Icon={Icons.Bell} accent="aqua"/>
+      <Metric label="Help request" value="No active" sub="One tap to create" Icon={Icons.HeartHandshake} accent="violet"/>
+      <Metric label="Closest shelter" value="12 min" sub="642 / 850 occupied" Icon={Icons.House} accent="amber"/>
+      <Metric label="Campaigns nearby" value="04" sub="2 recruiting" Icon={Icons.Megaphone} accent="rose"/>
+    </div>
+    <div className="dashboard-columns">
+      <GlassCard><CardHeader title="What is happening" action="View all" onClick={()=>navigate('/alerts')}/>{alerts.slice(0,3).map(a=><AlertRow key={a.id} item={a}/>)}</GlassCard>
+      <GlassCard><CardHeader title="Quick help"/><div className="quick-grid">{[['Medical',Icons.Stethoscope],['Food',Icons.Utensils],['Water',Icons.Droplets],['Shelter',Icons.House],['Family',Icons.Users],['Rescue',Icons.Siren]].map(([n,I])=><button key={n} className="quick-action interactive" onClick={()=>navigate(n==='Shelter'?'/shelters':n==='Family'?'/family':'/help')}><I size={18}/><span>{n}</span></button>)}</div></GlassCard>
+    </div>
+    <div className="dashboard-columns">
+      <GlassCard><CardHeader title="Nearby campaigns" action="Explore" onClick={()=>navigate('/campaigns')}/>{campaigns.slice(0,2).map(c=><CampaignMini key={c.id} c={c}/>)}</GlassCard>
+      <GlassCard><CardHeader title="Limited access"/><div className="access-note"><Icons.ShieldCheck size={18}/><div><b>Citizen permissions</b><p>You can view alerts, request help, report incidents, find shelters, join public campaigns and manage family safety. Operational controls, responder queues and user administration stay hidden.</p></div></div></GlassCard>
+    </div>
+    <div className="network-shortcuts">
+      <button className="network-shortcut interactive" onClick={()=>navigate('/campaigns')}><Icons.Megaphone size={17}/><span><b>Campaign Network</b><small>Join nearby public programs</small></span><Icons.ArrowUpRight size={14}/></button>
+      <button className="network-shortcut interactive" onClick={()=>navigate('/shelters')}><Icons.House size={17}/><span><b>Shelter Network</b><small>Find a verified safe place</small></span><Icons.ArrowUpRight size={14}/></button>
+    </div>
+  </div>;
+}
 function VolunteerDashboard(){const navigate=useNavigate();return <div className="content-stack"><PageIntro kicker="Volunteer operations" title="Your response dashboard" sub="See only campaigns, tasks and help requests you are permitted to take or give." actions={<button className="primary-button interactive" onClick={()=>navigate('/requests')}><Icons.ListChecks size={16}/> Open response tasks</button>}/><div className="stats-grid four"><Metric label="Open tasks" value="12" sub="3 critical" Icon={Icons.ListChecks} accent="violet"/><Metric label="My missions" value="04" sub="2 active" Icon={Icons.Route} accent="aqua"/><Metric label="People helped" value="126" sub="+18 this month" Icon={Icons.HeartHandshake} accent="amber"/><Metric label="Campaigns nearby" value="06" sub="3 recruiting" Icon={Icons.Megaphone} accent="rose"/></div><div className="volunteer-grid"><GlassCard><CardHeader title="Help requests you can take" action="View queue" onClick={()=>navigate('/requests')}/>{requests.slice(0,4).map(r=><TaskRow key={r.id} r={r}/>)}</GlassCard><GlassCard><CardHeader title="Campaigns where you can help" action="Browse" onClick={()=>navigate('/campaigns')}/>{campaigns.slice(0,3).map(c=><CampaignMini key={c.id} c={c} volunteer/>)}</GlassCard></div><GlassCard><CardHeader title="Access scope"/><div className="scope-grid"><ScopeItem icon={Icons.MapPin} title="Location scope" text="Pune + assigned partner districts"/><ScopeItem icon={Icons.Handshake} title="Help scope" text="Requests marked volunteer-eligible"/><ScopeItem icon={Icons.LockKeyhole} title="Restricted" text="No citizen identity admin, official broadcasts or system settings"/></div></GlassCard><div className="network-shortcuts"><button className="network-shortcut interactive" onClick={()=>navigate('/campaigns')}><Icons.Megaphone size={17}/><span><b>Campaign Network</b><small>Join approved community programs</small></span><Icons.ArrowUpRight size={14}/></button><button className="network-shortcut interactive" onClick={()=>navigate('/shelters')}><Icons.House size={17}/><span><b>Shelter Network</b><small>View relief centres & capacity</small></span><Icons.ArrowUpRight size={14}/></button></div></div>}
 function LiveThreatFeedWidget(){
   const [threats, setThreats] = useState([]);
@@ -3214,39 +3251,92 @@ function Login(){
 
   const update=(key,value)=>setForm(v=>({...v,[key]:value}));
 
+  const handleQuickLogin = (targetRole) => {
+    setError('');
+    const mockProfile = {
+      name: targetRole === 'citizen' ? 'Harshal Mogare' :
+            targetRole === 'ngo' ? 'Seva Sahayog Volunteer' :
+            targetRole === 'government' ? 'District Incident Commander' : 'Platform Administrator',
+      email: targetRole === 'citizen' ? 'harshal@rakshak.in' :
+             targetRole === 'ngo' ? 'volunteer@sevasahayog.org' :
+             targetRole === 'government' ? 'commander@eoc.gov.in' : 'admin@rakshak.gov.in',
+      phone: '+91 98765 43210',
+      state: 'Maharashtra',
+      district: 'Pune',
+      taluka: 'Haveli',
+      city: 'Pune City (Shivaji Nagar)',
+      pincode: '411005',
+      code: 'RAKSHAK07'
+    };
+    const coordinates = getCoordinatesForLocation('Maharashtra', 'Pune', 'Haveli', 'Pune City (Shivaji Nagar)');
+    login(targetRole, { ...mockProfile, coordinates });
+    navigate('/dashboard');
+  };
+
   const submit=e=>{
     e.preventDefault();
-    const email=form.email.trim();
-    if(!form.name.trim())return setError('Enter your full name.');
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))return setError('Enter a valid Gmail or email address.');
-    if(!/^[+0-9 ()-]{8,}$/.test(form.phone))return setError('Enter a valid phone number.');
-    if(!form.state||!form.district||!form.city||!form.pincode)return setError('Select your State, District, Taluka and Area so your local emergency PIN is locked.');
-    if(restricted&&code!=='RESQ07')return setError('Official access code is incorrect.');
+    const cleanCode = (code || '').trim().toUpperCase();
+    const name = form.name.trim() || `Demo ${roles[role].label}`;
+    const email = form.email.trim() || `${name.toLowerCase().replace(/\s+/g,'')}@rakshak.in`;
+    const phone = form.phone.trim() || '+91 98765 43210';
+
+    if (restricted && cleanCode !== 'RAKSHAK07' && cleanCode !== 'RESQ07') {
+      return setError('Official restricted clearance code is incorrect. Enter RAKSHAK07 or click Quick Fill below.');
+    }
     setError('');
     const coordinates=getCoordinatesForLocation(form.state, form.district, form.taluka, form.city);
-    login(role,{...form,taluka:form.taluka||form.city,coordinates,email});
+    login(role, {
+      ...form,
+      name,
+      email,
+      phone,
+      pincode: form.pincode || '411005',
+      taluka: form.taluka || form.city,
+      coordinates,
+      code: cleanCode || 'RAKSHAK07'
+    });
     navigate('/dashboard');
   };
 
   return <div className={`login-page login-role-${role}`}><CursorFX/><div className="login-layout">
     <div className="login-intro">
      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:36}}>
-       <button className="brand interactive" style={{marginBottom:0}} onClick={()=>navigate('/')}><span className="brand-mark"><Icons.ShieldCheck size={19}/></span><span><b>RESQ</b><small>Disaster Response</small></span></button>
+       <button className="brand interactive" style={{marginBottom:0}} onClick={()=>navigate('/')}><span className="brand-mark"><Icons.ShieldCheck size={19}/></span><span><b>Rakshak</b><small>Disaster Response · रक्षक</small></span></button>
        <ThemeToggle/>
      </div>
-     <span className="eyebrow">Role-based disaster management</span><h2>One network.<br/><em>Right access, right response.</em></h2>
-     <p>Create a response-ready profile with verified contact and location details. Citizen and volunteer access stays focused; official roles unlock restricted operational controls.</p>
-     <div className="login-proof"><span>⌁</span><b>Role-aware access layer</b><small>Government & admin verification is hidden from public roles.</small></div>
-     <div className="login-side-status"><span className="live-dot"/><div><b>National coverage enabled</b><small>Select any State, District, and Taluka/Sub-district across India for instant auto PIN mapping.</small></div></div>
+     <span className="eyebrow">National Resilience Network</span><h2>One mission.<br/><em>Immediate response when every second counts.</em></h2>
+     <p>Rakshak (रक्षक) coordinates emergency response between citizens, volunteer disaster response teams, and district emergency operations centers.</p>
+     <div className="login-proof"><span>⌁</span><b>Role-aware security architecture</b><small>Citizen safety stays focused; official command tiers unlock restricted operations.</small></div>
+     <div className="login-side-status"><span className="live-dot"/><div><b>Pan-India National Coverage</b><small>Every state, district, taluka, and locality mapped with instant meteorological telemetry.</small></div></div>
     </div>
     <GlassCard className="login-card premium-login">
-     <div className="login-card-head"><span className="eyebrow">Secure sign in</span><span className="secure-chip"><Icons.LockKeyhole size={12}/> Protected</span></div>
-     <h3>Build your response profile</h3><p className="login-card-sub">Your contact and location details are stored locally for this prototype session.</p>
+     <div className="login-card-head"><span className="eyebrow">Rakshak Sign In</span><span className="secure-chip"><Icons.LockKeyhole size={12}/> Protected</span></div>
+     <h3>Access your response profile</h3><p className="login-card-sub">Select your operational tier or choose 1-Click Instant Demo Access below.</p>
+
+     {/* 1-Click Instant Demo Login Presets */}
+     <div className="quick-demo-login-strip">
+       <span className="quick-demo-label"><Icons.Zap size={13}/> 1-CLICK INSTANT DEMO LOGIN:</span>
+       <div className="quick-demo-buttons">
+         <button type="button" className="quick-demo-btn citizen interactive" onClick={()=>handleQuickLogin('citizen')}>
+           <Icons.UserRound size={13}/> Citizen
+         </button>
+         <button type="button" className="quick-demo-btn ngo interactive" onClick={()=>handleQuickLogin('ngo')}>
+           <Icons.HeartHandshake size={13}/> NGO Responder
+         </button>
+         <button type="button" className="quick-demo-btn govt interactive" onClick={()=>handleQuickLogin('government')}>
+           <Icons.Building2 size={13}/> Govt Commander
+         </button>
+         <button type="button" className="quick-demo-btn admin interactive" onClick={()=>handleQuickLogin('admin')}>
+           <Icons.ShieldCheck size={13}/> System Admin
+         </button>
+       </div>
+     </div>
+
      <div className="role-select-grid">{Object.entries(roles).map(([r,v])=><motion.button type="button" whileHover={{y:-2}} whileTap={{scale:.985}} className={`role-select interactive ${role===r?'active':''}`} key={r} onClick={()=>{setRole(r);setCode('');setError('')}}><span className={`role-dot ${v.accent}`}/><b>{v.label}</b><small>{r==='citizen'?'Focused personal safety':r==='ngo'?'Volunteer response tools':r==='government'?'Official operations access':'Full platform administration'}</small><span className="role-arrow"><Icons.ArrowUpRight size={13}/></span></motion.button>)}</div>
      <form className="login-form" onSubmit={submit}>
        <div className="form-grid compact-login-grid">
          <div className="form-row"><label>Full name</label><div className="input-shell"><Icons.UserRound size={15}/><input value={form.name} onChange={e=>{update('name',e.target.value);setError('')}} placeholder="e.g. Harshal Mogare"/></div></div>
-         <div className="form-row"><label>Gmail / Email</label><div className="input-shell"><Icons.Mail size={15}/><input type="email" value={form.email} onChange={e=>{update('email',e.target.value);setError('')}} placeholder="you@gmail.com"/></div></div>
+         <div className="form-row"><label>Email / Contact</label><div className="input-shell"><Icons.Mail size={15}/><input type="email" value={form.email} onChange={e=>{update('email',e.target.value);setError('')}} placeholder="you@rakshak.in"/></div></div>
          <div className="form-row"><label>Phone number</label><div className="input-shell"><Icons.Phone size={15}/><input type="tel" value={form.phone} onChange={e=>{update('phone',e.target.value);setError('')}} placeholder="+91 98765 43210"/></div></div>
          <CustomSelect label="State / UT (All India)" options={allStates} value={form.state} onChange={handleStateChange} placeholder="Select State / UT"/>
          <CustomSelect label="District" options={districts} value={form.district} onChange={handleDistrictChange} placeholder="Select District"/>
@@ -3254,13 +3344,13 @@ function Login(){
          <CustomSelect label="Locality / Area" options={cities.map(c=>c.city)} value={form.city} onChange={handleCityChange} placeholder="Select Locality / Area"/>
          <div className="form-row"><label>PIN / Postal code</label><div className="input-shell auto-field"><Icons.MapPin size={15}/><input value={form.pincode} readOnly placeholder="Auto-filled from locality"/><span className="auto-chip">AUTO</span></div></div>
        </div>
-       <AnimatePresence initial={false}>{restricted&&<motion.div className="official-code-card" initial={{opacity:0,height:0,y:-7}} animate={{opacity:1,height:'auto',y:0}} exit={{opacity:0,height:0,y:-7}}><div className="official-code-head"><div><span className="eyebrow">Official verification</span><b>Restricted clearance code</b></div><span className="mini-lock"><Icons.ShieldAlert size={15}/></span></div><div className="secret-input"><Icons.KeyRound size={15}/><input type={showCode?'text':'password'} value={code} onChange={e=>{setCode(e.target.value);setError('')}} placeholder="Enter restricted clearance code" autoComplete="off"/><button type="button" className="secret-eye interactive" onClick={()=>setShowCode(v=>!v)}>{showCode?<Icons.EyeOff size={15}/>:<Icons.Eye size={15}/>}</button></div><small>Restricted clearance required for Government Incident Command and Platform Admin roles. Unauthorized access attempts are recorded in system audit logs.</small></motion.div>}</AnimatePresence>
+       <AnimatePresence initial={false}>{restricted&&<motion.div className="official-code-card" initial={{opacity:0,height:0,y:-7}} animate={{opacity:1,height:'auto',y:0}} exit={{opacity:0,height:0,y:-7}}><div className="official-code-head"><div><span className="eyebrow">Official verification</span><b>Restricted clearance code</b></div><span className="mini-lock"><Icons.ShieldAlert size={15}/></span></div><div className="secret-input"><Icons.KeyRound size={15}/><input type={showCode?'text':'password'} value={code} onChange={e=>{setCode(e.target.value);setError('')}} placeholder="Enter restricted clearance code (RAKSHAK07)" autoComplete="off"/><button type="button" className="secret-eye interactive" onClick={()=>setShowCode(v=>!v)}>{showCode?<Icons.EyeOff size={15}/>:<Icons.Eye size={15}/>}</button></div><div className="code-hint-row"><small>Clearance passkey required for Government Command and Platform Admin tiers.</small><button type="button" className="code-quick-fill-btn interactive" onClick={()=>setCode('RAKSHAK07')}><Icons.Zap size={12}/> Quick Fill: RAKSHAK07</button></div></motion.div>}</AnimatePresence>
        {error&&<motion.div className="login-error" initial={{opacity:0,y:-4}} animate={{opacity:1,y:0}}><Icons.TriangleAlert size={14}/>{error}</motion.div>}
        <motion.button whileHover={{y:-2}} whileTap={{scale:.985}} className="primary-button full interactive login-button" type="submit"><Icons.LogIn size={16}/> Continue to {roles[role].label} <Icons.ArrowRight size={15}/></motion.button>
-       <div className="login-footnote"><Icons.ShieldCheck size={13}/> Demo environment · role-aware profile · no production credentials</div>
+       <div className="login-footnote"><Icons.ShieldCheck size={13}/> Rakshak Emergency Resilience Network · ICS-100 Aligned</div>
      </form>
     </GlassCard>
-   </div></div>
+   </div></div>;
 }
 function Landing(){
   const navigate=useNavigate();
@@ -3459,8 +3549,8 @@ function Landing(){
       <button className="brand interactive" onClick={()=>navigate('/')}>
         <span className="brand-mark tactical-mark"><Icons.ShieldAlert size={20}/></span>
         <span>
-          <b>RESQ DISASTER COMMAND</b>
-          <small>National Crisis Response Grid</small>
+          <b>RAKSHAK DISASTER COMMAND</b>
+          <small>National Crisis Response Grid · रक्षक</small>
         </span>
       </button>
 
@@ -3809,7 +3899,7 @@ function Landing(){
     <footer className="landing-footer tactical-footer">
       <div className="footer-left">
         <Icons.ShieldAlert size={16}/>
-        <span>RESQ · National Disaster Management & Incident Command Prototype</span>
+        <span>Rakshak · National Disaster Resilience &amp; Incident Command Grid (रक्षक)</span>
       </div>
       <div className="footer-right">
         <span>Standard Operating Procedures · ICS-100/200 Aligned · Emergency Dispatch 112 Ready</span>

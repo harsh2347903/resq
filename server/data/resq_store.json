@@ -641,6 +641,76 @@
   ],
   "audits": [
     {
+      "id": "aud-1788946219011-ijxq",
+      "time": "15:00",
+      "actor": "Harshal Mogare",
+      "action": "Harshal Mogare signed in as Citizen (Pune City, Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:30:19.010Z",
+      "previousHash": "0c14199dd3d3f3daaaa790537bcf5c471246dae73dee4d40053f91ce2d2286e7",
+      "hash": "85af58c3a79a4c63f9fa6febe190d5de1f7afb7c49b8cc067b19308470d95f26"
+    },
+    {
+      "id": "aud-1788946204186-b74v",
+      "time": "15:00",
+      "actor": "Test Commander",
+      "action": "Test Commander signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:30:04.185Z",
+      "previousHash": "1fd87ec828c39a419a2cc0b8ca7a8f06800a1f33a90c4ab19cdad8262d11583c",
+      "hash": "0c14199dd3d3f3daaaa790537bcf5c471246dae73dee4d40053f91ce2d2286e7"
+    },
+    {
+      "id": "aud-1788946196597-glfd",
+      "time": "14:59",
+      "actor": "Test Commander",
+      "action": "Test Commander signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:29:56.582Z",
+      "previousHash": "268917b0081adeda8c42e334a4d4d5f3fbb00c17061b459b4839b9cbffd24c56",
+      "hash": "1fd87ec828c39a419a2cc0b8ca7a8f06800a1f33a90c4ab19cdad8262d11583c"
+    },
+    {
+      "id": "aud-1788946172108-t1t0",
+      "time": "14:59",
+      "actor": "Test Commander",
+      "action": "Unauthorized login attempt to GOVERNMENT role",
+      "severity": "warning",
+      "timestamp": "2026-09-09T09:29:32.108Z",
+      "previousHash": "c2a944722dd2a0fa190198e6d3121a5fe96052bbd07fcfc314b3dd1cd9be5833",
+      "hash": "268917b0081adeda8c42e334a4d4d5f3fbb00c17061b459b4839b9cbffd24c56"
+    },
+    {
+      "id": "aud-1788945647258-cp5l",
+      "time": "14:50",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Sitabuldi / Dharampeth, Nagpur)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:20:47.258Z",
+      "previousHash": "2957385b71feb197c91596714de57d73fb1d8c76483570ad2105034c70b1eea6",
+      "hash": "c2a944722dd2a0fa190198e6d3121a5fe96052bbd07fcfc314b3dd1cd9be5833"
+    },
+    {
+      "id": "aud-1788945597737-e0ev",
+      "time": "14:49",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Sitabuldi / Dharampeth, Nagpur)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:19:57.737Z",
+      "previousHash": "0cd463d692efa4280af355e85f2b80eb971acb7d742e2926df0e3351480bd060",
+      "hash": "2957385b71feb197c91596714de57d73fb1d8c76483570ad2105034c70b1eea6"
+    },
+    {
+      "id": "aud-1788945567212-lmrx",
+      "time": "14:49",
+      "actor": "Harshal",
+      "action": "Harshal signed in as Government Officer (Bhandara City, Bhandara)",
+      "severity": "info",
+      "timestamp": "2026-09-09T09:19:27.211Z",
+      "previousHash": "ba9dc8d3844f226ed51a9a4e907910136d66504a3d0f83fd7689d85face324f8",
+      "hash": "0cd463d692efa4280af355e85f2b80eb971acb7d742e2926df0e3351480bd060"
+    },
+    {
       "id": "aud-1788944677692-ng5l",
       "time": "14:34",
       "actor": "Harshal",

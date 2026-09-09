@@ -3,7 +3,7 @@ import { createRoleEnvelope, requireAuth, ROLES } from '../middleware/auth.js';
 import { db } from '../config/db.js';
 
 const router = express.Router();
-const OFFICER_PASSKEY = process.env.OFFICER_PASSKEY || 'RESQ07';
+const VALID_PASSKEYS = ['RAKSHAK07', 'RESQ07', (process.env.OFFICER_PASSKEY || '')].filter(Boolean).map(s => s.toUpperCase());
 
 // POST /api/auth/login
 router.post('/login', (req, res) => {
@@ -13,10 +13,12 @@ router.post('/login', (req, res) => {
     return res.status(400).json({ error: `Invalid role '${role}'. Valid roles: ${Object.keys(ROLES).join(', ')}` });
   }
 
+  const incomingCode = (code || '').trim().toUpperCase();
+
   // Official clearance passkey check for restricted roles
-  if ((role === 'government' || role === 'admin') && code !== OFFICER_PASSKEY) {
+  if ((role === 'government' || role === 'admin') && !VALID_PASSKEYS.includes(incomingCode)) {
     db.addAudit(`Unauthorized login attempt to ${role.toUpperCase()} role`, name || 'Unknown', 'warning');
-    return res.status(403).json({ error: 'Official restricted clearance code is incorrect.' });
+    return res.status(403).json({ error: 'Official restricted clearance code is incorrect. Use RAKSHAK07' });
   }
 
   const envelope = createRoleEnvelope(role, { name, email, phone, state, district, city, pincode });

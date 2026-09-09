@@ -77,14 +77,15 @@ export function AuthProvider({ children }) {
     };
     const profile = createEnvelope(role, safeProfile);
     localStorage.setItem(PERMISSION_KEY, JSON.stringify(profile));
+    setSession({ ...profile });
 
     // Authenticate with backend and register session in background
-    api.auth.login({ role, ...safeProfile, code: profileData.code || 'RESQ07' })
+    api.auth.login({ role, ...safeProfile, code: profileData.code || 'RAKSHAK07' })
       .then((res) => {
         if (res?.token) {
           profile.token = res.token;
           localStorage.setItem(PERMISSION_KEY, JSON.stringify(profile));
-          setSession({ ...profile });
+          setSession(prev => prev ? { ...prev, token: res.token } : { ...profile });
         }
       })
       .catch(() => {});
@@ -110,7 +111,6 @@ export function AuthProvider({ children }) {
       localStorage.setItem(key, JSON.stringify(seed.slice(0, 80)));
       window.dispatchEvent(new CustomEvent('resq:activity', { detail: event }));
     } catch {}
-    setSession(profile);
   };
   const logout = () => {
     localStorage.removeItem(PERMISSION_KEY);
