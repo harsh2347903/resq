@@ -152,7 +152,9 @@ export function CrisisEmergencyEngine() {
       };
       existing.unshift(event);
       localStorage.setItem(actKey, JSON.stringify(existing.slice(0, 80)));
-      window.dispatchEvent(new CustomEvent('resq:activity', { detail: event }));
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('resq:activity', { detail: event }));
+      }, 0);
     } catch {}
   }, []);
 
