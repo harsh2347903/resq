@@ -6,6 +6,8 @@ import { useAuth, roles } from './context/AuthContext';
 import { alerts, campaigns, shelters, requests, incidents, activities, volunteers, audits } from './lib/mockData';
 import { playEmergencyTone, triggerHaptic, createSpeechRecognizer, isSoundMuted, setSoundMuted } from './lib/soundUtils';
 import { getAllStates, getDistrictsForState, getCitiesForDistrict } from './lib/indiaGeoData';
+import { CrisisEmergencyEngine, EmergencyCrisisButton, DashboardCrisisWidget } from './components/CrisisEmergencyEngine';
+import { isCrisisActive } from './lib/crisisManager';
 
 const ACTIVITY_KEY='resq_system_activity_v3';
 const PROFILE_KEY='resq_profile_v3';
@@ -23,7 +25,8 @@ function saveBroadcasts(items){ try { const next=items.slice(0,100); localStorag
 function applyGlobalPreferences(prefs){
   if (typeof document === 'undefined') return;
   const p = prefs || readPrefs();
-  const theme = p.theme || 'dark';
+  const isCrisis = isCrisisActive();
+  const theme = isCrisis ? 'crisis' : (p.theme || 'dark');
   document.documentElement.dataset.theme = theme;
   document.documentElement.setAttribute('data-theme', theme);
   document.documentElement.dataset.density = p.density || 'comfortable';
@@ -33,6 +36,15 @@ function applyGlobalPreferences(prefs){
   document.documentElement.dataset.glow = p.accentGlow === false ? 'off' : 'on';
   document.documentElement.dataset.autorefresh = p.autoRefresh === false ? 'off' : 'on';
   document.documentElement.dataset.sms = p.sms === false ? 'off' : 'on';
+  if (isCrisis) {
+    document.documentElement.dataset.crisis = 'active';
+    document.documentElement.classList.add('crisis-mode-active');
+    if (document.body) document.body.classList.add('crisis-mode-active');
+  } else {
+    document.documentElement.dataset.crisis = 'off';
+    document.documentElement.classList.remove('crisis-mode-active');
+    if (document.body) document.body.classList.remove('crisis-mode-active');
+  }
 }
 function readPrefs(){ try { return JSON.parse(localStorage.getItem(PREF_KEY)||'{}'); } catch { return {}; } }
 function writePrefs(next){ try { localStorage.setItem(PREF_KEY,JSON.stringify(next)); applyGlobalPreferences(next); window.dispatchEvent(new CustomEvent('resq:preferences',{detail:next})); } catch {} }
@@ -255,87 +267,141 @@ function Shell({children}){
    }
  }, [session?.role, canRunDrill, drillActive]);
 
- const applyPreferences=(p)=>{document.documentElement.dataset.density=p.density||'comfortable';document.documentElement.dataset.motion=p.reducedMotion?'reduced':'full';document.documentElement.dataset.emergency=p.emergencyMode?'on':'off';document.documentElement.dataset.glow=p.accentGlow===false?'off':'on';document.documentElement.dataset.theme=p.theme||'dark';document.documentElement.dataset.autorefresh=p.autoRefresh===false?'off':'on';document.documentElement.dataset.sms=p.sms===false?'off':'on';};
- useEffect(()=>{setNotice(false);setProfile(false)},[location.pathname]);
- useEffect(()=>{if(session?.role)document.documentElement.dataset.role=session.role;return()=>{delete document.documentElement.dataset.role}},[session?.role]);
- useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(''),2600);return()=>clearTimeout(t)},[toast]);
- useEffect(()=>{applyPreferences(readPrefs());const fn=e=>applyPreferences(e.detail||{});window.addEventListener('resq:preferences',fn);return()=>window.removeEventListener('resq:preferences',fn)},[]);
- useEffect(()=>{const fn=e=>{if(!e.detail)return;setToastEvent(e.detail);setTimeout(()=>setToastEvent(null),4200)};window.addEventListener('resq:activity',fn);return()=>window.removeEventListener('resq:activity',fn)},[]);
- useEffect(()=>{const fn=e=>setThemeTransition(e.detail||null);window.addEventListener('resq:themeTransition',fn);return()=>window.removeEventListener('resq:themeTransition',fn)},[]);
- useEffect(()=>{ if(!session) return; const timer=setTimeout(()=>{ setFeed(readActivities().slice(0,5)); setFlash(true); },180); const hide=setTimeout(()=>setFlash(false),5200); return()=>{clearTimeout(timer);clearTimeout(hide)} },[session?.issuedAt]);
- useEffect(()=>{ const root=document.querySelector('.page-scroll'); if(!root)return; const nodes=[...root.querySelectorAll('.page-intro,.glass-card,.metric-card,.status-strip,.table-card,.form-card,.analytics-card,.history-card')]; nodes.forEach((el,i)=>{el.classList.add('scroll-reveal');el.style.setProperty('--reveal-delay',`${Math.min(i*35,240)}ms`)}); const io=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in-view')}),{root,threshold:.08}); nodes.forEach(n=>io.observe(n)); return()=>io.disconnect(); },[location.pathname]);
- if(!session)return children; const role=roles[session.role];
- return <div className={`app-shell role-${session.role}`}><CursorFX/>
-  <aside className="sidebar glass-panel">
-   <button className="brand interactive" onClick={()=>navigate('/dashboard')}><span className="brand-mark"><Icons.ShieldCheck size={19}/></span><span><b>RESQ</b><small>Disaster Response</small></span></button>
-   <div className="role-pill"><span className="live-dot"/>{role.label}<span className="encrypted-badge"><Icons.LockKeyhole size={11}/>SIGNED</span></div>
-   <nav className="side-nav">{role.nav.map(([label,path,ico])=><NavItem key={path} label={label} path={path} ico={ico} active={location.pathname===path}/>)}</nav>
-   <div className="sidebar-bottom"><div className="safe-card"><span className="safe-icon"><Icons.Waves size={16}/></span><span><b>Network live</b><small>24/7 response layer</small></span></div><button className="soft-button interactive" onClick={()=>{recordActivity({kind:'signout',message:`${role.label} signed out safely`,actor:session.name,time:'just now'});setToast('Signed out safely');setTimeout(()=>{logout();navigate('/')},900)}}><Icons.LogOut size={15}/> Sign out</button></div>
-  </aside>
-  <main className="main-area">
-   {drillActive && canRunDrill && (
-     <CrisisDrillBanner
-       seconds={drillSeconds}
-       count={drillCount}
-       onStop={stopDrill}
-       soundMuted={soundMutedState}
-       onToggleSound={() => {
+  const applyPreferences=(p)=>{
+    const isCrisis = isCrisisActive();
+    const theme = isCrisis ? 'crisis' : (p.theme || 'dark');
+    document.documentElement.dataset.density=p.density||'comfortable';
+    document.documentElement.dataset.motion=p.reducedMotion?'reduced':'full';
+    document.documentElement.dataset.emergency=p.emergencyMode?'on':'off';
+    document.documentElement.dataset.glow=p.accentGlow===false?'off':'on';
+    document.documentElement.dataset.theme=theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.dataset.autorefresh=p.autoRefresh===false?'off':'on';
+    document.documentElement.dataset.sms=p.sms===false?'off':'on';
+    if (isCrisis) {
+      document.documentElement.dataset.crisis = 'active';
+      document.documentElement.classList.add('crisis-mode-active');
+      if (document.body) document.body.classList.add('crisis-mode-active');
+    } else {
+      document.documentElement.dataset.crisis = 'off';
+      document.documentElement.classList.remove('crisis-mode-active');
+      if (document.body) document.body.classList.remove('crisis-mode-active');
+    }
+  };
+  useEffect(()=>{setNotice(false);setProfile(false)},[location.pathname]);
+  useEffect(()=>{if(session?.role)document.documentElement.dataset.role=session.role;return()=>{delete document.documentElement.dataset.role}},[session?.role]);
+  useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(''),2600);return()=>clearTimeout(t)},[toast]);
+  useEffect(()=>{applyPreferences(readPrefs());const fn=e=>applyPreferences(e.detail||{});window.addEventListener('resq:preferences',fn);return()=>window.removeEventListener('resq:preferences',fn)},[]);
+  useEffect(()=>{const fn=e=>{if(!e.detail)return;setToastEvent(e.detail);setTimeout(()=>setToastEvent(null),4200)};window.addEventListener('resq:activity',fn);return()=>window.removeEventListener('resq:activity',fn)},[]);
+  useEffect(()=>{const fn=e=>setThemeTransition(e.detail||null);window.addEventListener('resq:themeTransition',fn);return()=>window.removeEventListener('resq:themeTransition',fn)},[]);
+  useEffect(()=>{ if(!session) return; const timer=setTimeout(()=>{ setFeed(readActivities().slice(0,5)); setFlash(true); },180); const hide=setTimeout(()=>setFlash(false),5200); return()=>{clearTimeout(timer);clearTimeout(hide)} },[session?.issuedAt]);
+  useEffect(()=>{ const root=document.querySelector('.page-scroll'); if(!root)return; const nodes=[...root.querySelectorAll('.page-intro,.glass-card,.metric-card,.status-strip,.table-card,.form-card,.analytics-card,.history-card')]; nodes.forEach((el,i)=>{el.classList.add('scroll-reveal');el.style.setProperty('--reveal-delay',`${Math.min(i*35,240)}ms`)}); const io=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in-view')}),{root,threshold:.08}); nodes.forEach(n=>io.observe(n)); return()=>io.disconnect(); },[location.pathname]);
+  if(!session)return children; const role=roles[session.role];
+  return <div className={`app-shell role-${session.role}`}><CursorFX/>
+   <aside className="sidebar glass-panel">
+    <button className="brand interactive" onClick={()=>navigate('/dashboard')}><span className="brand-mark"><Icons.ShieldCheck size={19}/></span><span><b>RESQ</b><small>Disaster Response</small></span></button>
+    <div className="role-pill"><span className="live-dot"/>{role.label}<span className="encrypted-badge"><Icons.LockKeyhole size={11}/>SIGNED</span></div>
+    <nav className="side-nav">{role.nav.map(([label,path,ico])=><NavItem key={path} label={label} path={path} ico={ico} active={location.pathname===path}/>)}</nav>
+    <div className="sidebar-bottom"><div className="safe-card"><span className="safe-icon"><Icons.Waves size={16}/></span><span><b>Network live</b><small>24/7 response layer</small></span></div><button className="soft-button interactive" onClick={()=>{recordActivity({kind:'signout',message:`${role.label} signed out safely`,actor:session.name,time:'just now'});setToast('Signed out safely');setTimeout(()=>{logout();navigate('/')},900)}}><Icons.LogOut size={15}/> Sign out</button></div>
+   </aside>
+   <main className="main-area">
+    {drillActive && canRunDrill && (
+      <CrisisDrillBanner
+        seconds={drillSeconds}
+        count={drillCount}
+        onStop={stopDrill}
+        soundMuted={soundMutedState}
+        onToggleSound={() => {
+          const next = !soundMutedState;
+          setSoundMuted(next);
+          setSoundMutedState(next);
+        }}
+      />
+    )}
+    <header className="topbar"><div><span className="eyebrow">National resilience network</span><h1>{pageMeta[location.pathname]?.[0]||'RESQ'}</h1></div><div className="top-actions">
+     <EmergencyCrisisButton />
+     {canRunDrill && (
+       <button
+         type="button"
+         className={`drill-trigger-btn interactive ${drillActive ? 'active' : ''}`}
+         onClick={drillActive ? stopDrill : startDrill}
+         title={drillActive ? 'Stop Emergency Simulation Drill' : 'Start Simulated Crisis Drill'}
+       >
+         <Icons.Zap size={14} className={drillActive ? 'pulse-zap' : ''}/>
+         <span>{drillActive ? 'Stop Drill' : 'Live Crisis Drill'}</span>
+       </button>
+     )}
+     <button
+       type="button"
+       className="icon-button sound-toggle interactive"
+       onClick={() => {
          const next = !soundMutedState;
          setSoundMuted(next);
          setSoundMutedState(next);
        }}
-     />
-   )}
-   <header className="topbar"><div><span className="eyebrow">National resilience network</span><h1>{pageMeta[location.pathname]?.[0]||'RESQ'}</h1></div><div className="top-actions">
-    {canRunDrill && (
-      <button
-        type="button"
-        className={`drill-trigger-btn interactive ${drillActive ? 'active' : ''}`}
-        onClick={drillActive ? stopDrill : startDrill}
-        title={drillActive ? 'Stop Emergency Simulation Drill' : 'Start Simulated Crisis Drill'}
-      >
-        <Icons.Zap size={14} className={drillActive ? 'pulse-zap' : ''}/>
-        <span>{drillActive ? 'Stop Drill' : 'Live Crisis Drill'}</span>
-      </button>
-    )}
-    <button
-      type="button"
-      className="icon-button sound-toggle interactive"
-      onClick={() => {
-        const next = !soundMutedState;
-        setSoundMuted(next);
-        setSoundMutedState(next);
-      }}
-      title={soundMutedState ? 'Audio sirens muted' : 'Audio sirens active'}
-      aria-label="Toggle Sound"
-    >
-      {soundMutedState ? <Icons.VolumeX size={17} /> : <Icons.Volume2 size={17} />}
-    </button>
-    <ThemeToggle/>
-    <button className="icon-button emergency-button interactive" onClick={()=>setToast('Emergency hotline 112 is ready to call.')}><Icons.PhoneCall size={15}/>112</button>
-    <div className="dropdown-wrap"><button className="icon-button notification-button interactive" onClick={()=>setNotice(v=>!v)}><Icons.Bell size={18}/><span className="notification-badge">{alerts.length}</span></button><AnimatePresence>{notice&&<NotificationMenu navigate={navigate} session={session}/>}</AnimatePresence></div>
-    <div className="dropdown-wrap"><button className="profile-chip interactive" onClick={()=>setProfile(v=>!v)}><span className="avatar">{session.name[0].toUpperCase()}</span><span><b>{session.name}</b><small>{role.label}</small></span><Icons.ChevronDown size={15}/></button><AnimatePresence>{profile&&<ProfileMenu session={session} logout={()=>{logout();navigate('/')}}/>}</AnimatePresence></div>
-  </div></header><section className="page-scroll">{children}</section><div className="footer-note"><span>●</span> Systems operational · Demonstration data · Client permissions are UI-enforced; production authorization belongs on a trusted server</div></main>
-  <LoginActivityFlash feed={flash?feed:[]} role={role}/><AnimatePresence>{themeTransition&&<ThemeTransition transition={themeTransition} onDone={()=>setThemeTransition(null)}/>}</AnimatePresence><AnimatePresence>{toastEvent&&<ActivityFlash event={toastEvent}/>}</AnimatePresence><AnimatePresence>{toast&&<motion.div className="toast glass-panel" initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} exit={{opacity:0,y:18}}><Icons.ShieldCheck size={17}/>{toast}</motion.div>}</AnimatePresence>
- </div>
-}
-function NavItem({label,path,ico,active}){const navigate=useNavigate();const I=iconMap[ico]||Icons.Circle;return <button className={`nav-item interactive ${active?'active':''}`} onClick={()=>navigate(path)}><I size={15}/>{label}</button>}
-function ThemeTransition({transition,onDone}){
- const [particles]=useState(()=>Array.from({length:42},(_,i)=>({id:i,left:Math.max(4,Math.min(96,50+(Math.random()-.5)*82)),top:Math.max(42,Math.min(92,55+Math.random()*34)),delay:Math.random()*.28,duration:1.15+Math.random()*.8,size:2.5+Math.random()*6,drift:(Math.random()-.5)*110,blur:1+Math.random()*4})));
- useEffect(()=>{const t=setTimeout(onDone,1250);return()=>clearTimeout(t)},[onDone]);
- if(!transition)return null;
- return <div className={`theme-transition theme-transition-to-${transition.to} from-${transition.from}`} style={{'--theme-x':`${transition.x}px`,'--theme-y':`${transition.y}px`}}>
-  <div className="theme-orbit-glow" aria-hidden="true"/>
-  <div className="theme-vapor-field" aria-hidden="true">{particles.map(p=><i key={p.id} className="theme-vapor" style={{left:`${p.left}%`,top:`${p.top}%`,animationDelay:`${p.delay}s`,animationDuration:`${p.duration}s`,width:`${p.size}px`,height:`${p.size}px`,'--drift':`${p.drift}px`,'--blur':`${p.blur}px`}}/>)}</div>
-  <div className="theme-reveal" aria-hidden="true"/>
- </div>
-}
-function ThemeToggle(){
- const [theme,setTheme]=useState(()=>readPrefs().theme||'dark'); const ref=useRef(null);
- useEffect(()=>{const fn=e=>setTheme(e.detail?.theme||readPrefs().theme||'dark');window.addEventListener('resq:preferences',fn);return()=>window.removeEventListener('resq:preferences',fn)},[]);
- const toggle=()=>{const next=theme==='dark'?'light':'dark';const rect=ref.current?.getBoundingClientRect();const x=rect?rect.left+rect.width/2:window.innerWidth-100;const y=rect?rect.top+rect.height/2:40;window.dispatchEvent(new CustomEvent('resq:themeTransition',{detail:{from:theme,to:next,x,y}}));const prefs={...readPrefs(),theme:next};writePrefs(prefs);setTheme(next);recordActivity({kind:'settings',message:`${next==='dark'?'Dark':'Light'} mode enabled`,actor:'User',time:'just now'});};
- return <button ref={ref} type="button" className="icon-button theme-toggle interactive" onClick={toggle} aria-label={`Switch to ${theme==='dark'?'light':'dark'} mode`} title={`Switch to ${theme==='dark'?'light':'dark'} mode`}>{theme==='dark'?<Icons.Sun size={17}/>:<Icons.Moon size={17}/>}</button>
-}
+       title={soundMutedState ? 'Audio sirens muted' : 'Audio sirens active'}
+       aria-label="Toggle Sound"
+     >
+       {soundMutedState ? <Icons.VolumeX size={17} /> : <Icons.Volume2 size={17} />}
+     </button>
+     <ThemeToggle/>
+     <button className="icon-button emergency-button interactive" onClick={()=>setToast('Emergency hotline 112 is ready to call.')}><Icons.PhoneCall size={15}/>112</button>
+     <div className="dropdown-wrap"><button className="icon-button notification-button interactive" onClick={()=>setNotice(v=>!v)}><Icons.Bell size={18}/><span className="notification-badge">{alerts.length}</span></button><AnimatePresence>{notice&&<NotificationMenu navigate={navigate} session={session}/>}</AnimatePresence></div>
+     <div className="dropdown-wrap"><button className="profile-chip interactive" onClick={()=>setProfile(v=>!v)}><span className="avatar">{session.name[0].toUpperCase()}</span><span><b>{session.name}</b><small>{role.label}</small></span><Icons.ChevronDown size={15}/></button><AnimatePresence>{profile&&<ProfileMenu session={session} logout={()=>{logout();navigate('/')}}/>}</AnimatePresence></div>
+   </div></header><section className="page-scroll">{children}</section><div className="footer-note"><span>●</span> Systems operational · Demonstration data · Client permissions are UI-enforced; production authorization belongs on a trusted server</div></main>
+   <LoginActivityFlash feed={flash?feed:[]} role={role}/><AnimatePresence>{themeTransition&&<ThemeTransition transition={themeTransition} onDone={()=>setThemeTransition(null)}/>}</AnimatePresence><AnimatePresence>{toastEvent&&<ActivityFlash event={toastEvent}/>}</AnimatePresence><AnimatePresence>{toast&&<motion.div className="toast glass-panel" initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} exit={{opacity:0,y:18}}><Icons.ShieldCheck size={17}/>{toast}</motion.div>}</AnimatePresence>
+  </div>
+ }
+ function NavItem({label,path,ico,active}){const navigate=useNavigate();const I=iconMap[ico]||Icons.Circle;return <button className={`nav-item interactive ${active?'active':''}`} onClick={()=>navigate(path)}><I size={15}/>{label}</button>}
+ function ThemeTransition({transition,onDone}){
+  const [particles]=useState(()=>Array.from({length:42},(_,i)=>({id:i,left:Math.max(4,Math.min(96,50+(Math.random()-.5)*82)),top:Math.max(42,Math.min(92,55+Math.random()*34)),delay:Math.random()*.28,duration:1.15+Math.random()*.8,size:2.5+Math.random()*6,drift:(Math.random()-.5)*110,blur:1+Math.random()*4})));
+  useEffect(()=>{const t=setTimeout(onDone,1250);return()=>clearTimeout(t)},[onDone]);
+  if(!transition)return null;
+  return <div className={`theme-transition theme-transition-to-${transition.to} from-${transition.from}`} style={{'--theme-x':`${transition.x}px`,'--theme-y':`${transition.y}px`}}>
+   <div className="theme-orbit-glow" aria-hidden="true"/>
+   <div className="theme-vapor-field" aria-hidden="true">{particles.map(p=><i key={p.id} className="theme-vapor" style={{left:`${p.left}%`,top:`${p.top}%`,animationDelay:`${p.delay}s`,animationDuration:`${p.duration}s`,width:`${p.size}px`,height:`${p.size}px`,'--drift':`${p.drift}px`,'--blur':`${p.blur}px`}}/>)}</div>
+   <div className="theme-reveal" aria-hidden="true"/>
+  </div>
+ }
+ function ThemeToggle(){
+  const [theme,setTheme]=useState(()=>readPrefs().theme||'dark'); const ref=useRef(null);
+  const [isCrisis,setIsCrisis]=useState(()=>isCrisisActive());
+  useEffect(()=>{
+    const fn=e=>setTheme(e.detail?.theme||readPrefs().theme||'dark');
+    const onCrisis=()=>setIsCrisis(isCrisisActive());
+    window.addEventListener('resq:preferences',fn);
+    window.addEventListener('resq:crisis-mode',onCrisis);
+    return()=>{
+      window.removeEventListener('resq:preferences',fn);
+      window.removeEventListener('resq:crisis-mode',onCrisis);
+    };
+  },[]);
+  const toggle=()=>{
+    if (isCrisisActive()) {
+      window.dispatchEvent(new CustomEvent('resq:activity', {
+        detail: {
+          id: 'crisis-locked-' + Date.now(),
+          kind: 'settings',
+          severity: 'critical',
+          message: 'Theme toggle locked: Emergency Crisis Code Red active.',
+          actor: 'System Policy',
+          time: 'just now'
+        }
+      }));
+      return;
+    }
+    const next=theme==='dark'?'light':'dark';
+    const rect=ref.current?.getBoundingClientRect();
+    const x=rect?rect.left+rect.width/2:window.innerWidth-100;
+    const y=rect?rect.top+rect.height/2:40;
+    window.dispatchEvent(new CustomEvent('resq:themeTransition',{detail:{from:theme,to:next,x,y}}));
+    const prefs={...readPrefs(),theme:next};
+    writePrefs(prefs);
+    setTheme(next);
+    recordActivity({kind:'settings',message:`${next==='dark'?'Dark':'Light'} mode enabled`,actor:'User',time:'just now'});
+  };
+  return <button ref={ref} type="button" className={`icon-button theme-toggle interactive ${isCrisis?'crisis-locked':''}`} onClick={toggle} aria-label={isCrisis?'Theme locked to Crisis Mode':`Switch to ${theme==='dark'?'light':'dark'} mode`} title={isCrisis?'Emergency Crisis Mode Active (Theme Locked to Code Red)':`Switch to ${theme==='dark'?'light':'dark'} mode`}>{isCrisis?<Icons.Flame size={17} style={{color:'#ff2a4b'}}/>:theme==='dark'?<Icons.Sun size={17}/>:<Icons.Moon size={17}/>}</button>
+ }
 function activityRoute(a, role){
   if(a.kind==='broadcast') return (role==='government'||role==='admin')?'/broadcast-history':'/alerts';
   if(a.kind==='request') return role==='citizen'?'/help':role==='ngo'?'/requests':'/requests';
@@ -381,6 +447,7 @@ function GovernmentDashboard(){
 
   return (
     <div className="content-stack government-dashboard">
+      <DashboardCrisisWidget />
       <div className="command-hero glass-panel tactical-command-hero">
         <div className="command-hero-left">
           <span className="eyebrow">DISTRICT COMMAND CENTER · PUNE SECTOR 4</span>
@@ -911,7 +978,7 @@ function MapPinPoint({x,y,type,label,title,onSelect,selected}){
     </button>
   );
 }
-function AdminDashboard(){const {session}=useAuth();const navigate=useNavigate();const [broadcasts,setBroadcasts]=useState(()=>readBroadcasts().filter(x=>x.role==='admin'));const [security,setSecurity]=useState('Healthy');useEffect(()=>{const refresh=()=>setBroadcasts(readBroadcasts().filter(x=>x.role==='admin'));window.addEventListener('resq:broadcasts',refresh);window.addEventListener('storage',refresh);return()=>{window.removeEventListener('resq:broadcasts',refresh);window.removeEventListener('storage',refresh)}},[]);return <div className="content-stack admin-dashboard"><div className="admin-hero glass-panel"><div><span className="eyebrow">Privileged control plane</span><h2>Secure the platform behind the response.</h2><p>Identity, permissions, auditability and broadcast governance are separated from field operations.</p></div><div className="admin-posture-card glass-panel"><div className="posture-card-top"><div className="posture-status-indicator"><span className={`posture-lamp ${security==='Healthy'?'lamp-healthy':'lamp-review'}`}/><span className="posture-sub-tag">SYSTEM POSTURE</span></div><span className={`posture-badge ${security==='Healthy'?'badge-healthy':'badge-review'}`}>{security==='Healthy'?'● OPERATIONAL':'▲ AUDIT REQUIRED'}</span></div><div className="posture-card-body"><div className="posture-title-wrap"><Icons.ShieldCheck size={22} className={`posture-shield-ico ${security==='Healthy'?'ico-healthy':'ico-review'}`}/><div className="posture-text"><strong className="posture-state-text">{security}</strong><small className="posture-hint-text">{security==='Healthy'?'ICS-200 Cryptographic Security Verified':'Policy Discrepancy Flagged For Review'}</small></div></div><button type="button" className="admin-check-btn interactive" onClick={()=>setSecurity(security==='Healthy'?'Review':'Healthy')}><Icons.RotateCw size={13}/> Run Diagnostic Check</button></div></div></div><PageIntro kicker="System administration" title="Platform control center" sub="Manage policy and trace every high-impact action across the network." actions={<div className="button-row"><button className="primary-button interactive" onClick={()=>navigate('/broadcast')}><Icons.Megaphone size={16}/> Broadcast alert</button><button className="secondary-button interactive" onClick={()=>navigate('/permissions')}><Icons.ShieldCheck size={16}/> Access policy</button></div>}/><div className="stats-grid four"><Metric label="Active users" value="8,420" sub="+182 this week" Icon={Icons.Users} accent="rose"/><Metric label="Signed sessions" value="2,148" sub="99.8% valid envelopes" Icon={Icons.LockKeyhole} accent="aqua"/><Metric label="Audit events" value="12.4K" sub="Last 24 hours" Icon={Icons.ScrollText} accent="violet"/><Metric label="Policy health" value="98%" sub="2 warnings" Icon={Icons.ShieldCheck} accent="amber"/></div><div className="admin-grid"><GlassCard className="security-panel"><CardHeader title="Security posture"/><SecurityPosture/><div className="security-meter"><span>Authentication integrity</span><b>98%</b><i style={{width:'98%'}}/></div><div className="security-meter"><span>Permission integrity</span><b>100%</b><i style={{width:'100%'}}/></div><div className="security-meter"><span>Audit coverage</span><b>96%</b><i style={{width:'96%'}}/></div></GlassCard><GlassCard><CardHeader title="Privileged actions"/><div className="privileged-action-grid"><Shortcut name="Users" path="/users" Icon={Icons.Users}/><Shortcut name="Roles" path="/permissions" Icon={Icons.ShieldCheck}/><Shortcut name="Audit" path="/audit" Icon={Icons.ScrollText}/><Shortcut name="Broadcasts" path="/broadcast" Icon={Icons.Megaphone}/><Shortcut name="Shelters" path="/shelters" Icon={Icons.House}/><Shortcut name="Campaigns" path="/campaigns" Icon={Icons.Flag}/></div></GlassCard></div><div className="dashboard-columns"><GlassCard><CardHeader title="Admin broadcast activity" action="Open history" onClick={()=>navigate('/broadcast-history')}/>{broadcasts.length?broadcasts.slice(0,6).map(x=><motion.div className={`history-row history-rich severity-${severityClass(x.severity)}`} key={x.id} onClick={()=>navigate('/broadcast-history')}><span className={`severity-dot ${severityClass(x.severity)}`}/><div><b>{x.severity} · {x.type} · {x.area}</b><small>{x.message}</small><em>{x.actor||session?.name||'System Admin'} · {(x.channels||[]).join(' · ')||'App notification'} · {x.time}</em></div><span>OPEN</span></motion.div>):<div className="empty-state"><Icons.Megaphone size={20}/><b>No admin broadcasts</b><p>Admin advisories will appear here after publication.</p><button className="primary-button interactive" onClick={()=>navigate('/broadcast')}>Create broadcast</button></div>}</GlassCard><GlassCard><CardHeader title="Latest audit signals"/>{audits.slice(0,5).map((a,i)=><div className="audit-mini" key={i}><span>{a.time}</span><b>{a.actor}</b><p>{a.action}</p><span className={`priority ${a.severity}`}>{a.severity}</span></div>)}</GlassCard></div></div>}
+function AdminDashboard(){const {session}=useAuth();const navigate=useNavigate();const [broadcasts,setBroadcasts]=useState(()=>readBroadcasts().filter(x=>x.role==='admin'));const [security,setSecurity]=useState('Healthy');useEffect(()=>{const refresh=()=>setBroadcasts(readBroadcasts().filter(x=>x.role==='admin'));window.addEventListener('resq:broadcasts',refresh);window.addEventListener('storage',refresh);return()=>{window.removeEventListener('resq:broadcasts',refresh);window.removeEventListener('storage',refresh)}},[]);return <div className="content-stack admin-dashboard"><DashboardCrisisWidget /><div className="admin-hero glass-panel"><div><span className="eyebrow">Privileged control plane</span><h2>Secure the platform behind the response.</h2><p>Identity, permissions, auditability and broadcast governance are separated from field operations.</p></div><div className="admin-posture-card glass-panel"><div className="posture-card-top"><div className="posture-status-indicator"><span className={`posture-lamp ${security==='Healthy'?'lamp-healthy':'lamp-review'}`}/><span className="posture-sub-tag">SYSTEM POSTURE</span></div><span className={`posture-badge ${security==='Healthy'?'badge-healthy':'badge-review'}`}>{security==='Healthy'?'● OPERATIONAL':'▲ AUDIT REQUIRED'}</span></div><div className="posture-card-body"><div className="posture-title-wrap"><Icons.ShieldCheck size={22} className={`posture-shield-ico ${security==='Healthy'?'ico-healthy':'ico-review'}`}/><div className="posture-text"><strong className="posture-state-text">{security}</strong><small className="posture-hint-text">{security==='Healthy'?'ICS-200 Cryptographic Security Verified':'Policy Discrepancy Flagged For Review'}</small></div></div><button type="button" className="admin-check-btn interactive" onClick={()=>setSecurity(security==='Healthy'?'Review':'Healthy')}><Icons.RotateCw size={13}/> Run Diagnostic Check</button></div></div></div><PageIntro kicker="System administration" title="Platform control center" sub="Manage policy and trace every high-impact action across the network." actions={<div className="button-row"><button className="primary-button interactive" onClick={()=>navigate('/broadcast')}><Icons.Megaphone size={16}/> Broadcast alert</button><button className="secondary-button interactive" onClick={()=>navigate('/permissions')}><Icons.ShieldCheck size={16}/> Access policy</button></div>}/><div className="stats-grid four"><Metric label="Active users" value="8,420" sub="+182 this week" Icon={Icons.Users} accent="rose"/><Metric label="Signed sessions" value="2,148" sub="99.8% valid envelopes" Icon={Icons.LockKeyhole} accent="aqua"/><Metric label="Audit events" value="12.4K" sub="Last 24 hours" Icon={Icons.ScrollText} accent="violet"/><Metric label="Policy health" value="98%" sub="2 warnings" Icon={Icons.ShieldCheck} accent="amber"/></div><div className="admin-grid"><GlassCard className="security-panel"><CardHeader title="Security posture"/><SecurityPosture/><div className="security-meter"><span>Authentication integrity</span><b>98%</b><i style={{width:'98%'}}/></div><div className="security-meter"><span>Permission integrity</span><b>100%</b><i style={{width:'100%'}}/></div><div className="security-meter"><span>Audit coverage</span><b>96%</b><i style={{width:'96%'}}/></div></GlassCard><GlassCard><CardHeader title="Privileged actions"/><div className="privileged-action-grid"><Shortcut name="Users" path="/users" Icon={Icons.Users}/><Shortcut name="Roles" path="/permissions" Icon={Icons.ShieldCheck}/><Shortcut name="Audit" path="/audit" Icon={Icons.ScrollText}/><Shortcut name="Broadcasts" path="/broadcast" Icon={Icons.Megaphone}/><Shortcut name="Shelters" path="/shelters" Icon={Icons.House}/><Shortcut name="Campaigns" path="/campaigns" Icon={Icons.Flag}/></div></GlassCard></div><div className="dashboard-columns"><GlassCard><CardHeader title="Admin broadcast activity" action="Open history" onClick={()=>navigate('/broadcast-history')}/>{broadcasts.length?broadcasts.slice(0,6).map(x=><motion.div className={`history-row history-rich severity-${severityClass(x.severity)}`} key={x.id} onClick={()=>navigate('/broadcast-history')}><span className={`severity-dot ${severityClass(x.severity)}`}/><div><b>{x.severity} · {x.type} · {x.area}</b><small>{x.message}</small><em>{x.actor||session?.name||'System Admin'} · {(x.channels||[]).join(' · ')||'App notification'} · {x.time}</em></div><span>OPEN</span></motion.div>):<div className="empty-state"><Icons.Megaphone size={20}/><b>No admin broadcasts</b><p>Admin advisories will appear here after publication.</p><button className="primary-button interactive" onClick={()=>navigate('/broadcast')}>Create broadcast</button></div>}</GlassCard><GlassCard><CardHeader title="Latest audit signals"/>{audits.slice(0,5).map((a,i)=><div className="audit-mini" key={i}><span>{a.time}</span><b>{a.actor}</b><p>{a.action}</p><span className={`priority ${a.severity}`}>{a.severity}</span></div>)}</GlassCard></div></div>}
 function AlertRow({item}){return <div className="alert-row"><span className={`severity-dot ${item.level}`}/><div><b>{item.title}</b><small>{item.region}</small></div><span>{item.time}</span></div>}
 function CampaignMini({c,volunteer}){const navigate=useNavigate();return <div className="campaign-mini interactive-row" onClick={()=>navigate('/campaigns')}><div><span className="tag">{c.tag}</span><b>{c.name}</b><small>{c.org} · {c.location}</small></div><button className="tiny-button interactive" onClick={(e)=>{e.stopPropagation();navigate('/campaigns')}}>{volunteer?'HELP':'VIEW'}</button></div>}
 function TaskRow({r}){return <div className="task-row"><div><span className={`priority ${r.priority.toLowerCase()}`}>{r.priority}</span><b>{r.id} · {r.type}</b><small>{r.location} · {r.time}</small></div><button className="tiny-button interactive">TAKE</button></div>}
@@ -3149,7 +3216,13 @@ export default function App(){
       window.removeEventListener('storage',()=>applyGlobalPreferences());
     };
   },[]);
-  return <Routes><Route path="/" element={<Landing/>}/><Route path="/login" element={<Login/>}/><Route path="/*" element={<Shell><Routes>
+  return (
+    <>
+      <CrisisEmergencyEngine />
+      <Routes>
+        <Route path="/" element={<Landing/>}/>
+        <Route path="/login" element={<Login/>}/>
+        <Route path="/*" element={<Shell><Routes>
 <Route path="dashboard" element={<Protected><Dashboard/></Protected>}/>
 <Route path="alerts" element={<Protected permission="view_alerts"><AlertsPage/></Protected>}/>
 <Route path="campaigns" element={<Protected permission="view_campaigns"><Campaigns/></Protected>}/>
@@ -3171,4 +3244,5 @@ export default function App(){
 <Route path="settings" element={<Protected permission="interface_preferences"><Settings/></Protected>}/>
 <Route path="profile" element={<Protected><ProfilePreferences/></Protected>}/>
 <Route path="*" element={<NotFound/>}/>
-</Routes></Shell>}/></Routes>}
+</Routes></Shell>}/></Routes></>);
+}

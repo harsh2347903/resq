@@ -1,0 +1,667 @@
+/* ==========================================================================
+   RESQ — EMERGENCY CRISIS THEME & LIVE ALERT SYSTEM (CODE RED / DEFCON 1)
+   Exclusively triggered by Government Officers & Website Administrators
+   ========================================================================== */
+
+/* 1. Global Crisis Color Scheme & High-Alert Variables */
+:root[data-theme="crisis"],
+html[data-theme="crisis"],
+html.crisis-mode-active,
+body.crisis-mode-active {
+  --bg: #0c0204;
+  --bg2: #190407;
+  --panel: rgba(36, 6, 11, 0.84);
+  --panel2: rgba(48, 8, 14, 0.78);
+  --panel-solid: #1c0307;
+  --line: rgba(255, 55, 75, 0.32);
+  --line-hover: rgba(255, 30, 55, 0.65);
+  --text: #fff0f2;
+  --text-heading: #ffffff;
+  --muted: #e59ba3;
+  --aqua: #ff2a4b;          /* Screaming red tactical accent */
+  --violet: #ff4766;
+  --amber: #ff9900;
+  --rose: #ff0d34;
+  --green: #ff3355;         /* Even status indicators show high crisis */
+  --danger: #ff1230;
+  --shadow: 0 24px 80px rgba(180, 5, 25, 0.45);
+}
+
+/* Background canvas transformation */
+html[data-theme="crisis"] body,
+body.crisis-mode-active {
+  background: 
+    radial-gradient(circle at 12% 5%, rgba(180, 15, 35, 0.38) 0, transparent 42%),
+    radial-gradient(circle at 88% 18%, rgba(130, 8, 22, 0.42) 0, transparent 48%),
+    radial-gradient(circle at 50% 80%, rgba(90, 5, 15, 0.35) 0, transparent 55%),
+    #0c0204 !important;
+  color: var(--text) !important;
+  box-shadow: inset 0 0 60px rgba(255, 20, 50, 0.22);
+}
+
+/* Ambient glow transformation in crisis mode */
+html[data-theme="crisis"] .ambient-a,
+body.crisis-mode-active .ambient-a {
+  background: #ff1a3c !important;
+  opacity: 0.3 !important;
+}
+
+html[data-theme="crisis"] .ambient-b,
+body.crisis-mode-active .ambient-b {
+  background: #ff4766 !important;
+  opacity: 0.25 !important;
+}
+
+/* Crisis Perimeter Screen Hazard Strobe (Subtle border alert) */
+html.crisis-mode-active:after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  border: 3px solid rgba(255, 35, 60, 0.55);
+  box-shadow: inset 0 0 45px rgba(255, 20, 45, 0.28);
+  pointer-events: none;
+  z-index: 99999;
+  animation: crisisPerimeterPulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes crisisPerimeterPulse {
+  0% {
+    border-color: rgba(255, 35, 60, 0.4);
+    box-shadow: inset 0 0 30px rgba(255, 20, 45, 0.2);
+  }
+  100% {
+    border-color: rgba(255, 45, 75, 0.85);
+    box-shadow: inset 0 0 65px rgba(255, 25, 55, 0.4);
+  }
+}
+
+/* 2. Top Emergency Crisis Marquee & Command Bar */
+.crisis-global-banner {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  width: 100%;
+  background: linear-gradient(90deg, #6b0713 0%, #a80f24 25%, #d11231 50%, #a80f24 75%, #6b0713 100%);
+  background-size: 200% 100%;
+  animation: crisisStrobeBar 6s linear infinite;
+  color: #ffffff;
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 4px 28px rgba(255, 10, 40, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+@keyframes crisisStrobeBar {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.crisis-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.crisis-beacon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #b91028;
+  box-shadow: 0 0 16px #ffffff, 0 0 30px rgba(255, 255, 255, 0.8);
+  animation: beaconPulse 0.9s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate;
+  flex-shrink: 0;
+}
+
+@keyframes beaconPulse {
+  0% { transform: scale(0.9); opacity: 0.85; }
+  100% { transform: scale(1.15); opacity: 1; }
+}
+
+.crisis-banner-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.crisis-banner-title b {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.crisis-banner-title small {
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px;
+  color: #ffccd3;
+  opacity: 0.92;
+}
+
+.crisis-banner-middle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.crisis-chip-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.crisis-chip-pill.freq {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
+  animation: textFlash 1.5s infinite;
+}
+
+@keyframes textFlash {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; }
+}
+
+.crisis-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.crisis-standdown-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #b91028 !important;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.crisis-standdown-btn:hover {
+  background: #fff0f3;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.crisis-audio-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.crisis-audio-btn:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* 3. Emergency Crisis Trigger Button (in Topbar for Officers & Admins) */
+.crisis-toggle-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border: 1px solid rgba(255, 45, 75, 0.5);
+  background: linear-gradient(135deg, rgba(220, 20, 50, 0.22), rgba(160, 10, 30, 0.12));
+  color: #ffccd4;
+  box-shadow: 0 0 16px rgba(255, 30, 60, 0.2);
+}
+
+.crisis-toggle-trigger:hover {
+  background: linear-gradient(135deg, rgba(230, 25, 55, 0.36), rgba(180, 15, 35, 0.25));
+  border-color: rgba(255, 60, 90, 0.8);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 0 24px rgba(255, 30, 60, 0.45);
+}
+
+.crisis-toggle-trigger.crisis-active {
+  background: linear-gradient(135deg, #b91028, #e61434);
+  color: #ffffff;
+  border-color: #ff8090;
+  animation: activeCrisisButtonPulse 1.4s infinite alternate;
+}
+
+@keyframes activeCrisisButtonPulse {
+  0% {
+    box-shadow: 0 0 12px rgba(230, 20, 50, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 28px rgba(255, 40, 70, 0.85);
+  }
+}
+
+/* 4. 10 per Minute Live Crisis Notification Popups */
+.crisis-toast-container {
+  position: fixed;
+  top: 60px;
+  right: 24px;
+  z-index: 99998;
+  width: min(440px, calc(100vw - 36px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.crisis-toast-card {
+  pointer-events: auto;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(38, 5, 9, 0.96), rgba(20, 3, 6, 0.96));
+  border: 1.5px solid #ff2a4b;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6), 0 0 35px rgba(255, 30, 60, 0.35);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.crisis-toast-card:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff2a4b, #ff9900, #ff2a4b);
+  background-size: 200% 100%;
+  animation: crisisStrobeBar 3s linear infinite;
+}
+
+.crisis-toast-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.crisis-toast-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.crisis-toast-siren {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(255, 42, 75, 0.2);
+  border: 1px solid rgba(255, 42, 75, 0.4);
+  color: #ff3355;
+  display: grid;
+  place-items: center;
+  animation: sirenWiggle 0.6s infinite alternate;
+}
+
+@keyframes sirenWiggle {
+  0% { transform: rotate(-8deg); }
+  100% { transform: rotate(8deg); }
+}
+
+.crisis-toast-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #ff4766;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: rgba(255, 42, 75, 0.12);
+  padding: 3px 7px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 42, 75, 0.25);
+}
+
+.crisis-toast-rate {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  color: #ffccd3;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.crisis-toast-close {
+  background: transparent;
+  border: 0;
+  color: #ff9aa8;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s;
+}
+
+.crisis-toast-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.crisis-toast-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 5px;
+  line-height: 1.35;
+}
+
+.crisis-toast-location {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #ffa3b0;
+  margin-bottom: 7px;
+}
+
+.crisis-toast-body {
+  font-size: 11px;
+  line-height: 1.55;
+  color: #ffccd3;
+  margin: 0 0 12px;
+}
+
+.crisis-toast-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 60, 80, 0.18);
+}
+
+.crisis-toast-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 9px;
+  background: rgba(255, 42, 75, 0.22);
+  border: 1px solid rgba(255, 42, 75, 0.45);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.crisis-toast-link-btn:hover {
+  background: #ff2a4b;
+  transform: translateY(-1px);
+}
+
+/* 6-Second Live Countdown Bar (10 notifications per minute) */
+.crisis-progress-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.crisis-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff2a4b, #ff9900);
+  width: 100%;
+  transform-origin: left;
+  animation: nextAlertCountdown 6s linear infinite;
+}
+
+@keyframes nextAlertCountdown {
+  0% { width: 100%; }
+  100% { width: 0%; }
+}
+
+/* 5. Crisis Confirmation Modal (Officer / Admin authorization dialog) */
+.crisis-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(5, 0, 1, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.crisis-modal-card {
+  width: min(520px, 100%);
+  background: linear-gradient(160deg, #220306, #140103);
+  border: 2px solid #ff2a4b;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.85), 0 0 50px rgba(255, 30, 60, 0.4);
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+.crisis-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.crisis-modal-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 42, 75, 0.22);
+  border: 1px solid rgba(255, 42, 75, 0.5);
+  color: #ff2a4b;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.crisis-modal-title h3 {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 3px;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+}
+
+.crisis-modal-title span {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: #ff9aa8;
+}
+
+.crisis-modal-body p {
+  font-size: 12px;
+  line-height: 1.65;
+  color: #ffccd4;
+  margin: 0 0 16px;
+}
+
+.crisis-modal-body ul {
+  margin: 0 0 20px;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 11.5px;
+  color: #ffc2ca;
+}
+
+.crisis-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.crisis-btn-cancel {
+  padding: 10px 18px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffccd4;
+  font-weight: 600;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.crisis-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.crisis-btn-execute {
+  padding: 10px 22px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #d11231, #ff2a4b);
+  border: 1px solid #ff5975;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 6px 22px rgba(255, 30, 60, 0.45);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.crisis-btn-execute:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(255, 40, 70, 0.65);
+}
+
+.crisis-btn-execute.standdown {
+  background: linear-gradient(135deg, #059669, #10b981);
+  border-color: #34d399;
+  box-shadow: 0 6px 22px rgba(16, 185, 129, 0.45);
+}
+
+/* 6. Dashboard Widget (Tactical Crisis Status Widget in Govt & Admin Dashboards) */
+.crisis-dashboard-banner {
+  border-radius: 20px;
+  padding: 18px 22px;
+  background: linear-gradient(145deg, rgba(50, 8, 14, 0.85), rgba(28, 4, 8, 0.85));
+  border: 1.5px solid rgba(255, 42, 75, 0.45);
+  box-shadow: 0 14px 40px rgba(180, 10, 30, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 14px;
+}
+
+.crisis-dashboard-banner.active {
+  background: linear-gradient(145deg, rgba(80, 12, 22, 0.95), rgba(42, 6, 12, 0.95));
+  border-color: #ff2a4b;
+  box-shadow: 0 16px 50px rgba(255, 30, 60, 0.35);
+}
+
+.crisis-dash-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.crisis-dash-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(255, 42, 75, 0.2);
+  border: 1px solid rgba(255, 42, 75, 0.5);
+  color: #ff2a4b;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.crisis-dash-text b {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 3px;
+}
+
+.crisis-dash-text p {
+  margin: 0;
+  font-size: 11px;
+  color: #ffccd4;
+  line-height: 1.5;
+}
+
+/* Mobile Responsiveness for Crisis Elements */
+@media (max-width: 780px) {
+  .crisis-global-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 16px;
+  }
+  .crisis-banner-middle {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .crisis-banner-right {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+  .crisis-toast-container {
+    right: 12px;
+    left: 12px;
+    width: auto;
+    top: 75px;
+  }
+  .crisis-dashboard-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
