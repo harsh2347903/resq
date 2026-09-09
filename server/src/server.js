@@ -1,8 +1,14 @@
 import http from 'http';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { Server as SocketIOServer } from 'socket.io';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const distPath = path.resolve(__dirname, '../../resq_vnext/dist');
 
 // Load environment variables
 dotenv.config();
@@ -108,6 +114,12 @@ app.use('/api/*', (req, res) => {
   res.status(404).json({ error: `API endpoint '${req.method} ${req.originalUrl}' not found.` });
 });
 
+// Serve frontend single-page application (All-In-One Localhost at port 5000)
+app.use(express.static(distPath));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
+});
+
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('💥 Unhandled server error:', err);
@@ -120,13 +132,13 @@ app.use((err, req, res, next) => {
 // Start listening
 server.listen(PORT, () => {
   console.log('═══════════════════════════════════════════════════════');
-  console.log(`🚨 RESQ Disaster Management Server v2.0 active on port ${PORT}`);
+  console.log(`🚨 Rakshak Disaster Response Server v2.0 active on port ${PORT}`);
+  console.log(`🌐 ALL-IN-ONE LOCALHOST: http://localhost:${PORT}`);
   console.log(`🌐 REST API:    http://localhost:${PORT}/api/health`);
   console.log(`⚡ WebSockets:  ws://localhost:${PORT} (Socket.IO)`);
   console.log(`🧭 Geospatial:  Proximity Routing & Haversine Engine Online`);
   console.log(`🧠 AI Triage:   Multilingual Natural Language Processor Online`);
   console.log(`🛰️ Threat Grid: IMD / USGS / CWC Telemetry Feed Ingestion Active`);
   console.log(`🔗 Blockchain:  SHA-256 Hash-Chained Audit Ledger Verified`);
-  console.log(`🛡️ DEFCON Mode: Initialized & Monitoring`);
   console.log('═══════════════════════════════════════════════════════');
 });
