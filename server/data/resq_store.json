@@ -2,9 +2,9 @@
   "crisisState": {
     "active": false,
     "defcon": "DEFCON 5 · NORMAL MONITORING",
-    "activatedAt": 1788942503621,
-    "activatedBy": "Harshal",
-    "role": "government",
+    "activatedAt": 1789706176519,
+    "activatedBy": "harsh mishra",
+    "role": "admin",
     "reason": "State-level Emergency Crisis Protocol Triggered",
     "currentScenario": {
       "id": "scen-1",
@@ -17,9 +17,9 @@
       "actionLabel": "View Safe Shelters",
       "actionRoute": "/shelters"
     },
-    "updatedAt": "2026-09-09T08:28:27.692Z",
-    "stoodDownAt": 1788942507692,
-    "stoodDownBy": "Harshal"
+    "updatedAt": "2026-09-18T04:36:32.381Z",
+    "stoodDownAt": 1789706192381,
+    "stoodDownBy": "harsh mishra"
   },
   "incidents": [
     {
@@ -854,6 +854,66 @@
     }
   ],
   "audits": [
+    {
+      "id": "aud-1789706192382-k93n",
+      "time": "10:06",
+      "actor": "harsh mishra",
+      "action": "🟢 EMERGENCY CRISIS STOOD DOWN by harsh mishra (ADMIN)",
+      "severity": "info",
+      "timestamp": "2026-09-18T04:36:32.381Z",
+      "previousHash": "90ada043aa822e7fd9fec74ca2cc1823365fc6474c9ddd4901dc4c94332482fe",
+      "hash": "5c6d34bac6235dec8b3e5db76419dec3b70b16f1bd1c70e8f924ecbbe4e2e910"
+    },
+    {
+      "id": "aud-1789706192377-e4kj",
+      "time": "10:06",
+      "actor": "harsh mishra",
+      "action": "🟢 EMERGENCY CRISIS STOOD DOWN by harsh mishra (ADMIN)",
+      "severity": "info",
+      "timestamp": "2026-09-18T04:36:32.376Z",
+      "previousHash": "681fc8685afe92b80824d8dc9d0a2191c1fd2fd83c61fd86a39d292218a5af40",
+      "hash": "90ada043aa822e7fd9fec74ca2cc1823365fc6474c9ddd4901dc4c94332482fe"
+    },
+    {
+      "id": "aud-1789706176519-ujx4",
+      "time": "10:06",
+      "actor": "harsh mishra",
+      "action": "🚨 CODE RED CRISIS TRIGGERED by harsh mishra (ADMIN)",
+      "severity": "critical",
+      "timestamp": "2026-09-18T04:36:16.519Z",
+      "previousHash": "1b84878b5b9a900d4098b2f4b696907bb86394ad722c1c2883b02ef6486ad07f",
+      "hash": "681fc8685afe92b80824d8dc9d0a2191c1fd2fd83c61fd86a39d292218a5af40"
+    },
+    {
+      "id": "aud-1789706176510-kbn1",
+      "time": "10:06",
+      "actor": "harsh mishra",
+      "action": "🚨 CODE RED CRISIS TRIGGERED by harsh mishra (ADMIN)",
+      "severity": "critical",
+      "timestamp": "2026-09-18T04:36:16.510Z",
+      "previousHash": "2d82354cbc3236094b43a3157912ce002d04b9ed787d58b34050100c7f5b08cf",
+      "hash": "1b84878b5b9a900d4098b2f4b696907bb86394ad722c1c2883b02ef6486ad07f"
+    },
+    {
+      "id": "aud-1789706161350-au05",
+      "time": "10:06",
+      "actor": "harsh mishra",
+      "action": "harsh mishra signed in as System Admin (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-18T04:36:01.350Z",
+      "previousHash": "601ff447115aa92a9fc373156a6ef6d450f5751709f28ec66159f53d96bf7727",
+      "hash": "2d82354cbc3236094b43a3157912ce002d04b9ed787d58b34050100c7f5b08cf"
+    },
+    {
+      "id": "aud-1789705905787-8i14",
+      "time": "10:01",
+      "actor": "harsh",
+      "action": "harsh signed in as Government Officer (Pune City (Shivaji Nagar), Pune)",
+      "severity": "info",
+      "timestamp": "2026-09-18T04:31:45.756Z",
+      "previousHash": "1411b8d84649cab8899157bdd0baea79b649178bc79fab05e00e80a4c0b2394c",
+      "hash": "601ff447115aa92a9fc373156a6ef6d450f5751709f28ec66159f53d96bf7727"
+    },
     {
       "id": "aud-1788950065193-g13y",
       "time": "16:04",
